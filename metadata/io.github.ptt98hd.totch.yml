@@ -13,9 +13,9 @@ Repo: https://github.com/ptt98hd/totch.git
 Binaries: https://github.com/ptt98hd/totch/releases/download/v%v/totch-%v.apk
 
 Builds:
-  - versionName: 1.0.2
-    versionCode: 10002
-    commit: c75c4ab8819a7eb49523f3ab678f6b514c34b7b5
+  - versionName: 1.1.0
+    versionCode: 10100
+    commit: d0c10b13634c3c7ae268195ca67b5ee1744d89e7
     subdir: app
     gradle:
       - yes
@@ -24,5 +24,5 @@ AllowedAPKSigningKeys: 90f255632ccd15e18244b114256e4a2d79e5ae406fa4df06cd2a2ef3e
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 1.0.2
-CurrentVersionCode: 10002
+CurrentVersion: 1.1.0
+CurrentVersionCode: 10100
