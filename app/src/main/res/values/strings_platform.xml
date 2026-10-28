@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_label">Totch notch gestures</string>
+    <string name="accessibility_service_description">Draws an invisible touch area over the display cutout to detect gestures and performs the system actions you assign (Back, Home, lock screen…). Totch does not read any screen content.</string>
+</resources>

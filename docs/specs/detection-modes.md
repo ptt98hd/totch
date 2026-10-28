@@ -35,7 +35,7 @@ Trạng thái được expose qua `StateFlow<EngineStatus>` (singleton `GestureE
 | DM-11 | Settings thay đổi (padding, vùng thủ công) → overlay cập nhật vị trí trong ≤ 1 khung hình, không tạo lại service |
 | DM-12 | Xoay ngang → overlay bị gỡ (`PausedRotation`); xoay dọc → thêm lại |
 | DM-13 | `enabled=false` hoặc đổi sang SHIZUKU → overlay bị gỡ, service vẫn chạy nhưng không làm gì |
-| DM-14 | Config XML: `accessibilityEventTypes` rỗng(=0), `canRetrieveWindowContent=false`, `isAccessibilityTool=false`, có `description` giải thích rõ |
+| DM-14 | Config XML: không khai báo `accessibilityEventTypes` (không nhận event nào), `canRetrieveWindowContent=false`, `isAccessibilityTool=false`, có `description` giải thích rõ |
 
 ## 4. Khởi động cùng máy (FR-D6)
 | ID | Tiêu chí |
