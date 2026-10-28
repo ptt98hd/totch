@@ -9,6 +9,7 @@ import io.github.ptt98hd.totch.AppShortcuts
 import io.github.ptt98hd.totch.ShortcutEntry
 import io.github.ptt98hd.totch.TouchArea
 import io.github.ptt98hd.totch.core.model.Rect
+import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,8 +54,13 @@ class FakeSystemStatus(initial: Requirements = Requirements()) : SystemStatus {
     override fun requestShizukuPermission() { permissionRequests++ }
 }
 
-class FakeTouchArea(initial: Rect? = null, private val regionOf: (Settings) -> Rect? = { initial }) : TouchArea {
+class FakeTouchArea(
+    initial: Rect? = null,
+    detected: ManualRegionDp? = null,
+    private val regionOf: (Settings) -> Rect? = { initial },
+) : TouchArea {
     override val region: StateFlow<Rect?> = MutableStateFlow(initial)
+    override val detectedRegion = MutableStateFlow(detected)
     override fun regionFor(settings: Settings): Rect? = regionOf(settings)
 }
 

@@ -1,11 +1,14 @@
 # Spec: Cấu hình (`Settings`, `SettingsCodec`)
 
-Yêu cầu: FR-S1…FR-S8, FR-G10 · Module: `:core` (model, codec) + `:app` (`SettingsRepository`)
+Yêu cầu: FR-S1…FR-S9, FR-G10, FR-R6 · Module: `:core` (model, codec) + `:app` (`SettingsRepository`)
 
 ## 1. Mô hình
 
 ```kotlin
-@Serializable data class ManualRegionDp(val centerXFraction: Float = 0.5f, val widthDp: Int = 80, val heightDp: Int = 32)
+@Serializable data class ManualRegionDp(
+    val centerXFraction: Float = 0.5f, val widthDp: Int = 80, val heightDp: Int = 32,
+    val topDp: Int = 0,   // v1.2: vị trí dọc (FR-R6)
+)
 
 @Serializable data class Settings(
     val enabled: Boolean = false,
@@ -36,8 +39,6 @@ fun Settings.toGestureConfig(density: Float): GestureConfig   // touchSlopPx = T
 val HoldGestures: Set<Gesture>          // LONG_PRESS, SWIPE_DOWN_HOLD, SWIPE_LEFT_HOLD, SWIPE_RIGHT_HOLD
 fun Gesture.isAvailableIn(mode: DetectionMode): Boolean   // false cho SWIPE_DOWN, SWIPE_DOWN_HOLD ở SHIZUKU (FR-G10)
 fun Settings.effectiveAction(g: Gesture): Action          // None nếu !g.isAvailableIn(mode), ngược lại actionFor(g)
-fun Settings.withDefaultPreferences(): Settings           // FR-S5: reset cài đặt, giữ enabled/mode/bindings/repeatOnHold
-fun Settings.withDefaultGestures(): Settings              // FR-S5: bindings = DefaultBindings, repeatOnHold = ∅
 ```
 Gesture mới thêm ở v1.1 có binding mặc định `None`.
 
@@ -58,9 +59,10 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ST-11 | JSON của v1.0 (6 binding, không có field mới) → giữ binding cũ, field mới = mặc định |
 | ST-12 | `effectiveAction`: mode SHIZUKU → `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` trả `None` dù đã gán; mode ACCESSIBILITY → action đã gán |
 | ST-13 | `toGestureConfig`: `holdSwipes` = các `*_HOLD` có `effectiveAction ≠ None`; `repeating` = `repeatOnHold` ∩ {effectiveAction ≠ None}; `repeatIntervalMs` chuyển nguyên; `doubleTapEnabled` theo `effectiveAction` |
-| ST-14 | `withDefaultPreferences()` giữ `enabled`, `mode`, `bindings`, `repeatOnHold`; mọi field khác về mặc định |
-| ST-15 | `withDefaultGestures()` → `bindings == DefaultBindings` đủ 9 key, `repeatOnHold = ∅`; field khác giữ nguyên |
+| ST-14 | ~~`withDefaultPreferences()`~~ — bỏ ở v1.2 (FR-S9: không còn reset tổng) |
+| ST-15 | ~~`withDefaultGestures()`~~ — bỏ ở v1.2 (FR-S9) |
 | ST-16 | `decode(encode(s)) == s` cho `Assistant`, `LaunchShortcut(...)`, mọi giá trị `ThemeMode`/`AppLanguage`; JSON enum là `"dark"`, `"vi"`… |
+| ST-17 | `sanitized()` kẹp `manualRegion.topDp` 0–100; JSON v1.1 (không có `topDp`) → `topDp = 0` |
 
 ## 3. `SettingsRepository` (`:app`)
 - DataStore Preferences, key `settings_json`.

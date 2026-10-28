@@ -145,13 +145,24 @@ tham chiếu ID tương ứng.
 | FR-A10 | (sửa lỗi) Rung phản hồi hoạt động ổn định ở cả 2 mode | [actions §6](specs/actions.md) |
 | FR-A11 | Hành động **Gọi trợ lý** (trợ lý mặc định của hệ thống) | [actions](specs/actions.md) |
 | FR-A12 | Hành động **Mở shortcut** (shortcut tĩnh của app, nhóm theo app) | [actions §7](specs/actions.md) |
-| FR-S5 | Reset tách bạch: reset từng mục cài đặt; reset tổng chỉ reset cài đặt; reset gestures riêng ở màn Gestures | [settings](specs/settings.md), [ui](specs/ui.md) |
+| FR-S5 | ~~Reset tách bạch: reset từng mục cài đặt; reset tổng chỉ reset cài đặt; reset gestures riêng ở màn Gestures~~ (v1.2: thay bằng FR-S9) | [settings](specs/settings.md), [ui](specs/ui.md) |
 | FR-S6 | Giao diện: theme System / Light / Dark, chế độ AMOLED black | [ui](specs/ui.md) |
 | FR-S7 | Ngôn ngữ hiển thị: theo hệ thống (fallback tiếng Anh) hoặc chọn English / Tiếng Việt | [ui](specs/ui.md) |
 | FR-S8 | Bật/tắt khởi động cùng máy | [detection-modes §4](specs/detection-modes.md) |
 | FR-D7 | Khuyến nghị bỏ tối ưu pin (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) | [detection-modes §4b](specs/detection-modes.md) |
-| FR-U7 | Top bar tĩnh hiện tên màn hình; Settings mở từ icon bên trái top bar; bottom bar còn Home, Gestures | [ui §1](specs/ui.md) |
+| FR-U7 | Top bar tĩnh hiện tên màn hình; ~~Settings mở từ icon bên trái top bar; bottom bar còn Home, Gestures~~ (v1.2: thay bằng FR-U12, FR-U13) | [ui §1](specs/ui.md) |
 | FR-U8 | Highlight vùng notch trực tiếp trên màn hình khi mở app; chỉnh vùng chạm thấy thay đổi ngay (bỏ dialog preview) | [ui §2](specs/ui.md) |
 | FR-U9 | Màn chọn hành động dạng tab: Hệ thống & media / Ứng dụng / Shortcut | [ui §3](specs/ui.md) |
 | FR-U10 | Giao diện gọn: bỏ các đoạn mô tả không cần thiết; About thành section cuối của Settings | [ui](specs/ui.md) |
 | FR-U11 | Icon mới theo ảnh tham khảo, vẫn là dynamic (Monet + themed icon) | [ui](specs/ui.md) |
+
+## 9. Phiên bản 1.2 — sắp xếp lại giao diện
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-U12 | Tách Settings thành 2 màn: **Cài đặt ứng dụng** (giao diện, hệ thống, giới thiệu — mở từ icon Settings ở **bên phải** top bar) và **Notch** (độ nhạy, vị trí, kích thước, phản hồi — tab thứ 3 của bottom bar). Thay FR-U4, FR-U7 | [ui §1, §3](specs/ui.md) |
+| FR-U13 | Top bar: chỉ tên màn hình bên trái + icon Settings bên phải (màn con: Back bên trái). Bottom bar: Home, Gestures, Notch | [ui §1](specs/ui.md) |
+| FR-U14 | Theme chọn qua dialog như Ngôn ngữ; hai mục này có chevron để nhận biết là mở được | [ui §3](specs/ui.md) |
+| FR-S9 | Bỏ mọi nút reset tổng (reset cài đặt, reset gestures) và reset của switch/lựa chọn; chỉ slider có nút reset (bên phải slider). Thay FR-S5 | [ui §3](specs/ui.md) |
+| FR-R5 | Bỏ switch "Custom touch area": slider vị trí/kích thước luôn hiển thị, giá trị ban đầu = vùng tự phát hiện; kéo slider → chuyển sang vùng thủ công | [notch-region](specs/notch-region.md) |
+| FR-R6 | Vùng thủ công chỉnh được cả **vị trí dọc** (khoảng cách từ cạnh trên, dp) | [notch-region](specs/notch-region.md), [settings](specs/settings.md) |

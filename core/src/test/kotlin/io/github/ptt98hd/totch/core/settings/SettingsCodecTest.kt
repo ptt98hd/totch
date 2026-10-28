@@ -111,4 +111,11 @@ class SettingsCodecTest {
         assertEquals("system", Json.parseToJsonElement(SettingsCodec.encode(Settings())).jsonObject.getValue("language").jsonPrimitive.content)
         assertEquals("en", Json.parseToJsonElement(SettingsCodec.encode(Settings(language = AppLanguage.ENGLISH))).jsonObject.getValue("language").jsonPrimitive.content)
     }
+
+    @Test fun `ST-17 v1_1 manual region without topDp decodes with topDp 0`() {
+        val s = SettingsCodec.decode("""{"manualRegion":{"centerXFraction":0.3,"widthDp":100,"heightDp":40}}""")
+        assertEquals(ManualRegionDp(0.3f, 100, 40, topDp = 0), s.manualRegion)
+        val offset = Settings(manualRegion = ManualRegionDp(0.3f, 100, 40, topDp = 12))
+        assertEquals(offset, SettingsCodec.decode(SettingsCodec.encode(offset)))
+    }
 }

@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -33,14 +35,16 @@ import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.ui.gestures.GesturesRoute
 import io.github.ptt98hd.totch.ui.home.HomeRoute
+import io.github.ptt98hd.totch.ui.notch.NotchSettingsRoute
 import io.github.ptt98hd.totch.ui.picker.ActionPickerRoute
-import io.github.ptt98hd.totch.ui.settings.SettingsRoute
+import io.github.ptt98hd.totch.ui.settings.AppSettingsRoute
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
 @Serializable data object HomeDestination
 @Serializable data object GesturesDestination
-@Serializable data object SettingsDestination
+@Serializable data object NotchDestination
+@Serializable data object AppSettingsDestination
 @Serializable data class ActionPickerDestination(val gesture: String)
 
 private data class TopLevel(
@@ -51,10 +55,11 @@ private data class TopLevel(
     val selectedIcon: ImageVector,
 )
 
-/** UI-41: Settings is reached from the top bar, so only two tabs remain. */
+/** UI-41: app settings are reached from the top bar; the notch settings are the third tab. */
 private val topLevel = listOf(
     TopLevel(HomeDestination, HomeDestination::class, R.string.nav_home, Icons.Outlined.Home, Icons.Filled.Home),
     TopLevel(GesturesDestination, GesturesDestination::class, R.string.nav_gestures, Icons.Outlined.TouchApp, Icons.Filled.TouchApp),
+    TopLevel(NotchDestination, NotchDestination::class, R.string.nav_notch, Icons.Outlined.Tune, Icons.Filled.Tune),
 )
 
 private fun NavDestination?.isOn(routeClass: KClass<*>) = this?.hierarchy?.any { it.hasRoute(routeClass) } == true
@@ -65,7 +70,7 @@ fun TotchNavHost(container: AppContainer, modifier: Modifier = Modifier) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
     val showBottomBar = topLevel.any { destination.isOn(it.routeClass) }
-    val openSettings = { navController.navigate(SettingsDestination) { launchSingleTop = true } }
+    val openSettings = { navController.navigate(AppSettingsDestination) { launchSingleTop = true } }
     val back: () -> Unit = { navController.popBackStack() }
 
     Scaffold(
@@ -107,7 +112,8 @@ fun TotchNavHost(container: AppContainer, modifier: Modifier = Modifier) {
                     onPickAction = { navController.navigate(ActionPickerDestination(it.name)) },
                 )
             }
-            composable<SettingsDestination> { SettingsRoute(container, onBack = back) }
+            composable<NotchDestination> { NotchSettingsRoute(container, onOpenSettings = openSettings) }
+            composable<AppSettingsDestination> { AppSettingsRoute(container, onBack = back) }
             composable<ActionPickerDestination> { entry ->
                 val gesture = Gesture.valueOf(entry.toRoute<ActionPickerDestination>().gesture)
                 ActionPickerRoute(container, gesture, onBack = back)

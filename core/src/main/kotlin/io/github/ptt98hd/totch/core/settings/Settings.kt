@@ -23,9 +23,14 @@ enum class AppLanguage(val tag: String?) {
     @SerialName("vi") VIETNAMESE("vi"),
 }
 
-/** Manual notch region override in dp (converted to px by the app). */
+/** Manual notch region override in dp (converted to px by the app); [topDp] is the vertical position (FR-R6). */
 @Serializable
-data class ManualRegionDp(val centerXFraction: Float = 0.5f, val widthDp: Int = 80, val heightDp: Int = 32)
+data class ManualRegionDp(
+    val centerXFraction: Float = 0.5f,
+    val widthDp: Int = 80,
+    val heightDp: Int = 32,
+    val topDp: Int = 0,
+)
 
 /** Default bindings per FR-S2; gestures added in v1.1 default to None. */
 val DefaultBindings: Map<Gesture, Action> = mapOf(
@@ -83,6 +88,7 @@ data class Settings(
                 centerXFraction = if (centerXFraction.isNaN()) 0.5f else centerXFraction.coerceIn(0f, 1f),
                 widthDp = widthDp.coerceIn(8, 400),
                 heightDp = heightDp.coerceIn(8, 100),
+                topDp = topDp.coerceIn(0, 100),
             )
         },
         repeatOnHold = repeatOnHold intersect HoldGestures,
@@ -109,9 +115,3 @@ fun Settings.toGestureConfig(density: Float): GestureConfig {
     )
 }
 
-/** FR-S5: every preference back to default; the switch, the mode and the gestures are kept. */
-fun Settings.withDefaultPreferences(): Settings =
-    Settings(enabled = enabled, mode = mode, bindings = bindings, repeatOnHold = repeatOnHold)
-
-/** FR-S5: default bindings and no repeat; everything else is kept. */
-fun Settings.withDefaultGestures(): Settings = copy(bindings = DefaultBindings, repeatOnHold = emptySet())

@@ -60,4 +60,14 @@ class NotchRegionResolverTest {
         assertEquals(Rect(0, 0, 100, 60), resolve(manual = ManualRegion(-1f, 200, 60), width = 1000))
         assertEquals(Rect(900, 0, 1000, 60), resolve(manual = ManualRegion(3f, 200, 60), width = 1000))
     }
+
+    @Test fun `NR-10 manual vertical position offsets the region`() {
+        assertEquals(Rect(400, 40, 600, 100), resolve(manual = ManualRegion(0.5f, 200, 60, topPx = 40), width = 1000))
+    }
+
+    @Test fun `NR-11 padding also grows the top of an offset region, clamped to 0`() {
+        val manual = ManualRegion(0.5f, 200, 60, topPx = 40)
+        assertEquals(Rect(390, 30, 610, 110), resolve(manual = manual, padding = 10, width = 1000))
+        assertEquals(Rect(350, 0, 650, 150), resolve(manual = manual, padding = 50, width = 1000))
+    }
 }

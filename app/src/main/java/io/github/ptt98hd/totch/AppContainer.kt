@@ -1,6 +1,7 @@
 package io.github.ptt98hd.totch
 
 import io.github.ptt98hd.totch.core.model.Rect
+import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -82,4 +83,6 @@ interface TouchArea {
     val region: StateFlow<Rect?>
     /** Region the given (possibly unsaved draft) settings would produce on the current display. */
     fun regionFor(settings: Settings): Rect?
+    /** The automatically detected region in dp, shown while no manual region is set (FR-R5); null when rotated. */
+    val detectedRegion: StateFlow<ManualRegionDp?>
 }

@@ -1,0 +1,5 @@
+* Tab Notch mới: độ nhạy, vị trí, kích thước và phản hồi ở cùng một chỗ.
+* Vùng chạm chỉnh được vị trí dọc; slider vị trí và kích thước luôn hiển thị, bắt đầu từ notch tự phát hiện.
+* Cài đặt ứng dụng (giao diện, khởi động cùng máy, giới thiệu) mở từ icon Settings bên phải top bar.
+* Chọn chủ đề bằng dialog như ngôn ngữ.
+* Reset gọn hơn: chỉ slider có nút reset; bỏ reset tổng.

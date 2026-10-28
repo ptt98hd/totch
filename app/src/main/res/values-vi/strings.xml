@@ -5,6 +5,7 @@
     <!-- Navigation -->
     <string name="nav_home">Trang chủ</string>
     <string name="nav_gestures">Cử chỉ</string>
+    <string name="nav_notch">Notch</string>
     <string name="nav_settings">Cài đặt</string>
     <string name="nav_back">Quay lại</string>
 
@@ -61,9 +62,6 @@
     <string name="group_swipe_hold">Vuốt và giữ</string>
     <string name="gesture_unavailable_shizuku">Không khả dụng ở chế độ Shizuku</string>
     <string name="repeat_cd">Lặp lại khi giữ</string>
-    <string name="reset_gestures_cd">Khôi phục cử chỉ</string>
-    <string name="reset_gestures_title">Khôi phục cử chỉ?</string>
-    <string name="reset_gestures_message">Mọi cử chỉ trở về hành động mặc định và tắt lặp lại. Cài đặt được giữ nguyên.</string>
     <string name="action_none">Không làm gì</string>
     <string name="action_back">Quay lại</string>
     <string name="action_home">Màn hình chính</string>
@@ -113,15 +111,12 @@
     <string name="unit_percent">%1$d%%</string>
     <string name="section_feedback">Phản hồi</string>
     <string name="setting_haptics">Rung phản hồi</string>
-    <string name="section_touch_area">Vùng chạm</string>
-    <string name="setting_custom_area">Tùy chỉnh vùng chạm</string>
+    <string name="section_position">Vị trí</string>
+    <string name="section_size">Kích thước</string>
     <string name="setting_area_x">Vị trí ngang</string>
+    <string name="setting_area_y">Vị trí dọc</string>
     <string name="setting_area_width">Chiều rộng</string>
     <string name="setting_area_height">Chiều cao</string>
-    <string name="reset_title">Khôi phục cài đặt?</string>
-    <string name="reset_message">Độ nhạy, vùng chạm, phản hồi, giao diện và cài đặt hệ thống sẽ trở về mặc định. Cử chỉ, công tắc bật/tắt và chế độ nhận diện được giữ nguyên.</string>
-    <string name="reset_confirm">Khôi phục</string>
-    <string name="reset_settings_cd">Khôi phục cài đặt</string>
     <string name="reset_item_cd">Khôi phục mặc định</string>
     <string name="section_appearance">Giao diện</string>
     <string name="setting_theme">Chủ đề</string>

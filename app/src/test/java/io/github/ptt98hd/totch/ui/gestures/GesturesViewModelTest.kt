@@ -71,28 +71,6 @@ class GesturesViewModelTest {
     }
 
     @Test
-    fun `UI-16 reset gestures asks first and keeps other settings`() = runTest {
-        val custom = Settings(
-            doubleTapMs = 200,
-            bindings = DefaultBindings + (Gesture.TAP to Action.Home),
-            repeatOnHold = setOf(Gesture.LONG_PRESS),
-        )
-        val repo = FakeSettingsRepository(custom)
-        val vm = GesturesViewModel(repo, FakeInstalledApps())
-        vm.state.test {
-            vm.requestResetGestures()
-            assertTrue(expectMostRecentItem().confirmReset)
-            vm.cancelResetGestures()
-            assertFalse(expectMostRecentItem().confirmReset)
-            assertEquals(custom, repo.current)
-            vm.requestResetGestures()
-            vm.confirmResetGestures()
-            assertFalse(expectMostRecentItem().confirmReset)
-        }
-        assertEquals(custom.copy(bindings = DefaultBindings, repeatOnHold = emptySet()), repo.current)
-    }
-
-    @Test
     fun `UI-12 app label for LaunchApp and LaunchShortcut, null when not installed`() = runTest {
         val repo = FakeSettingsRepository(
             Settings(

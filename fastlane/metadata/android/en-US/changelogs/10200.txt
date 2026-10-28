@@ -1,0 +1,5 @@
+* New Notch tab: sensitivity, position, size and feedback in one place.
+* Touch area can now be moved vertically; position and size sliders are always shown, starting from the detected notch.
+* App settings (appearance, start on boot, about) open from the Settings icon on the right of the top bar.
+* Theme is picked from a dialog, like the language.
+* Simpler reset: only sliders keep a reset button; global resets removed.
