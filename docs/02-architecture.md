@@ -240,7 +240,7 @@ duy nhất trên `Dispatchers.Default` → không polling (NFR-3).
 ## 7. Stack & phiên bản
 | Thành phần | Phiên bản |
 |---|---|
-| JDK | Temurin 17 (qua `mise.toml`) |
+| JDK | Temurin 21 (qua `mise.toml`, cùng bản chính với build server F-Droid); bytecode Java 17 |
 | Gradle / AGP | wrapper 9.8.2 / AGP 9.4.1 (Kotlin tích hợp sẵn của AGP 9) · compileSdk 37 |
 | Kotlin | 2.4.21, kotlinx-serialization 1.12, coroutines 1.11 |
 | UI | Compose BOM mới nhất, Material 3, Navigation Compose |

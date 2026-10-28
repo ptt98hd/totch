@@ -8,7 +8,7 @@
 
 | Mục | Giá trị |
 |---|---|
-| Phiên bản app | 1.0.1 (10001) |
+| Phiên bản app | 1.0.2 (10002) |
 | Máy / ROM / Android | |
 | Kiểu notch (giọt nước / đục lỗ giữa / đục lỗ góc / không có) | |
 | Phiên bản Shizuku | |

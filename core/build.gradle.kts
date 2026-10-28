@@ -3,8 +3,17 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// No jvmToolchain: build with whatever JDK runs Gradle (F-Droid's buildserver ships only OpenJDK 21),
+// while keeping Java 17 bytecode like :app.
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
 kotlin {
-    jvmToolchain(17)
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
 }
 
 dependencies {

@@ -50,7 +50,9 @@ Các điểm đã xử lý để build tái lập (đã kiểm chứng bằng `f
   git worktree cho ra `NO_VALID_GIT_FOUND` → khác byte.
 - Ký với `apksigner sign --alignment-preserved --v4-signing-enabled false`: mặc định apksigner căn chỉnh lại entry
   → nội dung khác bản unsigned của F-Droid.
-- Gradle wrapper ghim `distributionSha256Sum`; JDK 17 (mise) trùng với build server F-Droid.
+- Gradle wrapper ghim `distributionSha256Sum`; JDK 21 (mise, `mise.toml`) cùng phiên bản chính với build server F-Droid
+  (`buildserver-trixie`: Debian OpenJDK 21). Không dùng `jvmToolchain(...)`: server chỉ có JDK 21, toolchain 17 sẽ làm build
+  lỗi (bài học từ MR đầu tiên, bản 1.0.1).
 
 Kiểm tra tái lập cục bộ (tùy chọn): `fdroid build -v -l io.github.ptt98hd.totch` trong một bản clone fdroiddata,
 kết quả phải có dòng `...successfully verified`. Lưu ý: `apksigcopier` lỗi `Unsupported compresslevel` với
@@ -81,7 +83,7 @@ Python 3.14 → dùng Python 3.12 (`mise install python@3.12`).
 - **Shizuku:** thư viện `dev.rikka.shizuku:api/provider` là Apache-2.0, có trên Maven Central → tương thích F-Droid; app Shizuku cũng có trên F-Droid. Không cần anti-feature `NonFreeDep`. Nêu trong MR rằng Shizuku là tùy chọn.
 - **Notification access** (tùy chọn, cho media): `MediaListenerService` không override `onNotificationPosted`, chỉ dùng `getActiveSessions`. Đã nêu trong `full_description.txt`.
 - Không có `INTERNET`, không tracker → không khai báo `AntiFeatures` (`fdroid lint` không chấp nhận danh sách rỗng `[]`). Trước khi gửi, kiểm tra không có dependency Google Play Services / Firebase lọt vào (`./gradlew :app:dependencies`).
-- Build server F-Droid đã có JDK 17 nên metadata không cần khối `sudo`. Nếu sau này cần JDK khác, thêm:
+- Build server F-Droid (`buildserver-trixie`) có sẵn OpenJDK 21 nên metadata không cần khối `sudo`. Nếu sau này cần JDK khác, thêm:
   ```yaml
       sudo:
         - apt-get update

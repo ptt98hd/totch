@@ -1,0 +1,3 @@
+* Sửa lỗi build trên máy chủ F-Droid (JDK 21). Tính năng giống 1.0.1:
+* Sửa lỗi: cử chỉ media không hoạt động ở chế độ Trợ năng (khuyến nghị cấp quyền truy cập thông báo).
+* Icon ứng dụng động đổi màu theo hình nền (Material You), hỗ trợ themed icon.

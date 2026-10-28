@@ -37,7 +37,7 @@ Optional **notification access** is recommended when media actions are bound: To
 
 ## Building
 
-Requires JDK 17.
+Requires JDK 21 (same as the F-Droid build server).
 
 ```sh
 ./gradlew assembleRelease   # unsigned release APK in app/build/outputs/apk/release/
