@@ -67,6 +67,25 @@ class NotchAccessibilityService : AccessibilityService() {
         startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
+    /** Opens a static app shortcut from its stored intent URI, without selector or URI grants (FR-A12). */
+    fun launchShortcut(intentUri: String) {
+        val intent = Intent.parseUri(intentUri, Intent.URI_INTENT_SCHEME).apply {
+            selector = null
+            removeFlags(URI_GRANT_FLAGS)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
+    }
+
+    /** Opens the default assistant (FR-A11); ACTION_ASSIST first, voice command as fallback. */
+    fun openAssistant() {
+        val intent = listOf(Intent.ACTION_ASSIST, Intent.ACTION_VOICE_COMMAND)
+            .map { Intent(it).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+            .firstOrNull { it.resolveActivity(packageManager) != null }
+            ?: error("no assistant")
+        startActivity(intent)
+    }
+
     private fun updateOverlay(rect: Rect?) {
         platform.engine.reset()
         if (rect == null) {
@@ -136,5 +155,7 @@ class NotchAccessibilityService : AccessibilityService() {
 
     private companion object {
         const val TAG = "TotchA11y"
+        const val URI_GRANT_FLAGS = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
     }
 }

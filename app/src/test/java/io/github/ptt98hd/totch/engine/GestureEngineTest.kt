@@ -7,6 +7,7 @@ import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.model.TouchAction
 import io.github.ptt98hd.totch.core.model.TouchEvent
 import io.github.ptt98hd.totch.core.settings.DefaultBindings
+import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.TestScope
@@ -173,5 +174,37 @@ class GestureEngineTest {
         e.onTouch(up(40, y = 200f))
         runCurrent()
         assertEquals(listOf(Action.Home, Action.Notifications), dispatched)
+    }
+
+    private fun move(t: Long, x: Float, y: Float = 40f) = TouchEvent(TouchAction.MOVE, x, y, t)
+
+    @Test
+    fun `EN-9 swipe down is not dispatched in Shizuku mode`() = runTest {
+        val e = engine(Settings(enabled = true, mode = DetectionMode.SHIZUKU).bind(Gesture.SWIPE_DOWN to Action.Notifications))
+        e.onTouch(down(0, y = 10f))
+        e.onTouch(move(50, 500f, 200f))
+        e.onTouch(up(100, 500f, 200f))
+        advanceTimeBy(1000)
+        runCurrent()
+        assertTrue(dispatched.isEmpty())
+        assertEquals(0, haptics)
+    }
+
+    @Test
+    fun `EN-10 swipe right and hold repeats until release`() = runTest {
+        val e = engine(
+            Settings(enabled = true, repeatOnHold = setOf(Gesture.SWIPE_RIGHT_HOLD), repeatIntervalMs = 300)
+                .bind(Gesture.SWIPE_RIGHT_HOLD to Action.VolumeUp),
+        )
+        e.onTouch(down(0, x = 420f))
+        e.onTouch(move(50, 560f))
+        advanceTimeBy(50 + 500 + 2 * 300)
+        runCurrent()
+        assertEquals(List<Action>(3) { Action.VolumeUp }, dispatched)
+        assertEquals(3, haptics)
+        e.onTouch(up(testScheduler.currentTime, 560f))
+        advanceTimeBy(2000)
+        runCurrent()
+        assertEquals(3, dispatched.size)
     }
 }

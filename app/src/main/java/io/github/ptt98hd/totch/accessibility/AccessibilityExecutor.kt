@@ -7,22 +7,26 @@ import io.github.ptt98hd.totch.core.model.Action
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** System actions via `performGlobalAction` and app launch from the service (actions spec §4). */
+/** System actions via `performGlobalAction`; apps, shortcuts and the assistant are started from the service (actions spec §4). */
 class AccessibilityExecutor(private val bridge: AccessibilityBridge) : ActionExecutor {
     override val capability = Capability.ACCESSIBILITY
 
     override fun isAvailable(): Boolean = bridge.service.value != null
 
-    override fun supports(action: Action): Boolean = action is Action.LaunchApp || globalAction(action) != null
+    override fun supports(action: Action): Boolean =
+        action is Action.LaunchApp || action is Action.LaunchShortcut || action == Action.Assistant || globalAction(action) != null
 
     override suspend fun execute(action: Action): Result<Unit> = withContext(Dispatchers.Main) {
         runCatching {
             val service = bridge.service.value ?: error("unavailable")
-            if (action is Action.LaunchApp) {
-                service.launchApp(action.packageName)
-            } else {
-                val global = globalAction(action) ?: error("unsupported")
-                check(service.performGlobalAction(global)) { "rejected" }
+            when (action) {
+                is Action.LaunchApp -> service.launchApp(action.packageName)
+                is Action.LaunchShortcut -> service.launchShortcut(action.intentUri)
+                Action.Assistant -> service.openAssistant()
+                else -> {
+                    val global = globalAction(action) ?: error("unsupported")
+                    check(service.performGlobalAction(global)) { "rejected" }
+                }
             }
         }
     }
