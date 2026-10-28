@@ -10,14 +10,17 @@ AutoName: Totch
 
 RepoType: git
 Repo: https://github.com/ptt98hd/totch.git
+Binaries: https://github.com/ptt98hd/totch/releases/download/v%v/totch-%v.apk
 
 Builds:
   - versionName: 1.0.1
     versionCode: 10001
-    commit: v1.0.1
+    commit: fe5558af47fb70d8772ec268a8745b04edf77005
     subdir: app
     gradle:
       - yes
+
+AllowedAPKSigningKeys: 90f255632ccd15e18244b114256e4a2d79e5ae406fa4df06cd2a2ef3ebd5b8ae
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
