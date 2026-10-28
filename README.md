@@ -9,10 +9,10 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers, no `INTERNET` perm
 
 ## Features
 
-- **9 gestures** on the notch area: tap, double tap, long press, swipe down / left / right, and swipe down / left / right **& hold**. Hold gestures can repeat their action until you lift your finger (great for volume).
-- **Actions** (one per gesture, or "Do nothing"):
+- **9 gestures** on the notch area: tap, double tap, long press, swipe down / left / right, and swipe down / left / right **& hold**. Each gesture has its own on/off switch that keeps the assigned action.
+- **Actions** (one per gesture):
   - System: Back, Home, Recents, Lock screen, Screenshot, Notification shade, Quick Settings, Assistant
-  - Flashlight toggle; media Play/Pause, Next, Previous; Volume up/down
+  - Flashlight toggle; media Play/Pause, Next, Previous; Volume up/down; show the volume panel
   - Launch any installed app, or one of its static app shortcuts
 - Adjustable sensitivity, manual notch region shown live on screen, haptic feedback, start on boot.
 - Material 3 with dynamic color; light / dark / AMOLED black theme; English and Vietnamese (or follow the system).

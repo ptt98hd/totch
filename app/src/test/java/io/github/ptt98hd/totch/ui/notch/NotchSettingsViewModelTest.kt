@@ -20,7 +20,7 @@ class NotchSettingsViewModelTest {
     private val auto = ManualRegionDp(0.5f, widthDp = 40, heightDp = 40, topDp = 0)
     private val area = ManualRegionDp(0.2f, widthDp = 50, heightDp = 20, topDp = 10)
     private val custom = Settings(
-        doubleTapMs = 200, longPressMs = 900, swipeMinDistanceDp = 100, repeatIntervalMs = 500,
+        doubleTapMs = 200, longPressMs = 900, swipeMinDistanceDp = 100,
         paddingDp = 0, manualRegion = area, haptics = false,
     )
 
@@ -29,7 +29,7 @@ class NotchSettingsViewModelTest {
     @Test
     fun `UI-30 notch page has exactly the sliders`() {
         assertEquals(
-            listOf("DOUBLE_TAP", "LONG_PRESS", "SWIPE_DISTANCE", "REPEAT_INTERVAL", "AREA_X", "AREA_Y", "AREA_WIDTH", "AREA_HEIGHT", "PADDING"),
+            listOf("DOUBLE_TAP", "LONG_PRESS", "SWIPE_DISTANCE", "AREA_X", "AREA_Y", "AREA_WIDTH", "AREA_HEIGHT", "PADDING"),
             NotchSetting.entries.map { it.name },
         )
     }
@@ -94,14 +94,12 @@ class NotchSettingsViewModelTest {
         vm.setDoubleTapMs(9999)
         vm.setLongPressMs(800)
         vm.setSwipeDistanceDp(60)
-        vm.setRepeatIntervalMs(450)
         vm.setPaddingDp(12)
         vm.setHaptics(false)
         with(repo.current) {
             assertEquals(600, doubleTapMs)
             assertEquals(800, longPressMs)
             assertEquals(60, swipeMinDistanceDp)
-            assertEquals(450, repeatIntervalMs)
             assertEquals(12, paddingDp)
             assertFalse(haptics)
         }

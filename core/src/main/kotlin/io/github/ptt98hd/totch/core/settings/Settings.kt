@@ -45,7 +45,7 @@ val DefaultBindings: Map<Gesture, Action> = mapOf(
     Gesture.SWIPE_RIGHT_HOLD to Action.None,
 )
 
-/** Gestures that keep the finger down after recognition and may repeat (FR-G9). */
+/** Gestures that keep the finger down after recognition; they fire once (FR-G11). */
 val HoldGestures: Set<Gesture> =
     setOf(Gesture.LONG_PRESS, Gesture.SWIPE_DOWN_HOLD, Gesture.SWIPE_LEFT_HOLD, Gesture.SWIPE_RIGHT_HOLD)
 
@@ -69,12 +69,12 @@ data class Settings(
     val paddingDp: Int = 8,
     val manualRegion: ManualRegionDp? = null,
     val haptics: Boolean = true,
-    val repeatOnHold: Set<Gesture> = emptySet(),
-    val repeatIntervalMs: Long = 300,
     val theme: ThemeMode = ThemeMode.SYSTEM,
     val amoledBlack: Boolean = false,
     val language: AppLanguage = AppLanguage.SYSTEM,
     val startOnBoot: Boolean = true,
+    /** Gestures switched off by the user; their binding is kept for when they are switched on again (FR-G12). */
+    val disabledGestures: Set<Gesture> = emptySet(),
 ) {
     /** Clamps values to FR-S4 limits and ensures every [Gesture] has a binding. */
     fun sanitized(): Settings = copy(
@@ -91,15 +91,24 @@ data class Settings(
                 topDp = topDp.coerceIn(0, 100),
             )
         },
-        repeatOnHold = repeatOnHold intersect HoldGestures,
-        repeatIntervalMs = repeatIntervalMs.coerceIn(100, 1000),
     )
 }
 
 fun Settings.actionFor(g: Gesture): Action = bindings[g] ?: Action.None
 
-/** The action that actually runs for [g] in the current mode (ST-12). */
-fun Settings.effectiveAction(g: Gesture): Action = if (g.isAvailableIn(mode)) actionFor(g) else Action.None
+/** The action that actually runs for [g] in the current mode (ST-12, ST-19). */
+fun Settings.effectiveAction(g: Gesture): Action =
+    if (g.isAvailableIn(mode) && g !in disabledGestures) actionFor(g) else Action.None
+
+/** State of the gesture's switch: on and bound to an action (ST-20). */
+fun Settings.isGestureOn(g: Gesture): Boolean = g !in disabledGestures && actionFor(g) != Action.None
+
+fun Settings.withGestureOn(g: Gesture, on: Boolean): Settings =
+    copy(disabledGestures = if (on) disabledGestures - g else disabledGestures + g)
+
+/** Binds [action] to [g] and switches it on. */
+fun Settings.withBinding(g: Gesture, action: Action): Settings =
+    copy(bindings = bindings + (g to action), disabledGestures = disabledGestures - g)
 
 fun Settings.toGestureConfig(density: Float): GestureConfig {
     val bound = Gesture.entries.filterTo(mutableSetOf()) { effectiveAction(it) != Action.None }
@@ -110,8 +119,6 @@ fun Settings.toGestureConfig(density: Float): GestureConfig {
         swipeMinDistancePx = swipeMinDistanceDp * density,
         doubleTapEnabled = Gesture.DOUBLE_TAP in bound,
         holdSwipes = SwipeHoldGestures intersect bound,
-        repeating = repeatOnHold intersect bound,
-        repeatIntervalMs = repeatIntervalMs,
     )
 }
 

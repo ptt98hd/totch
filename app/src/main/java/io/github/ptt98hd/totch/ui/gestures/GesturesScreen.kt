@@ -4,29 +4,31 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Repeat
-import androidx.compose.material.icons.outlined.RepeatOn
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,7 +39,6 @@ import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DefaultBindings
 import io.github.ptt98hd.totch.core.settings.DetectionMode
-import io.github.ptt98hd.totch.core.settings.HoldGestures
 import io.github.ptt98hd.totch.core.settings.isAvailableIn
 import io.github.ptt98hd.totch.ui.common.ActionCatalog
 import io.github.ptt98hd.totch.ui.common.Gutter
@@ -48,18 +49,20 @@ import io.github.ptt98hd.totch.ui.common.actionDisplayName
 import io.github.ptt98hd.totch.ui.common.icon
 import io.github.ptt98hd.totch.ui.common.labelRes
 import io.github.ptt98hd.totch.ui.common.withGutters
+import io.github.ptt98hd.totch.ui.picker.ActionPickerSheet
 import io.github.ptt98hd.totch.ui.theme.TotchTheme
 
 @Composable
-fun GesturesRoute(container: AppContainer, onOpenSettings: () -> Unit, onPickAction: (Gesture) -> Unit) {
+fun GesturesRoute(container: AppContainer, onOpenSettings: () -> Unit) {
     val vm: GesturesViewModel = viewModel(factory = GesturesViewModel.factory(container))
     val state by vm.state.collectAsStateWithLifecycle()
     GesturesScreen(
         state = state,
         onOpenSettings = onOpenSettings,
-        onGestureClick = onPickAction,
-        onRepeatChange = vm::setRepeat,
+        onGestureClick = vm::openPicker,
+        onSwitchChange = vm::setOn,
     )
+    state.picking?.let { gesture -> ActionPickerSheet(container, gesture, onDismiss = vm::closePicker) }
 }
 
 @get:StringRes
@@ -76,7 +79,7 @@ fun GesturesScreen(
     state: GesturesUiState,
     onOpenSettings: () -> Unit,
     onGestureClick: (Gesture) -> Unit,
-    onRepeatChange: (Gesture, Boolean) -> Unit,
+    onSwitchChange: (Gesture, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -97,7 +100,7 @@ fun GesturesScreen(
                                 row = row,
                                 mode = state.mode,
                                 onClick = { onGestureClick(row.gesture) },
-                                onRepeatChange = { onRepeatChange(row.gesture, it) },
+                                onSwitchChange = { onSwitchChange(row.gesture, it) },
                             )
                         }
                     }
@@ -107,57 +110,51 @@ fun GesturesScreen(
     }
 }
 
+/** UI-16: a gesture row with its switch; the action can only be picked while the gesture is on. */
 @Composable
-private fun GestureListItem(row: GestureRow, mode: DetectionMode, onClick: () -> Unit, onRepeatChange: (Boolean) -> Unit) {
-    val actionName = actionDisplayName(row.action, row.appLabel)
+private fun GestureListItem(row: GestureRow, mode: DetectionMode, onClick: () -> Unit, onSwitchChange: (Boolean) -> Unit) {
+    val bound = row.action != Action.None
+    val actionName = if (bound) actionDisplayName(row.action, row.appLabel) else null
     val packageAction = row.action is Action.LaunchApp || row.action is Action.LaunchShortcut
     val notInstalled = packageAction && row.appLabel == null
     val available = ActionCatalog.isAvailable(row.action, mode)
     val supporting = when {
         !row.enabled -> stringResource(R.string.gesture_unavailable_shizuku)
+        actionName == null -> null
         notInstalled -> "$actionName · ${stringResource(R.string.app_not_installed)}"
         else -> actionName
     }
+    val colors = MaterialTheme.colorScheme
+    val supportingColor = when {
+        notInstalled && row.enabled && row.on -> colors.error
+        row.on || !row.enabled -> colors.onSurfaceVariant
+        else -> colors.onSurfaceVariant.copy(alpha = 0.6f) // remembered action of a switched-off gesture
+    }
     ListItem(
         modifier = Modifier
-            .clickable(enabled = row.enabled, onClick = onClick)
+            .clickable(enabled = row.enabled && row.on, onClick = onClick)
             .alpha(if (row.enabled) 1f else 0.5f),
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        colors = ListItemDefaults.colors(containerColor = colors.surfaceContainer),
         leadingContent = { TonalIcon(row.gesture.icon) },
         headlineContent = { Text(stringResource(row.gesture.labelRes)) },
-        supportingContent = {
-            Text(
-                supporting,
-                color = if (notInstalled && row.enabled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
-        trailingContent = when {
-            !row.enabled -> null
-            row.repeatable -> {
-                {
-                    IconToggleButton(
-                        checked = row.repeat,
-                        onCheckedChange = onRepeatChange,
-                        enabled = row.action != Action.None,
-                    ) {
-                        Icon(
-                            if (row.repeat) Icons.Outlined.RepeatOn else Icons.Outlined.Repeat,
-                            contentDescription = stringResource(R.string.repeat_cd),
-                            tint = if (row.repeat) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-            !available -> {
-                {
+        supportingContent = supporting?.let { { Text(it, color = supportingColor) } },
+        trailingContent = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (row.enabled && row.on && !available) {
                     Icon(
                         Icons.Outlined.WarningAmber,
                         contentDescription = stringResource(R.string.action_unavailable_in_mode),
-                        tint = MaterialTheme.colorScheme.error,
+                        tint = colors.error,
                     )
                 }
+                val switchDescription = stringResource(R.string.gesture_switch_cd, stringResource(row.gesture.labelRes))
+                Switch(
+                    checked = row.on,
+                    onCheckedChange = onSwitchChange,
+                    enabled = row.enabled,
+                    modifier = Modifier.semantics { contentDescription = switchDescription },
+                )
             }
-            else -> null
         },
     )
 }
@@ -176,7 +173,7 @@ private fun GesturesScreenPreview() {
                             val action = if (g == Gesture.TAP) Action.LaunchApp("org.example.camera") else DefaultBindings.getValue(g)
                             GestureRow(
                                 g, action, appLabel = if (g == Gesture.TAP) "Camera" else null,
-                                enabled = g.isAvailableIn(mode), repeatable = g in HoldGestures, repeat = g == Gesture.LONG_PRESS,
+                                enabled = g.isAvailableIn(mode), on = action != Action.None && g != Gesture.SWIPE_LEFT,
                             )
                         },
                     )
@@ -185,7 +182,7 @@ private fun GesturesScreenPreview() {
             ),
             onOpenSettings = {},
             onGestureClick = {},
-            onRepeatChange = { _, _ -> },
+            onSwitchChange = { _, _ -> },
         )
     }
 }

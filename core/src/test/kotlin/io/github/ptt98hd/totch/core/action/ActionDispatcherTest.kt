@@ -78,7 +78,7 @@ class ActionDispatcherTest {
         system.forEach { assertEquals(setOf(Capability.ACCESSIBILITY, Capability.SHIZUKU), ActionRequirements.of(it)) }
         val local = listOf(
             Action.ToggleTorch, Action.MediaPlayPause, Action.MediaNext,
-            Action.MediaPrevious, Action.VolumeUp, Action.VolumeDown,
+            Action.MediaPrevious, Action.VolumeUp, Action.VolumeDown, Action.VolumePanel,
         )
         local.forEach { assertEquals(setOf(Capability.LOCAL), ActionRequirements.of(it)) }
     }
@@ -87,5 +87,9 @@ class ActionDispatcherTest {
         val system = setOf(Capability.ACCESSIBILITY, Capability.SHIZUKU)
         assertEquals(system, ActionRequirements.of(Action.Assistant))
         assertEquals(system, ActionRequirements.of(Action.LaunchShortcut("com.a", "id", "L", "intent:#Intent;end")))
+    }
+
+    @Test fun `AD-8 volume panel runs locally`() {
+        assertEquals(setOf(Capability.LOCAL), ActionRequirements.of(Action.VolumePanel))
     }
 }

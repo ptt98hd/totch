@@ -5,7 +5,7 @@
     <!-- Navigation -->
     <string name="nav_home">Trang chủ</string>
     <string name="nav_gestures">Cử chỉ</string>
-    <string name="nav_notch">Notch</string>
+    <string name="nav_preferences">Tuỳ chỉnh</string>
     <string name="nav_settings">Cài đặt</string>
     <string name="nav_back">Quay lại</string>
 
@@ -61,7 +61,7 @@
     <string name="group_swipe">Vuốt</string>
     <string name="group_swipe_hold">Vuốt và giữ</string>
     <string name="gesture_unavailable_shizuku">Không khả dụng ở chế độ Shizuku</string>
-    <string name="repeat_cd">Lặp lại khi giữ</string>
+    <string name="gesture_switch_cd">Bật hoặc tắt %1$s</string>
     <string name="action_none">Không làm gì</string>
     <string name="action_back">Quay lại</string>
     <string name="action_home">Màn hình chính</string>
@@ -76,6 +76,7 @@
     <string name="action_previous">Bài trước</string>
     <string name="action_volume_up">Tăng âm lượng</string>
     <string name="action_volume_down">Giảm âm lượng</string>
+    <string name="action_volume_panel">Bảng âm lượng</string>
     <string name="action_open_app">Mở ứng dụng…</string>
     <string name="action_launch_app">Mở %1$s</string>
     <string name="action_assistant">Gọi trợ lý</string>
@@ -87,11 +88,13 @@
     <string name="action_unavailable_in_mode">Không khả dụng ở chế độ này</string>
 
     <!-- Action picker -->
+    <string name="action_search">Tìm hành động</string>
+    <string name="action_search_empty">Không có hành động nào khớp “%1$s”</string>
     <string name="app_picker_search">Tìm ứng dụng</string>
     <string name="app_picker_clear">Xóa tìm kiếm</string>
     <string name="app_picker_empty">Không có ứng dụng nào khớp “%1$s”</string>
     <string name="app_picker_none">Không tìm thấy ứng dụng</string>
-    <string name="tab_system">Hệ thống &amp; media</string>
+    <string name="tab_system">Hệ thống</string>
     <string name="tab_apps">Ứng dụng</string>
     <string name="tab_shortcuts">Shortcut</string>
     <string name="shortcut_search">Tìm shortcut</string>
@@ -104,7 +107,6 @@
     <string name="setting_double_tap">Khoảng chạm hai lần</string>
     <string name="setting_long_press">Thời gian nhấn giữ</string>
     <string name="setting_swipe">Khoảng cách vuốt</string>
-    <string name="setting_repeat_interval">Khoảng lặp lại</string>
     <string name="setting_padding">Mở rộng vùng chạm</string>
     <string name="unit_ms">%1$d ms</string>
     <string name="unit_dp">%1$d dp</string>

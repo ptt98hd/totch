@@ -7,7 +7,7 @@
 <li>Back, Home, Recents, Khóa màn hình, Chụp màn hình</li>
 <li>Mở thanh thông báo hoặc Quick Settings</li>
 <li>Bật/tắt đèn pin</li>
-<li>Phát/Tạm dừng, Bài tiếp, Bài trước; Tăng/Giảm âm lượng</li>
+<li>Phát/Tạm dừng, Bài tiếp, Bài trước; Tăng/Giảm âm lượng; bảng âm lượng</li>
 <li>Mở một ứng dụng bất kỳ đã cài</li>
 </ul>
 

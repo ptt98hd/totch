@@ -120,6 +120,18 @@ fun ResetButton(enabled: Boolean, onClick: () -> Unit) {
     }
 }
 
+/** UI-35: [value] rounded to a multiple of [step] counted from the start of [range], kept inside [range]. */
+fun snapToStep(value: Float, range: ClosedFloatingPointRange<Float>, step: Float): Float =
+    (range.start + ((value - range.start) / step).roundToInt() * step).coerceIn(range)
+
+/** UI-35: tick marks for `Slider(steps)`; scales with more than [MAX_TICKED_STEPS] steps only snap. */
+fun tickCount(range: ClosedFloatingPointRange<Float>, step: Float): Int {
+    val intervals = ((range.endInclusive - range.start) / step).roundToInt()
+    return if (intervals <= MAX_TICKED_STEPS) intervals - 1 else 0
+}
+
+private const val MAX_TICKED_STEPS = 20
+
 /**
  * Slider with a title and a value label; [trailing] (the reset button) sits right of the slider. The value
  * is only saved through [onValueChangeFinished] so the repository is not written on every drag frame;
@@ -155,11 +167,12 @@ fun SliderSetting(
             Slider(
                 value = draft,
                 onValueChange = {
-                    draft = ((it / step).roundToInt() * step).coerceIn(valueRange)
+                    draft = snapToStep(it, valueRange, step)
                     onValueChange(draft)
                 },
                 onValueChangeFinished = { onValueChangeFinished(draft) },
                 valueRange = valueRange,
+                steps = tickCount(valueRange, step),
                 modifier = Modifier.weight(1f),
             )
             trailing?.invoke()

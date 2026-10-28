@@ -20,6 +20,8 @@ sealed interface Action {
     @Serializable @SerialName("previous") data object MediaPrevious : Action
     @Serializable @SerialName("volume_up") data object VolumeUp : Action
     @Serializable @SerialName("volume_down") data object VolumeDown : Action
+    /** Shows the system volume panel without changing the volume (FR-A13). */
+    @Serializable @SerialName("volume_panel") data object VolumePanel : Action
     @Serializable @SerialName("launch_app") data class LaunchApp(val packageName: String) : Action
     @Serializable @SerialName("assistant") data object Assistant : Action
 

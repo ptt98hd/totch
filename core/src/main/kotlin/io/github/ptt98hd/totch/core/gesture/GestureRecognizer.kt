@@ -21,8 +21,8 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
         data class Pressed(val x: Float, val y: Float, val timeMs: Long, val isSecond: Boolean) : State
         /** Swipe candidate from ([x],[y]); the anchor is where the finger last came to rest (spec §4). */
         data class Moved(val x: Float, val y: Float, val anchorX: Float, val anchorY: Float, val anchorTimeMs: Long) : State
-        /** LONG_PRESS or `SWIPE_*_HOLD` emitted; [nextRepeatMs] is set while repeating. */
-        data class Held(val gesture: Gesture, val nextRepeatMs: Long?) : State
+        /** LONG_PRESS or `SWIPE_*_HOLD` emitted once; waits for release (FR-G11). */
+        data object Held : State
         data class WaitingSecondTap(val upTimeMs: Long) : State
     }
 
@@ -46,7 +46,6 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
         is State.Pressed -> s.timeMs + config.longPressMs
         is State.WaitingSecondTap -> s.upTimeMs + config.doubleTapMs
         is State.Moved -> if (holdCandidate(s) != null) s.anchorTimeMs + config.longPressMs else null
-        is State.Held -> s.nextRepeatMs
         else -> null
     }
 
@@ -60,17 +59,13 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
         when (val s = state) {
             is State.Pressed -> {
                 if (s.isSecond) out += Gesture.TAP
-                hold(Gesture.LONG_PRESS, nowMs, out)
+                hold(Gesture.LONG_PRESS, out)
             }
             is State.WaitingSecondTap -> {
                 out += Gesture.TAP
                 state = State.Idle
             }
-            is State.Moved -> hold(holdCandidate(s) ?: return, nowMs, out)
-            is State.Held -> {
-                out += s.gesture
-                state = s.copy(nextRepeatMs = nowMs + config.repeatIntervalMs) // one repeat per tick, no burst
-            }
+            is State.Moved -> hold(holdCandidate(s) ?: return, out)
             else -> Unit
         }
     }
@@ -121,7 +116,7 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
                 state = State.Idle
                 swipe(e.x - s.x, e.y - s.y)?.let { out += it }
             }
-            is State.Held, State.Ignoring -> state = State.Idle
+            State.Held, State.Ignoring -> state = State.Idle
             State.Idle, is State.WaitingSecondTap -> Unit // GR-25
         }
     }
@@ -137,10 +132,9 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
         }
     }
 
-    private fun hold(gesture: Gesture, nowMs: Long, out: MutableList<Gesture>) {
+    private fun hold(gesture: Gesture, out: MutableList<Gesture>) {
         out += gesture
-        val next = if (gesture in config.repeating) nowMs + config.repeatIntervalMs else null
-        state = State.Held(gesture, next)
+        state = State.Held
     }
 
     /** Hold gesture for a finger resting at the anchor, if that direction is bound (spec §4). */

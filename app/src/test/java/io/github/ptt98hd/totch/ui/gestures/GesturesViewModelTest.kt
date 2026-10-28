@@ -6,7 +6,6 @@ import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DefaultBindings
 import io.github.ptt98hd.totch.core.settings.DetectionMode
-import io.github.ptt98hd.totch.core.settings.HoldGestures
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.FakeInstalledApps
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
@@ -55,18 +54,39 @@ class GesturesViewModelTest {
     }
 
     @Test
-    fun `UI-15 only hold gestures are repeatable and setRepeat updates repeatOnHold`() = runTest {
+    fun `UI-16 switching a gesture off keeps its action`() = runTest {
         val repo = FakeSettingsRepository()
         val vm = GesturesViewModel(repo, FakeInstalledApps())
         vm.state.test {
-            val rows = expectMostRecentItem().groups.flatMap { it.rows }
-            assertEquals(HoldGestures, rows.filter { it.repeatable }.map { it.gesture }.toSet())
-            vm.setRepeat(Gesture.SWIPE_RIGHT_HOLD, true)
-            assertEquals(setOf(Gesture.SWIPE_RIGHT_HOLD), repo.current.repeatOnHold)
-            assertTrue(expectMostRecentItem().row(Gesture.SWIPE_RIGHT_HOLD).repeat)
-            vm.setRepeat(Gesture.SWIPE_RIGHT_HOLD, false)
-            assertEquals(emptySet(), repo.current.repeatOnHold)
-            assertFalse(expectMostRecentItem().row(Gesture.SWIPE_RIGHT_HOLD).repeat)
+            val state = expectMostRecentItem()
+            assertTrue(state.row(Gesture.DOUBLE_TAP).on)
+            assertFalse(state.row(Gesture.TAP).on) // bound to None
+            vm.setOn(Gesture.DOUBLE_TAP, false)
+            assertEquals(setOf(Gesture.DOUBLE_TAP), repo.current.disabledGestures)
+            assertEquals(Action.LockScreen, repo.current.bindings[Gesture.DOUBLE_TAP])
+            val off = expectMostRecentItem().row(Gesture.DOUBLE_TAP)
+            assertFalse(off.on)
+            assertEquals(Action.LockScreen, off.action)
+            vm.setOn(Gesture.DOUBLE_TAP, true)
+            assertEquals(emptySet(), repo.current.disabledGestures)
+            assertTrue(expectMostRecentItem().row(Gesture.DOUBLE_TAP).on)
+        }
+    }
+
+    @Test
+    fun `UI-17 switching on an unbound gesture opens the picker instead`() = runTest {
+        val repo = FakeSettingsRepository()
+        val vm = GesturesViewModel(repo, FakeInstalledApps())
+        vm.state.test {
+            vm.openPicker(Gesture.TAP)
+            assertNull(expectMostRecentItem().picking) // switched off: no picker
+            vm.setOn(Gesture.TAP, true)
+            assertEquals(Settings(), repo.current)
+            assertEquals(Gesture.TAP, expectMostRecentItem().picking)
+            vm.closePicker()
+            assertNull(expectMostRecentItem().picking)
+            vm.openPicker(Gesture.DOUBLE_TAP)
+            assertEquals(Gesture.DOUBLE_TAP, expectMostRecentItem().picking)
         }
     }
 

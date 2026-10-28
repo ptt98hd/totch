@@ -1,6 +1,6 @@
 # Spec: Hành động & điều phối (`ActionDispatcher`)
 
-Yêu cầu: FR-A1…FR-A12 · Module: `:core` (logic) + `:app` (executor)
+Yêu cầu: FR-A1…FR-A13 · Module: `:core` (logic) + `:app` (executor)
 
 ## 1. Ma trận khả năng — `ActionRequirements.of(action)`
 
@@ -8,7 +8,7 @@ Yêu cầu: FR-A1…FR-A12 · Module: `:core` (logic) + `:app` (executor)
 |---|---|
 | `None` | ∅ |
 | `Back`, `Home`, `Recents`, `LockScreen`, `Screenshot`, `Notifications`, `QuickSettings`, `LaunchApp`, `Assistant`, `LaunchShortcut` | {ACCESSIBILITY, SHIZUKU} |
-| `ToggleTorch`, `MediaPlayPause`, `MediaNext`, `MediaPrevious`, `VolumeUp`, `VolumeDown` | {LOCAL} |
+| `ToggleTorch`, `MediaPlayPause`, `MediaNext`, `MediaPrevious`, `VolumeUp`, `VolumeDown`, `VolumePanel` | {LOCAL} |
 
 ## 2. Điều phối
 
@@ -29,6 +29,7 @@ Yêu cầu: FR-A1…FR-A12 · Module: `:core` (logic) + `:app` (executor)
 | AD-5 | Executor ném exception → `Failed` với message, không lan exception ra ngoài |
 | AD-6 | Executor `supports()=false` bị bỏ qua |
 | AD-7 | `Assistant`, `LaunchShortcut` có requirements {ACCESSIBILITY, SHIZUKU} |
+| AD-8 | `VolumePanel` có requirements {LOCAL} (v1.3, FR-A13) |
 
 Action mới (v1.1):
 ```kotlin
@@ -36,6 +37,11 @@ Action mới (v1.1):
 @SerialName("launch_shortcut") data class LaunchShortcut(                           // FR-A12
     val packageName: String, val shortcutId: String, val label: String, val intentUri: String) : Action
 ```
+Action mới (v1.3):
+```kotlin
+@SerialName("volume_panel") data object VolumePanel : Action                         // FR-A13
+```
+
 `intentUri` = `Intent.toUri(Intent.URI_INTENT_SCHEME)` của intent cuối trong shortcut tĩnh; `label` lưu lại
 lúc chọn để hiển thị mà không cần đọc lại manifest.
 
@@ -71,7 +77,7 @@ lúc chọn để hiển thị mà không cần đọc lại manifest.
 
 | Executor | Thực thi |
 |---|---|
-| `LocalExecutor` | Đèn pin: `CameraManager.setTorchMode` trên camera có flash, lưu trạng thái qua `TorchCallback`. Media: xem §5. Âm lượng: `adjustStreamVolume(STREAM_MUSIC, ±1, FLAG_SHOW_UI)` |
+| `LocalExecutor` | Đèn pin: `CameraManager.setTorchMode` trên camera có flash, lưu trạng thái qua `TorchCallback`. Media: xem §5. Âm lượng: `adjustStreamVolume(STREAM_MUSIC, ±1, FLAG_SHOW_UI)`. Bảng âm lượng: `adjustStreamVolume(STREAM_MUSIC, ADJUST_SAME, FLAG_SHOW_UI)` (chỉ hiện thanh, không đổi mức) |
 | `AccessibilityExecutor` | `performGlobalAction(GLOBAL_ACTION_BACK/HOME/RECENTS/LOCK_SCREEN/TAKE_SCREENSHOT/NOTIFICATIONS/QUICK_SETTINGS)`; LaunchApp: `startActivity(launchIntent)` từ service; Assistant: `startActivity(ACTION_ASSIST)`, không có thì `ACTION_VOICE_COMMAND`; LaunchShortcut: `Intent.parseUri(intentUri)` (bỏ selector và cờ grant URI) + `FLAG_ACTIVITY_NEW_TASK`. `isAvailable()` = service đang chạy |
 | `ShizukuExecutor` | `ITouchService.exec(ShellCommands…)`. `isAvailable()` = Shizuku binder sống + đã cấp quyền + UserService đã bind |
 
@@ -109,7 +115,7 @@ hoặc không được hỗ trợ trên nhiều máy.
 |---|---|
 | HF-1 | Hiệu ứng: `EFFECT_CLICK` nếu `areAllEffectsSupported` = YES, ngược lại one-shot 30 ms biên độ mặc định |
 | HF-2 | Android 13+: `vibrate(effect, VibrationAttributes.createForUsage(USAGE_HARDWARE_FEEDBACK))` (được phép khi app ở nền, không phụ thuộc công tắc phản hồi chạm); Android 12: `AudioAttributes` `USAGE_ASSISTANCE_SONIFICATION` |
-| HF-3 | Mỗi lần dispatch `Ok` (kể cả lần lặp khi giữ) rung một lần; không có vibrator → bỏ qua, không crash |
+| HF-3 | Mỗi lần dispatch `Ok` rung một lần; không có vibrator → bỏ qua, không crash |
 
 ## 7. Shortcut tĩnh của ứng dụng (FR-A12)
 

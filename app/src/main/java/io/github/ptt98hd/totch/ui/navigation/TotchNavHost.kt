@@ -29,14 +29,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.R
-import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.ui.gestures.GesturesRoute
 import io.github.ptt98hd.totch.ui.home.HomeRoute
 import io.github.ptt98hd.totch.ui.notch.NotchSettingsRoute
-import io.github.ptt98hd.totch.ui.picker.ActionPickerRoute
 import io.github.ptt98hd.totch.ui.settings.AppSettingsRoute
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
@@ -45,7 +42,6 @@ import kotlin.reflect.KClass
 @Serializable data object GesturesDestination
 @Serializable data object NotchDestination
 @Serializable data object AppSettingsDestination
-@Serializable data class ActionPickerDestination(val gesture: String)
 
 private data class TopLevel(
     val route: Any,
@@ -55,11 +51,11 @@ private data class TopLevel(
     val selectedIcon: ImageVector,
 )
 
-/** UI-41: app settings are reached from the top bar; the notch settings are the third tab. */
+/** UI-41: app settings are reached from the top bar; the preferences (notch settings) are the third tab. */
 private val topLevel = listOf(
     TopLevel(HomeDestination, HomeDestination::class, R.string.nav_home, Icons.Outlined.Home, Icons.Filled.Home),
     TopLevel(GesturesDestination, GesturesDestination::class, R.string.nav_gestures, Icons.Outlined.TouchApp, Icons.Filled.TouchApp),
-    TopLevel(NotchDestination, NotchDestination::class, R.string.nav_notch, Icons.Outlined.Tune, Icons.Filled.Tune),
+    TopLevel(NotchDestination, NotchDestination::class, R.string.nav_preferences, Icons.Outlined.Tune, Icons.Filled.Tune),
 )
 
 private fun NavDestination?.isOn(routeClass: KClass<*>) = this?.hierarchy?.any { it.hasRoute(routeClass) } == true
@@ -105,19 +101,9 @@ fun TotchNavHost(container: AppContainer, modifier: Modifier = Modifier) {
             modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
             composable<HomeDestination> { HomeRoute(container, onOpenSettings = openSettings) }
-            composable<GesturesDestination> {
-                GesturesRoute(
-                    container,
-                    onOpenSettings = openSettings,
-                    onPickAction = { navController.navigate(ActionPickerDestination(it.name)) },
-                )
-            }
+            composable<GesturesDestination> { GesturesRoute(container, onOpenSettings = openSettings) }
             composable<NotchDestination> { NotchSettingsRoute(container, onOpenSettings = openSettings) }
             composable<AppSettingsDestination> { AppSettingsRoute(container, onBack = back) }
-            composable<ActionPickerDestination> { entry ->
-                val gesture = Gesture.valueOf(entry.toRoute<ActionPickerDestination>().gesture)
-                ActionPickerRoute(container, gesture, onBack = back)
-            }
         }
     }
 }

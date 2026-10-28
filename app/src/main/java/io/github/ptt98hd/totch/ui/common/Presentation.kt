@@ -18,6 +18,7 @@ import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Screenshot
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
+import androidx.compose.material.icons.outlined.Speaker
 import androidx.compose.material.icons.outlined.Shortcut
 import androidx.compose.material.icons.outlined.SwipeDown
 import androidx.compose.material.icons.outlined.SwipeDownAlt
@@ -80,6 +81,7 @@ val Action.labelRes: Int
         Action.MediaPrevious -> R.string.action_previous
         Action.VolumeUp -> R.string.action_volume_up
         Action.VolumeDown -> R.string.action_volume_down
+        Action.VolumePanel -> R.string.action_volume_panel
         is Action.LaunchApp -> R.string.action_open_app
         Action.Assistant -> R.string.action_assistant
         is Action.LaunchShortcut -> R.string.action_open_shortcut
@@ -101,6 +103,7 @@ val Action.icon: ImageVector
         Action.MediaPrevious -> Icons.Outlined.SkipPrevious
         Action.VolumeUp -> Icons.AutoMirrored.Outlined.VolumeUp
         Action.VolumeDown -> Icons.AutoMirrored.Outlined.VolumeDown
+        Action.VolumePanel -> Icons.Outlined.Speaker
         is Action.LaunchApp -> Icons.Outlined.Apps
         Action.Assistant -> Icons.Outlined.Assistant
         is Action.LaunchShortcut -> Icons.Outlined.Shortcut

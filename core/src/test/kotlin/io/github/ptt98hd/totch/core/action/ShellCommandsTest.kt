@@ -24,6 +24,7 @@ class ShellCommandsTest {
             Action.MediaPrevious to null,
             Action.VolumeUp to null,
             Action.VolumeDown to null,
+            Action.VolumePanel to null,
             Action.LaunchApp("com.example") to null,
         )
         expected.forEach { (action, cmd) -> assertEquals(cmd, ShellCommands.of(action), "$action") }

@@ -23,7 +23,7 @@ object ActionRequirements {
         Action.Notifications, Action.QuickSettings, is Action.LaunchApp, Action.Assistant,
         is Action.LaunchShortcut -> system
         Action.ToggleTorch, Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious,
-        Action.VolumeUp, Action.VolumeDown -> local
+        Action.VolumeUp, Action.VolumeDown, Action.VolumePanel -> local
     }
 }
 

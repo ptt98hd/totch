@@ -181,4 +181,16 @@ class HomeViewModelTest {
             }
         }
     }
+
+    @Test
+    fun `UI-42 master icon shows check only while running`() {
+        allStatuses.forEach { status ->
+            val expected = when (status) {
+                EngineStatus.Running -> MasterIcon.CHECK
+                is EngineStatus.Error -> MasterIcon.ERROR
+                else -> MasterIcon.OFF
+            }
+            assertEquals(expected, masterIcon(status), "$status")
+        }
+    }
 }

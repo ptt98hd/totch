@@ -71,7 +71,8 @@ class LocalExecutor(private val context: Context, private val accessibility: Acc
 
     override fun supports(action: Action): Boolean = when (action) {
         Action.ToggleTorch -> torchCameraId != null
-        Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious, Action.VolumeUp, Action.VolumeDown -> true
+        Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious,
+        Action.VolumeUp, Action.VolumeDown, Action.VolumePanel -> true
         else -> false
     }
 
@@ -86,6 +87,7 @@ class LocalExecutor(private val context: Context, private val accessibility: Acc
             Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious -> media(action)
             Action.VolumeUp -> volume(AudioManager.ADJUST_RAISE)
             Action.VolumeDown -> volume(AudioManager.ADJUST_LOWER)
+            Action.VolumePanel -> volume(AudioManager.ADJUST_SAME) // only shows the panel (FR-A13)
             else -> error("unsupported")
         }
     }

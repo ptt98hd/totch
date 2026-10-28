@@ -64,7 +64,8 @@ Trạng thái được expose qua `StateFlow<EngineStatus>` (singleton `GestureE
 | EN-7 | Chạm ngoài vùng hoặc `region == null` → không dispatch |
 | EN-8 | Nhiều gesture liên tiếp được dispatch tuần tự, đúng thứ tự |
 | EN-9 | Mode SHIZUKU, `SWIPE_DOWN` gán `Notifications` → vuốt xuống không dispatch gì (FR-G10, dùng `effectiveAction`) |
-| EN-10 | `SWIPE_RIGHT_HOLD` gán `VolumeUp`, `repeatOnHold` chứa nó: vuốt phải rồi giữ 500 + 2×300 ms (virtual time) → `VolumeUp` dispatch 3 lần; nhả tay → dừng |
+| EN-10 | `SWIPE_RIGHT_HOLD` gán `VolumeUp`: vuốt phải rồi giữ 500 + 2000 ms (virtual time) → `VolumeUp` dispatch đúng **1** lần (v1.3: không lặp, FR-G11) |
+| EN-11 | `SWIPE_RIGHT` gán `MediaNext` nhưng nằm trong `disabledGestures` → vuốt phải không dispatch gì (FR-G12) |
 
 Đồng hồ: engine dùng `SystemClock.uptimeMillis()` (CLOCK_MONOTONIC). `MotionEvent.eventTime` dùng cùng
 đồng hồ; `getevent` gọi `EVIOCSCLOCKID(CLOCK_MONOTONIC)` nên timestamp `-t` cũng vậy. EN-5 là lưới an toàn.

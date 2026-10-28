@@ -7,7 +7,7 @@
 <li>Back, Home, Recents, Lock screen, Screenshot</li>
 <li>Open notification shade or Quick Settings</li>
 <li>Toggle flashlight</li>
-<li>Media Play/Pause, Next, Previous; Volume up/down</li>
+<li>Media Play/Pause, Next, Previous; Volume up/down; volume panel</li>
 <li>Launch any installed app</li>
 </ul>
 

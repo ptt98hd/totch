@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, **v1.1 đang làm** (§8) · Cập nhật: 2026-10-28
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), **v1.3 đang làm** (§10) · Cập nhật: 2026-10-28
 
 ## 1. Tầm nhìn
 
@@ -140,7 +140,7 @@ tham chiếu ID tương ứng.
 | ID | Yêu cầu | Spec |
 |---|---|---|
 | FR-G8 | Cử chỉ **vuốt và giữ** (trái / phải / xuống): vuốt đủ xa rồi giữ yên ngón ≥ `longPressMs` | [gesture-recognition §4](specs/gesture-recognition.md) |
-| FR-G9 | Tùy chọn **lặp lại khi giữ** cho từng cử chỉ giữ (Long press, vuốt và giữ): hành động lặp theo `repeatIntervalMs` tới khi nhả | [gesture-recognition §4](specs/gesture-recognition.md) |
+| FR-G9 | ~~Tùy chọn **lặp lại khi giữ** cho từng cử chỉ giữ (Long press, vuốt và giữ): hành động lặp theo `repeatIntervalMs` tới khi nhả~~ (v1.3: bỏ, FR-G11) | [gesture-recognition §4](specs/gesture-recognition.md) |
 | FR-G10 | Shizuku mode: vô hiệu Swipe down và Swipe down & hold (hệ thống luôn kéo thanh thông báo, R2) | [settings](specs/settings.md) |
 | FR-A10 | (sửa lỗi) Rung phản hồi hoạt động ổn định ở cả 2 mode | [actions §6](specs/actions.md) |
 | FR-A11 | Hành động **Gọi trợ lý** (trợ lý mặc định của hệ thống) | [actions](specs/actions.md) |
@@ -166,3 +166,14 @@ tham chiếu ID tương ứng.
 | FR-S9 | Bỏ mọi nút reset tổng (reset cài đặt, reset gestures) và reset của switch/lựa chọn; chỉ slider có nút reset (bên phải slider). Thay FR-S5 | [ui §3](specs/ui.md) |
 | FR-R5 | Bỏ switch "Custom touch area": slider vị trí/kích thước luôn hiển thị, giá trị ban đầu = vùng tự phát hiện; kéo slider → chuyển sang vùng thủ công | [notch-region](specs/notch-region.md) |
 | FR-R6 | Vùng thủ công chỉnh được cả **vị trí dọc** (khoảng cách từ cạnh trên, dp) | [notch-region](specs/notch-region.md), [settings](specs/settings.md) |
+
+## 10. Phiên bản 1.3
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-G11 | Bỏ hoàn toàn tính năng **lặp lại khi giữ** (FR-G9): mỗi cử chỉ giữ chỉ chạy hành động **một lần**; bỏ nút Lặp lại và slider Repeat interval | [gesture-recognition §4](specs/gesture-recognition.md), [settings](specs/settings.md) |
+| FR-G12 | Mỗi cử chỉ có **switch bật/tắt** riêng; tắt → không chạy gì nhưng **vẫn nhớ** hành động đã gán, bật lại dùng tiếp. Chỉ chọn được hành động khi cử chỉ đang bật | [settings](specs/settings.md), [ui §3](specs/ui.md) |
+| FR-U15 | Home: thẻ bật/tắt Notch gestures có icon trạng thái ✓ / ✗ bên trái, nằm trong một box | [ui §3](specs/ui.md) |
+| FR-U16 | Chọn hành động trong **bottom sheet** (không còn là màn riêng); dùng **segmented button** thay tab: System / Applications / Shortcuts; tab System có ô tìm kiếm; bỏ mục "Không làm gì" | [ui §3](specs/ui.md) |
+| FR-U17 | Đổi tên màn Notch thành **Preferences**; thứ tự section: Phản hồi → Độ nhạy → Vị trí → Kích thước; slider có nấc (bước tròn) | [ui §3](specs/ui.md) |
+| FR-A13 | Hành động **Mở bảng âm lượng** (hiện thanh âm lượng hệ thống, không đổi mức âm) | [actions](specs/actions.md) |

@@ -75,6 +75,7 @@ class AndroidFeedback(private val context: Context, private val apps: InstalledA
         Action.MediaPrevious -> R.string.platform_action_previous
         Action.VolumeUp -> R.string.platform_action_volume_up
         Action.VolumeDown -> R.string.platform_action_volume_down
+        Action.VolumePanel -> R.string.platform_action_volume_panel
         is Action.LaunchApp -> R.string.platform_action_launch_app
         Action.Assistant -> R.string.platform_action_assistant
         is Action.LaunchShortcut -> R.string.platform_action_shortcut

@@ -295,10 +295,9 @@ class GestureRecognizerTest {
         assertEquals(listOf(TAP), r.onTick(700))
     }
 
-    // --- §4 swipe & hold, repeat while held (v1.1) ---
+    // --- §4 swipe & hold (v1.1; no repeat since v1.3) ---
 
-    private fun holding(vararg holds: Gesture, repeating: Set<Gesture> = emptySet()) =
-        recognizer(GestureConfig(holdSwipes = holds.toSet(), repeating = repeating, repeatIntervalMs = 300))
+    private fun holding(vararg holds: Gesture) = recognizer(GestureConfig(holdSwipes = holds.toSet()))
 
     @Test fun `GR-30 pausing after a swipe emits the hold gesture`() {
         val r = holding(SWIPE_RIGHT_HOLD)
@@ -351,35 +350,25 @@ class GestureRecognizerTest {
         assertEquals(listOf(SWIPE_DOWN_HOLD), r.onTick(550))
     }
 
-    @Test fun `GR-35 held swipe repeats until release`() {
-        val r = holding(SWIPE_LEFT_HOLD, repeating = setOf(SWIPE_LEFT_HOLD))
+    @Test fun `GR-35 a held swipe fires once`() {
+        val r = holding(SWIPE_LEFT_HOLD)
         r.down(540, 50, 0)
         r.move(470, 50, 50)
         assertEquals(listOf(SWIPE_LEFT_HOLD), r.onTick(550))
-        assertEquals(850L, r.nextDeadlineMs())
-        assertEquals(listOf(SWIPE_LEFT_HOLD), r.onTick(850))
-        assertEquals(listOf(SWIPE_LEFT_HOLD), r.onTick(1150))
-        assertEquals(none, r.up(470, 50, 1200))
         assertNull(r.nextDeadlineMs())
-        assertEquals(none, r.onTick(5000))
+        assertEquals(none, r.onTick(850))
+        assertEquals(none, r.onTick(3550))
+        assertEquals(none, r.up(470, 50, 3600))
+        assertNull(r.nextDeadlineMs())
     }
 
-    @Test fun `GR-36 long press repeats until release`() {
-        val r = recognizer(GestureConfig(repeating = setOf(LONG_PRESS), repeatIntervalMs = 300))
+    @Test fun `GR-36 long press fires once`() {
+        val r = recognizer()
         r.down(540, 50, 0)
         assertEquals(listOf(LONG_PRESS), r.onTick(500))
-        assertEquals(listOf(LONG_PRESS), r.onTick(800))
-        assertEquals(none, r.up(540, 50, 900))
+        assertEquals(none, r.onTick(800))
         assertEquals(none, r.onTick(5000))
-    }
-
-    @Test fun `GR-37 a late tick emits a single repeat`() {
-        val r = holding(SWIPE_LEFT_HOLD, repeating = setOf(SWIPE_LEFT_HOLD))
-        r.down(540, 50, 0)
-        r.move(470, 50, 50)
-        r.onTick(550)
-        assertEquals(listOf(SWIPE_LEFT_HOLD), r.onTick(1550))
-        assertEquals(1850L, r.nextDeadlineMs())
+        assertEquals(none, r.up(540, 50, 5100))
     }
 
     @Test fun `GR-38 moving while held emits nothing`() {
@@ -392,12 +381,13 @@ class GestureRecognizerTest {
         assertEquals(none, r.up(670, 50, 700))
     }
 
-    @Test fun `GR-39 second finger stops repeating`() {
-        val r = holding(SWIPE_RIGHT_HOLD, repeating = setOf(SWIPE_RIGHT_HOLD))
+    @Test fun `GR-39 second finger while held emits nothing`() {
+        val r = holding(SWIPE_RIGHT_HOLD)
         r.down(540, 50, 0)
         r.move(610, 50, 50)
         r.onTick(550)
         assertEquals(none, r.move(610, 50, 600, pc = 2))
+        assertEquals(none, r.up(610, 50, 700))
         assertNull(r.nextDeadlineMs())
         assertEquals(none, r.onTick(2000))
     }

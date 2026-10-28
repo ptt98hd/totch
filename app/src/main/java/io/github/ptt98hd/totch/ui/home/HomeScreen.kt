@@ -17,9 +17,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -179,11 +181,7 @@ private fun MasterSwitchCard(enabled: Boolean, status: EngineStatus, onEnabledCh
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Box(
-                Modifier
-                    .size(12.dp)
-                    .background(if (running) colors.primary else colors.outline, CircleShape),
-            )
+            MasterIconBox(masterIcon(status))
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.master_title), style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(4.dp))
@@ -191,6 +189,29 @@ private fun MasterSwitchCard(enabled: Boolean, status: EngineStatus, onEnabledCh
             }
             Switch(checked = enabled, onCheckedChange = null)
         }
+    }
+}
+
+/** FR-U15: ✓ / ✗ inside a rounded box on the left of the master card. */
+@Composable
+private fun MasterIconBox(icon: MasterIcon) {
+    val colors = MaterialTheme.colorScheme
+    val (box, tint) = when (icon) {
+        MasterIcon.CHECK -> colors.primary to colors.onPrimary
+        MasterIcon.ERROR -> colors.error to colors.onError
+        MasterIcon.OFF -> colors.surfaceVariant to colors.onSurfaceVariant
+    }
+    val background by animateColorAsState(box, label = "masterIconBox")
+    Box(
+        Modifier.size(48.dp).background(background, RoundedCornerShape(14.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            if (icon == MasterIcon.CHECK) Icons.Outlined.Check else Icons.Outlined.Close,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(28.dp),
+        )
     }
 }
 
