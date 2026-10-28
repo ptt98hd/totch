@@ -2,4 +2,36 @@
 <resources>
     <string name="accessibility_service_label">Totch notch gestures</string>
     <string name="accessibility_service_description">Draws an invisible touch area over the display cutout to detect gestures and performs the system actions you assign (Back, Home, lock screen…). Totch does not read any screen content.</string>
+
+    <!-- Foreground service (Shizuku mode) -->
+    <string name="platform_channel_name">Gesture service</string>
+    <string name="platform_channel_description">Shown while Totch listens for notch gestures through Shizuku</string>
+    <string name="platform_notification_title">Totch is active</string>
+    <string name="platform_notification_running">Listening for notch gestures</string>
+    <string name="platform_notification_waiting">Waiting for Shizuku…</string>
+    <string name="platform_notification_permission">Shizuku permission required</string>
+    <string name="platform_notification_paused">Paused in landscape</string>
+
+    <!-- Engine errors (EngineStatus.Error) -->
+    <string name="platform_error_no_touchscreen">No touchscreen found for getevent. Try Accessibility mode.</string>
+    <string name="platform_error_stream_ended">Reading touch input stopped unexpectedly. Try Accessibility mode.</string>
+    <string name="platform_error_service_failed">Shizuku service stopped unexpectedly. Turn Totch off and on again, or try Accessibility mode.</string>
+
+    <!-- Toast when an action could not be performed (FR-A9) -->
+    <string name="platform_action_failed">Couldn\'t perform: %s</string>
+    <string name="platform_action_none">Do nothing</string>
+    <string name="platform_action_back">Back</string>
+    <string name="platform_action_home">Home</string>
+    <string name="platform_action_recents">Recent apps</string>
+    <string name="platform_action_lock">Lock screen</string>
+    <string name="platform_action_screenshot">Screenshot</string>
+    <string name="platform_action_notifications">Notifications</string>
+    <string name="platform_action_quick_settings">Quick Settings</string>
+    <string name="platform_action_torch">Flashlight</string>
+    <string name="platform_action_play_pause">Play / pause</string>
+    <string name="platform_action_next">Next track</string>
+    <string name="platform_action_previous">Previous track</string>
+    <string name="platform_action_volume_up">Volume up</string>
+    <string name="platform_action_volume_down">Volume down</string>
+    <string name="platform_action_launch_app">Open app</string>
 </resources>
