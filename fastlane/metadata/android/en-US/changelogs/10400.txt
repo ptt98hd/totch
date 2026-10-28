@@ -1,0 +1,6 @@
+* Shizuku is now required; the Accessibility mode is gone. Other permissions can be switched on from Home through Shizuku.
+* Home: Totch card with on / off / turning on-off icon; Requirement (Shizuku) and Permissions sections.
+* Settings moved to the 4th tab; Preferences renamed Notch.
+* Action picker: close button, no drag-to-dismiss, bars stay usable, grouped cards, expandable shortcut apps.
+* Sliders: − / + buttons, new ranges; padding preview on the notch.
+* Page transition animations.

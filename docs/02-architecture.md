@@ -1,6 +1,6 @@
 # 02 — Thiết kế hệ thống
 
-> Trạng thái: **Đã chốt v1.0**, cập nhật cho v1.1 · Liên quan: [01-requirements.md](01-requirements.md)
+> Trạng thái: **Đã chốt v1.0**, cập nhật cho v1.1 · **v1.4:** bỏ `AccessibilityTouchSource` (chỉ còn Shizuku nhận chạm), Accessibility chỉ còn là executor tùy chọn; quyền tùy chọn cấp qua `ShizukuShell` + `PermissionCommands` (detection-modes §6) · Liên quan: [01-requirements.md](01-requirements.md)
 
 ## 1. Tổng quan
 

@@ -8,6 +8,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class SettingsCodecTest {
     @Test fun `ST-4 encode decode round trip`() {
@@ -15,7 +16,6 @@ class SettingsCodecTest {
             Settings(),
             Settings(
                 enabled = true,
-                mode = DetectionMode.SHIZUKU,
                 bindings = DefaultBindings + mapOf(
                     Gesture.TAP to Action.LaunchApp("com.example"),
                     Gesture.DOUBLE_TAP to Action.None,
@@ -24,7 +24,7 @@ class SettingsCodecTest {
                     Gesture.SWIPE_LEFT to Action.VolumeDown,
                     Gesture.SWIPE_RIGHT to Action.MediaPlayPause,
                 ),
-                doubleTapMs = 200, longPressMs = 800, swipeMinDistanceDp = 50, paddingDp = 0,
+                doubleTapMs = 200, longPressMs = 800, swipeMinDistanceDp = 50, paddingDp = 1,
                 manualRegion = ManualRegionDp(0.3f, 100, 40),
                 haptics = false,
             ),
@@ -37,7 +37,7 @@ class SettingsCodecTest {
             "", "   ", "{", "null", "[]", "42", "not json",
             """{"enabled":"yes"}""",
             """{"bindings":{"TAP":{"type":"teleport"}}}""",
-            """{"mode":"ROOT"}""",
+            """{"theme":"sepia"}""",
         ).forEach { assertEquals(Settings(), SettingsCodec.decode(it), it) }
     }
 
@@ -46,7 +46,7 @@ class SettingsCodecTest {
             """{"enabled":true,"futureField":{"a":1},"longPressMs":5,"bindings":{"TAP":{"type":"home","extra":1}}}""",
         )
         assertEquals(true, s.enabled)
-        assertEquals(300, s.longPressMs)
+        assertEquals(100, s.longPressMs)
         assertEquals(Action.Home, s.bindings[Gesture.TAP])
         assertEquals(Action.None, s.bindings[Gesture.LONG_PRESS])
         assertEquals(Gesture.entries.toSet(), s.bindings.keys)
@@ -72,7 +72,14 @@ class SettingsCodecTest {
             val encoded = Json.encodeToString(Action.serializer(), action)
             assertEquals("""{"type":"$name"}""", encoded)
         }
-        assertEquals("ACCESSIBILITY", json.getValue("mode").jsonPrimitive.content)
+        assertFalse("mode" in json)
+    }
+
+    @Test fun `ST-23 json with the removed mode key still decodes`() {
+        listOf("SHIZUKU", "ACCESSIBILITY").forEach { mode ->
+            val s = SettingsCodec.decode("""{"enabled":true,"mode":"$mode","paddingDp":48}""")
+            assertEquals(Settings(enabled = true, paddingDp = 10), s)
+        }
     }
 
     @Test fun `ST-11 v1_0 json keeps bindings and defaults new fields`() {
@@ -86,7 +93,7 @@ class SettingsCodecTest {
         assertEquals(Action.Home, s.bindings[Gesture.TAP])
         assertEquals(Action.None, s.bindings[Gesture.SWIPE_RIGHT_HOLD])
         assertEquals(
-            Settings().copy(enabled = true, mode = DetectionMode.SHIZUKU, bindings = DefaultBindings + (Gesture.TAP to Action.Home)),
+            Settings().copy(enabled = true, bindings = DefaultBindings + (Gesture.TAP to Action.Home)),
             s,
         )
     }

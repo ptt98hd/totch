@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="accessibility_service_label">Totch notch gestures</string>
-    <string name="accessibility_service_description">Draws an invisible touch area over the display cutout to detect gestures and performs the system actions you assign (Back, Home, lock screen…). Totch does not read any screen content.</string>
+    <string name="accessibility_service_description">Optional. Performs the system actions you assign to notch gestures (Back, Home, lock screen…) and opens apps from the background. Totch does not read any screen content.</string>
 
-    <!-- Foreground service (Shizuku mode) -->
+    <!-- Foreground service -->
     <string name="platform_channel_name">Gesture service</string>
     <string name="platform_channel_description">Shown while Totch listens for notch gestures through Shizuku</string>
     <string name="platform_notification_title">Totch is active</string>
@@ -13,9 +13,9 @@
     <string name="platform_notification_paused">Paused in landscape</string>
 
     <!-- Engine errors (EngineStatus.Error) -->
-    <string name="platform_error_no_touchscreen">No touchscreen found for getevent. Try Accessibility mode.</string>
-    <string name="platform_error_stream_ended">Reading touch input stopped unexpectedly. Try Accessibility mode.</string>
-    <string name="platform_error_service_failed">Shizuku service stopped unexpectedly. Turn Totch off and on again, or try Accessibility mode.</string>
+    <string name="platform_error_no_touchscreen">No touchscreen found for getevent.</string>
+    <string name="platform_error_stream_ended">Reading touch input stopped unexpectedly.</string>
+    <string name="platform_error_service_failed">Shizuku service stopped unexpectedly. Turn Totch off and on again.</string>
 
     <!-- Toast when an action could not be performed (FR-A9) -->
     <string name="platform_action_failed">Couldn\'t perform: %s</string>

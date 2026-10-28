@@ -1,0 +1,6 @@
+* Shizuku giờ là bắt buộc, bỏ chế độ Trợ năng. Các quyền khác bật được ngay ở Trang chủ qua Shizuku.
+* Trang chủ: thẻ Totch với icon bật / tắt / đang bật-tắt; mục Yêu cầu (Shizuku) và Quyền.
+* Cài đặt chuyển xuống tab thứ 4; Tuỳ chỉnh đổi tên thành Notch.
+* Chọn hành động: nút đóng, không kéo để ẩn, thanh trên/dưới vẫn dùng được, card nhóm, shortcut mở rộng theo app.
+* Slider: nút − / +, thang mới; xem trước phần đệm trên notch.
+* Hiệu ứng chuyển trang.

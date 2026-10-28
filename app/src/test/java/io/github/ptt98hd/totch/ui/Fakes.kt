@@ -1,6 +1,8 @@
 package io.github.ptt98hd.totch.ui
 
 import io.github.ptt98hd.totch.AppInfo
+import io.github.ptt98hd.totch.HighlightArea
+import io.github.ptt98hd.totch.Permission
 import io.github.ptt98hd.totch.InstalledApps
 import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.SettingsRepository
@@ -8,7 +10,6 @@ import io.github.ptt98hd.totch.SystemStatus
 import io.github.ptt98hd.totch.AppShortcuts
 import io.github.ptt98hd.totch.ShortcutEntry
 import io.github.ptt98hd.totch.TouchArea
-import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.Dispatchers
@@ -50,18 +51,24 @@ class FakeSystemStatus(initial: Requirements = Requirements()) : SystemStatus {
     override val requirements = MutableStateFlow(initial)
     var refreshCalls = 0
     var permissionRequests = 0
+    var shizukuResult = true
+    val permissionCalls = mutableListOf<Pair<Permission, Boolean>>()
     override fun refresh() { refreshCalls++ }
     override fun requestShizukuPermission() { permissionRequests++ }
+    override suspend fun setPermission(permission: Permission, granted: Boolean): Boolean {
+        permissionCalls += permission to granted
+        return shizukuResult
+    }
 }
 
 class FakeTouchArea(
-    initial: Rect? = null,
+    initial: HighlightArea? = null,
     detected: ManualRegionDp? = null,
-    private val regionOf: (Settings) -> Rect? = { initial },
+    private val areaOf: (Settings) -> HighlightArea? = { initial },
 ) : TouchArea {
-    override val region: StateFlow<Rect?> = MutableStateFlow(initial)
+    override val area: StateFlow<HighlightArea?> = MutableStateFlow(initial)
     override val detectedRegion = MutableStateFlow(detected)
-    override fun regionFor(settings: Settings): Rect? = regionOf(settings)
+    override fun areaFor(settings: Settings): HighlightArea? = areaOf(settings)
 }
 
 class FakeAppShortcuts(private val entries: List<ShortcutEntry> = emptyList()) : AppShortcuts {

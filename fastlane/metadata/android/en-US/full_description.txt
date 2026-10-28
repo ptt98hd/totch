@@ -11,13 +11,9 @@
 <li>Launch any installed app</li>
 </ul>
 
-<p><b>Two detection modes, your choice:</b></p>
-<ul>
-<li><b>Shizuku mode</b> reads raw touch events with shell privileges through Shizuku. No Accessibility needed, but touches are not consumed: the system still receives them, so a swipe down also pulls the notification shade. Runs as a foreground service with a persistent notification.</li>
-<li><b>Accessibility mode</b> places a small invisible touch area exactly over the notch and consumes touches only inside that area.</li>
-</ul>
+<p><b>How it works:</b> Totch reads raw touch events with shell privileges through <b>Shizuku, which is required</b>. Touches are not consumed: the system still receives them, so swipe-down gestures are unavailable (they would also pull the notification shade). Runs as a foreground service with a persistent notification. Other permissions are optional and can be granted through Shizuku from the Home screen.</p>
 
-<p><b>About the Accessibility service:</b> Totch uses the Accessibility API only to (1) draw the touch area over the notch and (2) perform global actions such as Back, Home, Recents, lock screen, screenshot and opening the notification shade. It does not read, collect or transmit any screen content or typed text. The service is optional; Shizuku mode works without it.</p>
+<p><b>About the Accessibility service (optional):</b> Totch uses the Accessibility API only to perform global actions such as Back, Home, Recents, lock screen, screenshot and opening the notification shade, and to open apps from the background. It draws nothing and does not read, collect or transmit any screen content or typed text.</p>
 <p><b>About notification access (optional):</b> if you bind Play/Pause, Next or Previous, Totch recommends granting notification access. It is used only to find the active media player and send it play/pause/skip commands. Totch does not read, store or transmit any notification.</p>
 
 <p><b>Privacy:</b> no Internet permission, no ads, no trackers, no analytics. All settings stay on your device.</p>

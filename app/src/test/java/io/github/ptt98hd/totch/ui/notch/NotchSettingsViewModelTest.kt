@@ -21,7 +21,7 @@ class NotchSettingsViewModelTest {
     private val area = ManualRegionDp(0.2f, widthDp = 50, heightDp = 20, topDp = 10)
     private val custom = Settings(
         doubleTapMs = 200, longPressMs = 900, swipeMinDistanceDp = 100,
-        paddingDp = 0, manualRegion = area, haptics = false,
+        paddingDp = 3, manualRegion = area, haptics = false,
     )
 
     private fun NotchSetting.isArea() = name.startsWith("AREA_")
@@ -97,10 +97,10 @@ class NotchSettingsViewModelTest {
         vm.setPaddingDp(12)
         vm.setHaptics(false)
         with(repo.current) {
-            assertEquals(600, doubleTapMs)
+            assertEquals(1000, doubleTapMs)
             assertEquals(800, longPressMs)
             assertEquals(60, swipeMinDistanceDp)
-            assertEquals(12, paddingDp)
+            assertEquals(10, paddingDp)
             assertFalse(haptics)
         }
     }

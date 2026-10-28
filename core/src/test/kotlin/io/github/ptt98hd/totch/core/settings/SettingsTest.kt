@@ -26,7 +26,6 @@ class SettingsTest {
             s.bindings,
         )
         assertFalse(s.enabled)
-        assertEquals(DetectionMode.ACCESSIBILITY, s.mode)
         assertEquals(300, s.doubleTapMs)
         assertEquals(500, s.longPressMs)
         assertEquals(40, s.swipeMinDistanceDp)
@@ -41,20 +40,20 @@ class SettingsTest {
             doubleTapMs = 1, longPressMs = 1, swipeMinDistanceDp = 1, paddingDp = -5,
             manualRegion = ManualRegionDp(centerXFraction = -0.5f, widthDp = 1, heightDp = 1),
         ).sanitized()
-        assertEquals(150, low.doubleTapMs)
-        assertEquals(300, low.longPressMs)
+        assertEquals(100, low.doubleTapMs)
+        assertEquals(100, low.longPressMs)
         assertEquals(16, low.swipeMinDistanceDp)
-        assertEquals(0, low.paddingDp)
+        assertEquals(1, low.paddingDp)
         assertEquals(ManualRegionDp(0f, 8, 8), low.manualRegion)
 
         val high = Settings(
             doubleTapMs = 9999, longPressMs = 9999, swipeMinDistanceDp = 9999, paddingDp = 9999,
             manualRegion = ManualRegionDp(centerXFraction = 7f, widthDp = 9999, heightDp = 9999),
         ).sanitized()
-        assertEquals(600, high.doubleTapMs)
-        assertEquals(1500, high.longPressMs)
+        assertEquals(1000, high.doubleTapMs)
+        assertEquals(1000, high.longPressMs)
         assertEquals(200, high.swipeMinDistanceDp)
-        assertEquals(48, high.paddingDp)
+        assertEquals(10, high.paddingDp)
         assertEquals(ManualRegionDp(1f, 400, 100), high.manualRegion)
 
         assertEquals(0.5f, Settings(manualRegion = ManualRegionDp(centerXFraction = Float.NaN)).sanitized().manualRegion?.centerXFraction)
@@ -99,19 +98,24 @@ class SettingsTest {
         assertEquals(Action.Home, s.bindings[Gesture.TAP])
     }
 
-    @Test fun `ST-12 swipe down gestures are unavailable in Shizuku mode`() {
-        val bound = Settings(
+    @Test fun `ST-12 swipe down gestures are unavailable`() {
+        val s = Settings(
             bindings = DefaultBindings + mapOf(Gesture.SWIPE_DOWN to Action.Home, Gesture.SWIPE_DOWN_HOLD to Action.VolumeUp),
         )
-        val shizuku = bound.copy(mode = DetectionMode.SHIZUKU)
-        assertEquals(Action.None, shizuku.effectiveAction(Gesture.SWIPE_DOWN))
-        assertEquals(Action.None, shizuku.effectiveAction(Gesture.SWIPE_DOWN_HOLD))
-        assertEquals(Action.MediaNext, shizuku.effectiveAction(Gesture.SWIPE_RIGHT))
-        assertFalse(Gesture.SWIPE_DOWN.isAvailableIn(DetectionMode.SHIZUKU))
-        assertTrue(Gesture.SWIPE_DOWN.isAvailableIn(DetectionMode.ACCESSIBILITY))
-        val a11y = bound.copy(mode = DetectionMode.ACCESSIBILITY)
-        assertEquals(Action.Home, a11y.effectiveAction(Gesture.SWIPE_DOWN))
-        assertEquals(Action.VolumeUp, a11y.effectiveAction(Gesture.SWIPE_DOWN_HOLD))
+        assertEquals(Action.None, s.effectiveAction(Gesture.SWIPE_DOWN))
+        assertEquals(Action.None, s.effectiveAction(Gesture.SWIPE_DOWN_HOLD))
+        assertEquals(Action.Home, s.actionFor(Gesture.SWIPE_DOWN))
+        assertEquals(Action.MediaNext, s.effectiveAction(Gesture.SWIPE_RIGHT))
+        assertFalse(Gesture.SWIPE_DOWN.isAvailable)
+        assertFalse(Gesture.SWIPE_DOWN_HOLD.isAvailable)
+        assertTrue(Gesture.entries.filter { it != Gesture.SWIPE_DOWN && it != Gesture.SWIPE_DOWN_HOLD }.all { it.isAvailable })
+    }
+
+    @Test fun `ST-22 unavailable gestures are switched off`() {
+        val s = Settings(bindings = DefaultBindings + (Gesture.SWIPE_DOWN to Action.Home))
+        assertFalse(s.isGestureOn(Gesture.SWIPE_DOWN))
+        assertFalse(s.isGestureOn(Gesture.SWIPE_DOWN_HOLD))
+        assertTrue(s.isGestureOn(Gesture.SWIPE_RIGHT))
     }
 
     @Test fun `ST-13 toGestureConfig derives hold swipes from effective bindings`() {
@@ -121,8 +125,7 @@ class SettingsTest {
                 Gesture.SWIPE_DOWN_HOLD to Action.Home,
             ),
         )
-        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.SWIPE_DOWN_HOLD), s.toGestureConfig(1f).holdSwipes)
-        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD), s.copy(mode = DetectionMode.SHIZUKU).toGestureConfig(1f).holdSwipes)
+        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD), s.toGestureConfig(1f).holdSwipes)
     }
 
     @Test fun `ST-19 disabled gestures keep their binding but do nothing`() {

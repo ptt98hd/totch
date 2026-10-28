@@ -50,9 +50,10 @@ class NotchForegroundService : LifecycleService() {
             EngineStatus.Running -> getString(R.string.platform_notification_running)
             EngineStatus.WaitingShizuku -> getString(R.string.platform_notification_waiting)
             EngineStatus.ShizukuPermissionRequired -> getString(R.string.platform_notification_permission)
+            EngineStatus.Starting -> getString(R.string.platform_notification_waiting)
             EngineStatus.PausedRotation -> getString(R.string.platform_notification_paused)
             is EngineStatus.Error -> status.message
-            EngineStatus.Disabled, EngineStatus.AccessibilityRequired -> return // about to be stopped
+            EngineStatus.Disabled, EngineStatus.Stopping -> return // about to be stopped
         }
         runCatching { notificationManager.notify(NOTIFICATION_ID, notification(text)) }
     }

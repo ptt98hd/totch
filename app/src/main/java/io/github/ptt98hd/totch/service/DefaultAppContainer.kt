@@ -8,6 +8,7 @@ import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.SystemStatus
 import io.github.ptt98hd.totch.AppShortcuts
 import io.github.ptt98hd.totch.TouchArea
+import io.github.ptt98hd.totch.HighlightArea
 import io.github.ptt98hd.totch.accessibility.AccessibilityBridge
 import io.github.ptt98hd.totch.accessibility.AccessibilityExecutor
 import io.github.ptt98hd.totch.action.AndroidFeedback
@@ -16,7 +17,6 @@ import io.github.ptt98hd.totch.action.PackageManagerAppShortcuts
 import io.github.ptt98hd.totch.action.PackageManagerInstalledApps
 import io.github.ptt98hd.totch.core.action.ActionDispatcher
 import io.github.ptt98hd.totch.core.model.Rect
-import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.data.DataStoreSettingsRepository
@@ -24,11 +24,13 @@ import io.github.ptt98hd.totch.data.settingsDataStore
 import io.github.ptt98hd.totch.engine.GestureEngine
 import io.github.ptt98hd.totch.engine.PipelineError
 import io.github.ptt98hd.totch.engine.detectedRegionDp
+import io.github.ptt98hd.totch.engine.highlightArea
 import io.github.ptt98hd.totch.engine.notchRegion
 import io.github.ptt98hd.totch.engine.resolveEngineStatus
 import io.github.ptt98hd.totch.locale.AppLocales
 import io.github.ptt98hd.totch.shizuku.ShizukuExecutor
 import io.github.ptt98hd.totch.shizuku.ShizukuManager
+import io.github.ptt98hd.totch.shizuku.ShizukuShell
 import io.github.ptt98hd.totch.shizuku.ShizukuTouchPipeline
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -80,16 +82,16 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
         settings,
         shizuku.state,
         pipeline.state,
-        accessibility.service.map { it != null },
         display.state.map { it.rotation },
-    ) { s, shizukuState, pipelineState, a11y, rotation ->
-        resolveEngineStatus(s, shizukuState, pipelineState, a11y, rotation, ::errorMessage)
+    ) { s, shizukuState, pipelineState, rotation ->
+        resolveEngineStatus(s, shizukuState, pipelineState, rotation, ::errorMessage)
     }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, EngineStatus.Disabled)
 
-    override val systemStatus: SystemStatus = AndroidSystemStatus(app, shizuku, accessibility, scope)
+    override val systemStatus: SystemStatus = AndroidSystemStatus(app, shizuku, ShizukuShell(app, shizuku), accessibility, scope)
     override val touchArea: TouchArea = object : TouchArea {
-        override val region: StateFlow<Rect?> = this@DefaultAppContainer.region
-        override fun regionFor(settings: Settings): Rect? = notchRegion(settings, display.state.value)
+        override val area: StateFlow<HighlightArea?> = combine(settings, display.state, ::highlightArea)
+            .stateIn(scope, SharingStarted.Eagerly, null)
+        override fun areaFor(settings: Settings): HighlightArea? = highlightArea(settings, display.state.value)
         override val detectedRegion: StateFlow<ManualRegionDp?> = display.state.map(::detectedRegionDp)
             .stateIn(scope, SharingStarted.Eagerly, detectedRegionDp(display.state.value))
     }
@@ -104,7 +106,7 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
         // Repository flow (not the defaulted StateFlow) so a sticky restart is never stopped by a placeholder value.
         scope.launch {
             settingsRepository.settings
-                .map { it.enabled && it.mode == DetectionMode.SHIZUKU }
+                .map { it.enabled }
                 .distinctUntilChanged()
                 .collect { NotchForegroundService.setRunning(app, it) } // DM-1, DM-7
         }

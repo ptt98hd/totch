@@ -12,7 +12,6 @@ import io.github.ptt98hd.totch.SettingsRepository
 import io.github.ptt98hd.totch.ShortcutEntry
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
-import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.settings.actionFor
 import io.github.ptt98hd.totch.core.settings.withBinding
@@ -69,26 +68,29 @@ fun groupShortcuts(entries: List<ShortcutEntry>, query: String): List<ShortcutGr
 data class ActionPickerUiState(
     val gesture: Gesture,
     val current: Action = Action.None,
-    val mode: DetectionMode = DetectionMode.ACCESSIBILITY,
     val tab: PickerTab = PickerTab.SYSTEM,
-    val systemQuery: String = "",
     val appQuery: String = "",
     val apps: List<AppInfo> = emptyList(),
     val appsLoading: Boolean = true,
     val shortcutQuery: String = "",
     val shortcutGroups: List<ShortcutGroup> = emptyList(),
     val shortcutsLoading: Boolean = true,
+    /** Apps of the Shortcuts tab whose shortcuts are shown; all collapsed at first (UI-25). */
+    val expanded: Set<String> = emptySet(),
     /** True once an action was chosen and saved; the screen should navigate back. */
     val finished: Boolean = false,
-)
+) {
+    /** UI-25: while searching, every matching app is shown expanded. */
+    fun isExpanded(packageName: String): Boolean = shortcutQuery.isNotBlank() || packageName in expanded
+}
 
 private data class Local(
     val tab: PickerTab? = null,
-    val systemQuery: String = "",
     val appQuery: String = "",
     val apps: List<AppInfo>? = null,
     val shortcutQuery: String = "",
     val shortcuts: List<ShortcutEntry>? = null,
+    val expanded: Set<String> = emptySet(),
     val finished: Boolean = false,
 )
 
@@ -109,15 +111,14 @@ class ActionPickerViewModel(
             ActionPickerUiState(
                 gesture = gesture,
                 current = current,
-                mode = settings.mode,
                 tab = l.tab ?: initialTab(current),
-                systemQuery = l.systemQuery,
                 appQuery = l.appQuery,
                 apps = l.apps?.filterApps(l.appQuery).orEmpty(),
                 appsLoading = l.apps == null,
                 shortcutQuery = l.shortcutQuery,
                 shortcutGroups = l.shortcuts?.let { groupShortcuts(it, l.shortcutQuery) }.orEmpty(),
                 shortcutsLoading = l.shortcuts == null,
+                expanded = l.expanded,
                 finished = l.finished,
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, ActionPickerUiState(gesture))
@@ -151,11 +152,13 @@ class ActionPickerViewModel(
         }
     }
 
-    fun setSystemQuery(value: String) = local.update { it.copy(systemQuery = value) }
-
     fun setAppQuery(value: String) = local.update { it.copy(appQuery = value) }
 
     fun setShortcutQuery(value: String) = local.update { it.copy(shortcutQuery = value) }
+
+    fun toggleExpanded(packageName: String) = local.update {
+        it.copy(expanded = if (packageName in it.expanded) it.expanded - packageName else it.expanded + packageName)
+    }
 
     /** UI-10: saves the binding, switches the gesture on and finishes. */
     fun select(action: Action) {

@@ -5,46 +5,35 @@
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_gestures">Gestures</string>
-    <string name="nav_preferences">Preferences</string>
     <string name="nav_settings">Settings</string>
-    <string name="nav_back">Back</string>
+    <string name="nav_notch">Notch</string>
 
     <!-- Common -->
     <string name="cancel">Cancel</string>
-    <string name="action_open">Open</string>
-    <string name="action_install">Get</string>
-    <string name="action_grant">Grant</string>
-    <string name="action_open_settings">Open settings</string>
-    <string name="action_allow">Allow</string>
-    <string name="state_done">Done</string>
-    <string name="state_missing">Missing</string>
 
     <!-- Home -->
-    <string name="master_title">Notch gestures</string>
     <string name="master_switch_cd">Turn notch gestures on or off</string>
-    <string name="status_disabled">Gestures are turned off</string>
-    <string name="status_waiting_shizuku">Waiting for Shizuku to start</string>
-    <string name="status_shizuku_permission_required">Shizuku permission is required</string>
-    <string name="status_accessibility_required">The accessibility service is turned off</string>
-    <string name="status_error">Error: %1$s</string>
-    <string name="status_running">Listening for gestures on the notch</string>
-    <string name="status_paused_rotation">Paused while the screen is in landscape</string>
-    <string name="mode_title">Detection mode</string>
-    <string name="mode_accessibility">Accessibility</string>
-    <string name="mode_shizuku">Shizuku</string>
-    <string name="requirements_title">Requirements</string>
-    <string name="req_shizuku_running_title">Shizuku service</string>
-    <string name="req_shizuku_running_ok">Running</string>
-    <string name="req_shizuku_running_missing">Not running. Start it from the Shizuku app.</string>
-    <string name="req_shizuku_permission_title">Shizuku permission</string>
-    <string name="req_shizuku_permission_ok">Granted</string>
-    <string name="req_shizuku_permission_missing">Allow Totch to use Shizuku.</string>
-    <string name="req_accessibility_title">Accessibility service</string>
-    <string name="req_accessibility_ok">Enabled</string>
-    <string name="req_accessibility_missing">Turn on “Totch notch gestures” in the accessibility settings.</string>
-    <string name="req_notifications_title">Notifications</string>
-    <string name="req_notifications_ok">Allowed</string>
-    <string name="req_notifications_missing">Needed to show the background listener notification.</string>
+    <string name="status_disabled">Gestures are off</string>
+    <string name="status_waiting_shizuku">Gestures are waiting for Shizuku</string>
+    <string name="status_shizuku_permission_required">Gestures need Shizuku permission</string>
+    <string name="status_error">Gestures stopped: %1$s</string>
+    <string name="status_running">Gestures are on</string>
+    <string name="status_paused_rotation">Gestures are paused in landscape</string>
+    <string name="status_starting">Gestures are turning on…</string>
+    <string name="status_stopping">Gestures are turning off…</string>
+    <string name="requirement_title">Requirement</string>
+    <string name="permissions_title">Permissions</string>
+    <string name="shizuku_title">Shizuku</string>
+    <string name="shizuku_ready">Running, permission granted</string>
+    <string name="shizuku_permission_required">Permission not granted</string>
+    <string name="shizuku_not_running">Not running</string>
+    <string name="shizuku_not_installed">Not installed</string>
+    <string name="permission_accessibility">Accessibility</string>
+    <string name="permission_notifications">Notifications</string>
+    <string name="permission_media">Media control</string>
+    <string name="permission_battery">Unrestricted battery</string>
+    <string name="permission_granted">Granted</string>
+    <string name="permission_not_granted">Not granted</string>
 
     <!-- Gestures -->
     <string name="gesture_tap">Tap</string>
@@ -60,8 +49,8 @@
     <string name="group_press">Press &amp; hold</string>
     <string name="group_swipe">Swipe</string>
     <string name="group_swipe_hold">Swipe &amp; hold</string>
-    <string name="gesture_unavailable_shizuku">Not available in Shizuku mode</string>
     <string name="gesture_switch_cd">%1$s on or off</string>
+    <string name="gesture_unavailable">Unavailable: the system pulls down the shade</string>
     <string name="action_none">Do nothing</string>
     <string name="action_back">Back</string>
     <string name="action_home">Home</string>
@@ -85,11 +74,8 @@
     <string name="app_not_installed">Not installed</string>
     <string name="group_system">System</string>
     <string name="group_media">Media</string>
-    <string name="action_unavailable_in_mode">Not available in this mode</string>
 
     <!-- Action picker -->
-    <string name="action_search">Search actions</string>
-    <string name="action_search_empty">No actions match “%1$s”</string>
     <string name="app_picker_search">Search apps</string>
     <string name="app_picker_clear">Clear search</string>
     <string name="app_picker_empty">No apps match “%1$s”</string>
@@ -100,14 +86,17 @@
     <string name="shortcut_search">Search shortcuts</string>
     <string name="shortcut_empty">No shortcuts match “%1$s”</string>
     <string name="shortcut_none">No shortcuts found</string>
+    <string name="picker_close">Close</string>
+    <string name="state_expanded">Expanded</string>
+    <string name="state_collapsed">Collapsed</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="section_sensitivity">Sensitivity</string>
-    <string name="setting_double_tap">Double-tap window</string>
-    <string name="setting_long_press">Long-press duration</string>
-    <string name="setting_swipe">Swipe distance</string>
-    <string name="setting_padding">Touch area padding</string>
+    <string name="setting_double_tap">Double tap</string>
+    <string name="setting_long_press">Long press</string>
+    <string name="setting_swipe">Swipe</string>
+    <string name="setting_padding">Padding</string>
     <string name="unit_ms">%1$d ms</string>
     <string name="unit_dp">%1$d dp</string>
     <string name="unit_percent">%1$d%%</string>
@@ -115,11 +104,13 @@
     <string name="setting_haptics">Haptic feedback</string>
     <string name="section_position">Position</string>
     <string name="section_size">Size</string>
-    <string name="setting_area_x">Horizontal position</string>
-    <string name="setting_area_y">Vertical position</string>
+    <string name="setting_area_x">Horizontal</string>
+    <string name="setting_area_y">Vertical</string>
     <string name="setting_area_width">Width</string>
     <string name="setting_area_height">Height</string>
     <string name="reset_item_cd">Reset to default</string>
+    <string name="slider_decrease_cd">Decrease %1$s</string>
+    <string name="slider_increase_cd">Increase %1$s</string>
     <string name="section_appearance">Appearance</string>
     <string name="setting_theme">Theme</string>
     <string name="theme_system">System</string>
@@ -143,10 +134,4 @@
     <string name="about_credits_title">Credits</string>
     <string name="about_shizuku_credit">Shizuku by RikkaApps, for privileged input access</string>
     <string name="about_shizuku_url" translatable="false">https://shizuku.rikka.app/</string>
-    <string name="req_media_title">Media control</string>
-    <string name="req_media_ok">Play/Pause, Next and Previous control the active player directly</string>
-    <string name="req_media_missing">Recommended: allow notification access so media gestures work reliably. Totch only uses it to find the active player and never reads your notifications.</string>
-    <string name="req_battery_title">Battery</string>
-    <string name="req_battery_ok">Unrestricted</string>
-    <string name="req_battery_missing">Recommended: allow unrestricted battery use so Totch keeps running in the background.</string>
 </resources>

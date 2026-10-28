@@ -4,6 +4,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Remove
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -13,9 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Replay
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -86,29 +99,98 @@ fun TonalIcon(
     }
 }
 
-/**
- * The static (pinned, never collapsing) top bar shared by every screen (UI-40): the title on the left,
- * Back on the left of sub-screens ([onBack]) and Settings on the right of top-level screens ([onOpenSettings]).
- */
+/** The static (pinned, never collapsing) top bar shared by every screen (UI-40): only the screen title. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TotchTopBar(title: String, onBack: (() -> Unit)? = null, onOpenSettings: (() -> Unit)? = null) {
-    TopAppBar(
-        title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        navigationIcon = {
-            if (onBack != null) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.nav_back))
-                }
+fun TotchTopBar(title: String) {
+    TopAppBar(title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) })
+}
+
+/** Icon area in a rounded box, as on the master card and the Home rows. */
+@Composable
+fun IconBox(
+    modifier: Modifier = Modifier,
+    container: Color = MaterialTheme.colorScheme.secondaryContainer,
+    size: Dp = 48.dp,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier.size(size).background(container, RoundedCornerShape(size * 0.3f)),
+        contentAlignment = Alignment.Center,
+    ) { content() }
+}
+
+/** A rounded card holding one group of rows. */
+@Composable
+fun GroupCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        content = content,
+    )
+}
+
+/** A rounded card of [items], separated by horizontal dividers. */
+@Composable
+fun <T> GroupCard(items: List<T>, modifier: Modifier = Modifier, row: @Composable (T) -> Unit) {
+    GroupCard(modifier) {
+        items.forEachIndexed { index, item ->
+            if (index > 0) HorizontalDivider(Modifier.padding(horizontal = Gutter))
+            row(item)
+        }
+    }
+}
+
+/**
+ * Background of row [index] of [count] rows drawn as one rounded card in a lazy list (each row is its own
+ * lazy item); a divider separates it from the previous row.
+ */
+@Composable
+fun Modifier.groupItem(index: Int, count: Int): Modifier {
+    val corner = 12.dp
+    val shape = RoundedCornerShape(
+        topStart = if (index == 0) corner else 0.dp,
+        topEnd = if (index == 0) corner else 0.dp,
+        bottomStart = if (index == count - 1) corner else 0.dp,
+        bottomEnd = if (index == count - 1) corner else 0.dp,
+    )
+    val color = MaterialTheme.colorScheme.surfaceContainer
+    val divider = MaterialTheme.colorScheme.outlineVariant
+    return this
+        .clip(shape)
+        .background(color)
+        .drawWithContent {
+            drawContent()
+            if (index > 0) {
+                val inset = Gutter.toPx()
+                drawLine(divider, Offset(inset, 0f), Offset(size.width - inset, 0f), strokeWidth = 1.dp.toPx())
+            }
+        }
+}
+
+/** A row with an icon box, a title, a description and a switch; the whole row toggles. */
+@Composable
+fun ToggleListItem(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    error: Boolean = false,
+) {
+    val colors = MaterialTheme.colorScheme
+    ListItem(
+        modifier = modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
+        colors = ListItemDefaults.colors(containerColor = colors.surfaceContainer),
+        leadingContent = {
+            IconBox(size = 40.dp) {
+                Icon(icon, contentDescription = null, tint = colors.onSecondaryContainer, modifier = Modifier.size(22.dp))
             }
         },
-        actions = {
-            if (onOpenSettings != null) {
-                IconButton(onClick = onOpenSettings) {
-                    Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.nav_settings))
-                }
-            }
-        },
+        headlineContent = { Text(title) },
+        supportingContent = { Text(description, color = if (error) colors.error else colors.onSurfaceVariant) },
+        trailingContent = { Switch(checked = checked, onCheckedChange = null) },
     )
 }
 
@@ -120,22 +202,18 @@ fun ResetButton(enabled: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** UI-35: [value] rounded to a multiple of [step] counted from the start of [range], kept inside [range]. */
+/** UI-35: [value] rounded to the nearest multiple of [step], kept inside [range] (so both ends stay reachable). */
 fun snapToStep(value: Float, range: ClosedFloatingPointRange<Float>, step: Float): Float =
-    (range.start + ((value - range.start) / step).roundToInt() * step).coerceIn(range)
+    ((value / step).roundToInt() * step).coerceIn(range)
 
-/** UI-35: tick marks for `Slider(steps)`; scales with more than [MAX_TICKED_STEPS] steps only snap. */
-fun tickCount(range: ClosedFloatingPointRange<Float>, step: Float): Int {
-    val intervals = ((range.endInclusive - range.start) / step).roundToInt()
-    return if (intervals <= MAX_TICKED_STEPS) intervals - 1 else 0
-}
-
-private const val MAX_TICKED_STEPS = 20
+/** UI-36: [value] moved by [delta] (one unit of the − / + buttons), kept inside [range]. */
+fun stepBy(value: Float, delta: Float, range: ClosedFloatingPointRange<Float>): Float = (value + delta).coerceIn(range)
 
 /**
- * Slider with a title and a value label; [trailing] (the reset button) sits right of the slider. The value
- * is only saved through [onValueChangeFinished] so the repository is not written on every drag frame;
- * [onValueChange] reports the draft live.
+ * Slider with a title, a value label and − / + buttons moving by [increment]; dragging snaps to [step] and no
+ * tick marks are drawn (FR-U18). [trailing] (the reset button) sits right of the + button. The value is only
+ * saved through [onValueChangeFinished] so the repository is not written on every drag frame; [onValueChange]
+ * reports the draft live.
  */
 @Composable
 fun SliderSetting(
@@ -146,15 +224,21 @@ fun SliderSetting(
     onValueChangeFinished: (Float) -> Unit,
     modifier: Modifier = Modifier,
     step: Float = 1f,
+    increment: Float = 1f,
     onValueChange: (Float) -> Unit = {},
     trailing: (@Composable () -> Unit)? = null,
 ) {
     var draft by remember(value) { mutableFloatStateOf(value) }
-    Column(modifier.fillMaxWidth().padding(start = Gutter, end = if (trailing == null) Gutter else 4.dp, top = 4.dp, bottom = 4.dp)) {
+    fun nudge(delta: Float) {
+        draft = stepBy(draft, delta, valueRange)
+        onValueChange(draft)
+        onValueChangeFinished(draft)
+    }
+    Column(modifier.fillMaxWidth().padding(start = Gutter, end = 4.dp, top = 4.dp, bottom = 4.dp)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(end = if (trailing == null) 0.dp else 12.dp),
+            modifier = Modifier.padding(end = 12.dp),
         ) {
             Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             Text(
@@ -164,6 +248,9 @@ fun SliderSetting(
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { nudge(-increment) }, enabled = draft > valueRange.start, modifier = Modifier.offset(x = (-12).dp)) {
+                Icon(Icons.Outlined.Remove, contentDescription = stringResource(R.string.slider_decrease_cd, title))
+            }
             Slider(
                 value = draft,
                 onValueChange = {
@@ -172,9 +259,11 @@ fun SliderSetting(
                 },
                 onValueChangeFinished = { onValueChangeFinished(draft) },
                 valueRange = valueRange,
-                steps = tickCount(valueRange, step),
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).offset(x = (-8).dp),
             )
+            IconButton(onClick = { nudge(increment) }, enabled = draft < valueRange.endInclusive) {
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.slider_increase_cd, title))
+            }
             trailing?.invoke()
         }
     }

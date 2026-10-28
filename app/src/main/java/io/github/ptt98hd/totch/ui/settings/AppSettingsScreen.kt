@@ -54,22 +54,20 @@ data class AppSettingsActions(
     val onLanguage: (AppLanguage) -> Unit = {},
     val onStartOnBoot: (Boolean) -> Unit = {},
     val onOpenUrl: (String) -> Unit = {},
-    val onBack: () -> Unit = {},
 )
 
 @Composable
-fun AppSettingsRoute(container: AppContainer, onBack: () -> Unit) {
+fun AppSettingsRoute(container: AppContainer) {
     val vm: AppSettingsViewModel = viewModel(factory = AppSettingsViewModel.factory(container))
     val state by vm.state.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
-    val actions = remember(vm, onBack) {
+    val actions = remember(vm) {
         AppSettingsActions(
             onTheme = vm::setTheme,
             onAmoledBlack = vm::setAmoledBlack,
             onLanguage = vm::setLanguage,
             onStartOnBoot = vm::setStartOnBoot,
             onOpenUrl = { uriHandler.openUri(it) },
-            onBack = onBack,
         )
     }
     AppSettingsScreen(state, actions, versionName = BuildConfig.VERSION_NAME)
@@ -84,7 +82,7 @@ fun AppSettingsScreen(state: AppSettingsUiState, actions: AppSettingsActions, ve
 
     Scaffold(
         modifier = modifier,
-        topBar = { TotchTopBar(stringResource(R.string.settings_title), onBack = actions.onBack) },
+        topBar = { TotchTopBar(stringResource(R.string.settings_title)) },
     ) { padding ->
         LazyColumn(contentPadding = padding.withGutters(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item(key = "appearance") {

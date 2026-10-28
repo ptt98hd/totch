@@ -1,67 +1,61 @@
 package io.github.ptt98hd.totch.engine
 
 import io.github.ptt98hd.totch.EngineStatus
-import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class EngineStatusTest {
-    private val shizukuOn = Settings(enabled = true, mode = DetectionMode.SHIZUKU)
-    private val a11yOn = Settings(enabled = true, mode = DetectionMode.ACCESSIBILITY)
+    private val on = Settings(enabled = true)
+    private val off = Settings(enabled = false)
     private val ready = ShizukuState(running = true, granted = true)
 
     private fun status(
         settings: Settings,
         shizuku: ShizukuState = ready,
         pipeline: PipelineState = PipelineState.Running,
-        a11y: Boolean = true,
         rotation: Int = 0,
-    ) = resolveEngineStatus(settings, shizuku, pipeline, a11y, rotation) { "err:$it" }
+    ) = resolveEngineStatus(settings, shizuku, pipeline, rotation) { "err:$it" }
 
     @Test
-    fun `disabled wins over everything`() {
-        assertEquals(EngineStatus.Disabled, status(Settings(enabled = false), ShizukuState(false, false), a11y = false, rotation = 1))
+    fun `disabled wins when the pipeline is stopped`() {
+        assertEquals(EngineStatus.Disabled, status(off, ShizukuState(false, false), PipelineState.Idle, rotation = 1))
+        assertEquals(EngineStatus.Disabled, status(off, pipeline = PipelineState.Failed(PipelineError.STREAM_ENDED)))
+    }
+
+    @Test
+    fun `DM-30 disabled with a live pipeline is Stopping`() {
+        assertEquals(EngineStatus.Stopping, status(off, pipeline = PipelineState.Running))
+        assertEquals(EngineStatus.Stopping, status(off, pipeline = PipelineState.Connecting))
     }
 
     @Test
     fun `DM-2 shizuku not running is WaitingShizuku`() {
-        assertEquals(EngineStatus.WaitingShizuku, status(shizukuOn, ShizukuState(running = false, granted = false)))
+        assertEquals(EngineStatus.WaitingShizuku, status(on, ShizukuState(running = false, granted = false)))
     }
 
     @Test
     fun `DM-3 permission missing is ShizukuPermissionRequired`() {
-        assertEquals(EngineStatus.ShizukuPermissionRequired, status(shizukuOn, ShizukuState(running = true, granted = false)))
+        assertEquals(EngineStatus.ShizukuPermissionRequired, status(on, ShizukuState(running = true, granted = false)))
     }
 
     @Test
     fun `DM-5 pipeline failure is Error with message`() {
         assertEquals(
             EngineStatus.Error("err:NO_TOUCHSCREEN"),
-            status(shizukuOn, pipeline = PipelineState.Failed(PipelineError.NO_TOUCHSCREEN)),
+            status(on, pipeline = PipelineState.Failed(PipelineError.NO_TOUCHSCREEN)),
         )
     }
 
     @Test
-    fun `DM-6 connecting or idle pipeline is WaitingShizuku`() {
-        assertEquals(EngineStatus.WaitingShizuku, status(shizukuOn, pipeline = PipelineState.Connecting))
-        assertEquals(EngineStatus.WaitingShizuku, status(shizukuOn, pipeline = PipelineState.Idle))
+    fun `DM-30 connecting or idle pipeline with Shizuku ready is Starting`() {
+        assertEquals(EngineStatus.Starting, status(on, pipeline = PipelineState.Connecting))
+        assertEquals(EngineStatus.Starting, status(on, pipeline = PipelineState.Idle))
     }
 
     @Test
-    fun `shizuku running pipeline is Running and paused when rotated`() {
-        assertEquals(EngineStatus.Running, status(shizukuOn))
-        assertEquals(EngineStatus.PausedRotation, status(shizukuOn, rotation = 1))
-    }
-
-    @Test
-    fun `accessibility mode requires the connected service`() {
-        assertEquals(EngineStatus.AccessibilityRequired, status(a11yOn, a11y = false))
-        assertEquals(EngineStatus.Running, status(a11yOn, shizuku = ShizukuState(false, false), pipeline = PipelineState.Idle))
-    }
-
-    @Test
-    fun `DM-12 accessibility mode pauses in landscape`() {
-        assertEquals(EngineStatus.PausedRotation, status(a11yOn, rotation = 3))
+    fun `running pipeline is Running and paused when rotated`() {
+        assertEquals(EngineStatus.Running, status(on))
+        assertEquals(EngineStatus.PausedRotation, status(on, rotation = 1))
     }
 }

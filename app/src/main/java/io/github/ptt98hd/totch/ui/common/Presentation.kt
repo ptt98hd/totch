@@ -19,7 +19,7 @@ import androidx.compose.material.icons.outlined.Screenshot
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material.icons.outlined.Speaker
-import androidx.compose.material.icons.outlined.Shortcut
+import androidx.compose.material.icons.outlined.SubdirectoryArrowRight
 import androidx.compose.material.icons.outlined.SwipeDown
 import androidx.compose.material.icons.outlined.SwipeDownAlt
 import androidx.compose.material.icons.outlined.SwipeLeft
@@ -106,7 +106,7 @@ val Action.icon: ImageVector
         Action.VolumePanel -> Icons.Outlined.Speaker
         is Action.LaunchApp -> Icons.Outlined.Apps
         Action.Assistant -> Icons.Outlined.Assistant
-        is Action.LaunchShortcut -> Icons.Outlined.Shortcut
+        is Action.LaunchShortcut -> Icons.Outlined.SubdirectoryArrowRight
     }
 
 @StringRes

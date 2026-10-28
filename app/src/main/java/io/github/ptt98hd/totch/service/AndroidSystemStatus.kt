@@ -8,11 +8,16 @@ import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.app.NotificationManagerCompat
+import android.os.Build
+import io.github.ptt98hd.totch.Permission
 import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.SystemStatus
 import io.github.ptt98hd.totch.accessibility.AccessibilityBridge
 import io.github.ptt98hd.totch.accessibility.NotchAccessibilityService
+import io.github.ptt98hd.totch.action.MediaListenerService
+import io.github.ptt98hd.totch.core.action.PermissionCommands
 import io.github.ptt98hd.totch.shizuku.ShizukuManager
+import io.github.ptt98hd.totch.shizuku.ShizukuShell
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,6 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 class AndroidSystemStatus(
     private val context: Context,
     private val shizuku: ShizukuManager,
+    private val shell: ShizukuShell,
     accessibility: AccessibilityBridge,
     scope: CoroutineScope,
 ) : SystemStatus {
@@ -67,6 +73,31 @@ class AndroidSystemStatus(
     }
 
     override fun requestShizukuPermission() = shizuku.requestPermission()
+
+    override suspend fun setPermission(permission: Permission, granted: Boolean): Boolean {
+        val pkg = context.packageName
+        val commands = when (permission) {
+            Permission.ACCESSIBILITY -> PermissionCommands.accessibility(
+                Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES),
+                component.flattenToString(),
+                granted,
+            )
+            Permission.MEDIA_ACCESS -> listOf(
+                PermissionCommands.notificationListener(
+                    ComponentName(context, MediaListenerService::class.java).flattenToString(), granted,
+                ),
+            )
+            Permission.BATTERY -> listOf(PermissionCommands.batteryUnrestricted(pkg, granted))
+            // Revoking a runtime permission kills the app; Android 12 has no runtime notification permission.
+            Permission.NOTIFICATIONS ->
+                if (granted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    listOf(PermissionCommands.grantNotifications(pkg))
+                } else {
+                    return false
+                }
+        }
+        return shell.exec(commands).also { refresh() }
+    }
 
     private companion object {
         /** Hidden `Settings.Secure.ENABLED_NOTIFICATION_LISTENERS`; stable since API 18. */

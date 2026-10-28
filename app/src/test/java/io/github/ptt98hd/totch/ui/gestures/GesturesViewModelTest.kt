@@ -5,7 +5,6 @@ import io.github.ptt98hd.totch.AppInfo
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DefaultBindings
-import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.FakeInstalledApps
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
@@ -41,15 +40,14 @@ class GesturesViewModelTest {
     }
 
     @Test
-    fun `UI-14 swipe down rows are disabled in Shizuku mode only`() = runTest {
-        val repo = FakeSettingsRepository(Settings(mode = DetectionMode.SHIZUKU))
+    fun `UI-14 swipe down rows are disabled and switched off`() = runTest {
+        val repo = FakeSettingsRepository(Settings(bindings = DefaultBindings + (Gesture.SWIPE_DOWN_HOLD to Action.Home)))
         GesturesViewModel(repo, FakeInstalledApps()).state.test {
-            val state = expectMostRecentItem()
-            assertEquals(DetectionMode.SHIZUKU, state.mode)
-            val disabled = state.groups.flatMap { it.rows }.filterNot { it.enabled }.map { it.gesture }.toSet()
-            assertEquals(setOf(Gesture.SWIPE_DOWN, Gesture.SWIPE_DOWN_HOLD), disabled)
-            repo.update { it.copy(mode = DetectionMode.ACCESSIBILITY) }
-            assertTrue(expectMostRecentItem().groups.flatMap { it.rows }.all { it.enabled })
+            val rows = expectMostRecentItem().groups.flatMap { it.rows }
+            val disabled = rows.filterNot { it.enabled }
+            assertEquals(setOf(Gesture.SWIPE_DOWN, Gesture.SWIPE_DOWN_HOLD), disabled.map { it.gesture }.toSet())
+            assertTrue(disabled.none { it.on })
+            assertEquals(Action.Notifications, disabled.single { it.gesture == Gesture.SWIPE_DOWN }.action)
         }
     }
 

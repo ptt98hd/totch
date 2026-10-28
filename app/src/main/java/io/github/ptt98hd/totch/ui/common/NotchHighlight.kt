@@ -19,30 +19,35 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import io.github.ptt98hd.totch.HighlightArea
 import io.github.ptt98hd.totch.core.model.Rect
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.Color
 
 /**
- * Lets a screen replace the highlighted region while editing, e.g. Settings showing the region of
- * unsaved slider drafts (ui spec §2). [override] wins over the saved region while [active].
+ * Lets a screen replace the highlighted area while editing, e.g. the Notch screen showing the area of
+ * unsaved slider drafts (ui spec §2). [override] wins over the saved area while [active].
  */
 @Stable
 class NotchHighlightState {
     var active by mutableStateOf(false)
-    var override by mutableStateOf<Rect?>(null)
+    var override by mutableStateOf<HighlightArea?>(null)
 }
 
 val LocalNotchHighlight = staticCompositionLocalOf { NotchHighlightState() }
 
 /**
- * Draws the touch area (screen pixels) directly over the activity at the notch (FR-U8). Draws
- * nothing for `null` (landscape) and never consumes touches.
+ * Draws the touch area (screen pixels) directly over the activity at the notch (FR-U8): the notch itself
+ * (width × height) filled, and its padding as a dashed outline around it (FR-R7). Draws nothing for `null`
+ * (landscape) and never consumes touches.
  */
 @Composable
-fun NotchHighlightOverlay(region: Rect?, state: NotchHighlightState, modifier: Modifier = Modifier) {
+fun NotchHighlightOverlay(area: HighlightArea?, state: NotchHighlightState, modifier: Modifier = Modifier) {
     val view = LocalView.current
     var origin by remember { mutableStateOf(Offset.Zero) }
     val color = MaterialTheme.colorScheme.primary
-    val rect = if (state.active) state.override else region
+    val shown = if (state.active) state.override else area
     Canvas(
         modifier.fillMaxSize().onGloballyPositioned { coordinates ->
             // Window origin on screen + this canvas' position in the window.
@@ -55,11 +60,28 @@ fun NotchHighlightOverlay(region: Rect?, state: NotchHighlightState, modifier: M
             )
         },
     ) {
-        if (rect == null || rect.width <= 0 || rect.height <= 0) return@Canvas
-        val topLeft = Offset(rect.left - origin.x, rect.top - origin.y)
-        val size = Size(rect.width.toFloat(), rect.height.toFloat())
-        val corner = CornerRadius(minOf(size.width, size.height) / 2)
-        drawRoundRect(color = color.copy(alpha = 0.35f), topLeft = topLeft, size = size, cornerRadius = corner)
-        drawRoundRect(color = color, topLeft = topLeft, size = size, cornerRadius = corner, style = Stroke(width = 1.5.dp.toPx()))
+        if (shown == null) return@Canvas
+        fun Rect.box() = Offset(left - origin.x, top - origin.y) to Size(width.toFloat(), height.toFloat())
+        val stroke = 1.5.dp.toPx()
+        if (shown.touch != shown.notch && shown.touch.width > 0 && shown.touch.height > 0) {
+            val (topLeft, size) = shown.touch.box()
+            drawPill(color.copy(alpha = 0.12f), topLeft, size)
+            val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
+            drawPill(color.copy(alpha = 0.8f), topLeft, size, Stroke(width = stroke, pathEffect = dash))
+        }
+        if (shown.notch.width > 0 && shown.notch.height > 0) {
+            val (topLeft, size) = shown.notch.box()
+            drawPill(color.copy(alpha = 0.35f), topLeft, size)
+            drawPill(color, topLeft, size, Stroke(width = stroke))
+        }
+    }
+}
+
+private fun DrawScope.drawPill(color: Color, topLeft: Offset, size: Size, style: Stroke? = null) {
+    val corner = CornerRadius(minOf(size.width, size.height) / 2)
+    if (style == null) {
+        drawRoundRect(color = color, topLeft = topLeft, size = size, cornerRadius = corner)
+    } else {
+        drawRoundRect(color = color, topLeft = topLeft, size = size, cornerRadius = corner, style = style)
     }
 }

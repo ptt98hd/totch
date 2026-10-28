@@ -5,46 +5,35 @@
     <!-- Navigation -->
     <string name="nav_home">Trang chủ</string>
     <string name="nav_gestures">Cử chỉ</string>
-    <string name="nav_preferences">Tuỳ chỉnh</string>
     <string name="nav_settings">Cài đặt</string>
-    <string name="nav_back">Quay lại</string>
+    <string name="nav_notch">Notch</string>
 
     <!-- Common -->
     <string name="cancel">Hủy</string>
-    <string name="action_open">Mở</string>
-    <string name="action_install">Tải về</string>
-    <string name="action_grant">Cấp quyền</string>
-    <string name="action_open_settings">Mở cài đặt</string>
-    <string name="action_allow">Cho phép</string>
-    <string name="state_done">Đã xong</string>
-    <string name="state_missing">Còn thiếu</string>
 
     <!-- Home -->
-    <string name="master_title">Cử chỉ trên notch</string>
     <string name="master_switch_cd">Bật hoặc tắt cử chỉ trên notch</string>
     <string name="status_disabled">Cử chỉ đang tắt</string>
-    <string name="status_waiting_shizuku">Đang chờ Shizuku khởi động</string>
-    <string name="status_shizuku_permission_required">Cần cấp quyền Shizuku</string>
-    <string name="status_accessibility_required">Dịch vụ trợ năng đang tắt</string>
-    <string name="status_error">Lỗi: %1$s</string>
-    <string name="status_running">Đang nhận cử chỉ trên notch</string>
-    <string name="status_paused_rotation">Tạm dừng khi màn hình nằm ngang</string>
-    <string name="mode_title">Chế độ nhận diện</string>
-    <string name="mode_accessibility">Trợ năng</string>
-    <string name="mode_shizuku">Shizuku</string>
-    <string name="requirements_title">Yêu cầu</string>
-    <string name="req_shizuku_running_title">Dịch vụ Shizuku</string>
-    <string name="req_shizuku_running_ok">Đang chạy</string>
-    <string name="req_shizuku_running_missing">Chưa chạy. Hãy khởi động trong ứng dụng Shizuku.</string>
-    <string name="req_shizuku_permission_title">Quyền Shizuku</string>
-    <string name="req_shizuku_permission_ok">Đã cấp</string>
-    <string name="req_shizuku_permission_missing">Cho phép Totch dùng Shizuku.</string>
-    <string name="req_accessibility_title">Dịch vụ trợ năng</string>
-    <string name="req_accessibility_ok">Đã bật</string>
-    <string name="req_accessibility_missing">Bật “Totch notch gestures” trong cài đặt Trợ năng.</string>
-    <string name="req_notifications_title">Thông báo</string>
-    <string name="req_notifications_ok">Đã cho phép</string>
-    <string name="req_notifications_missing">Cần để hiển thị thông báo của dịch vụ chạy nền.</string>
+    <string name="status_waiting_shizuku">Cử chỉ đang chờ Shizuku</string>
+    <string name="status_shizuku_permission_required">Cử chỉ cần quyền Shizuku</string>
+    <string name="status_error">Cử chỉ đã dừng: %1$s</string>
+    <string name="status_running">Cử chỉ đang bật</string>
+    <string name="status_paused_rotation">Cử chỉ tạm dừng khi xoay ngang</string>
+    <string name="status_starting">Cử chỉ đang được bật…</string>
+    <string name="status_stopping">Cử chỉ đang được tắt…</string>
+    <string name="requirement_title">Yêu cầu</string>
+    <string name="permissions_title">Quyền</string>
+    <string name="shizuku_title">Shizuku</string>
+    <string name="shizuku_ready">Đang chạy, đã cấp quyền</string>
+    <string name="shizuku_permission_required">Chưa cấp quyền</string>
+    <string name="shizuku_not_running">Chưa chạy</string>
+    <string name="shizuku_not_installed">Chưa cài đặt</string>
+    <string name="permission_accessibility">Trợ năng</string>
+    <string name="permission_notifications">Thông báo</string>
+    <string name="permission_media">Điều khiển media</string>
+    <string name="permission_battery">Pin không giới hạn</string>
+    <string name="permission_granted">Đã cấp</string>
+    <string name="permission_not_granted">Chưa cấp</string>
 
     <!-- Gestures -->
     <string name="gesture_tap">Chạm</string>
@@ -60,8 +49,8 @@
     <string name="group_press">Nhấn giữ</string>
     <string name="group_swipe">Vuốt</string>
     <string name="group_swipe_hold">Vuốt và giữ</string>
-    <string name="gesture_unavailable_shizuku">Không khả dụng ở chế độ Shizuku</string>
     <string name="gesture_switch_cd">Bật hoặc tắt %1$s</string>
+    <string name="gesture_unavailable">Không khả dụng: hệ thống luôn kéo thanh thông báo</string>
     <string name="action_none">Không làm gì</string>
     <string name="action_back">Quay lại</string>
     <string name="action_home">Màn hình chính</string>
@@ -85,11 +74,8 @@
     <string name="app_not_installed">Chưa cài đặt</string>
     <string name="group_system">Hệ thống</string>
     <string name="group_media">Media</string>
-    <string name="action_unavailable_in_mode">Không khả dụng ở chế độ này</string>
 
     <!-- Action picker -->
-    <string name="action_search">Tìm hành động</string>
-    <string name="action_search_empty">Không có hành động nào khớp “%1$s”</string>
     <string name="app_picker_search">Tìm ứng dụng</string>
     <string name="app_picker_clear">Xóa tìm kiếm</string>
     <string name="app_picker_empty">Không có ứng dụng nào khớp “%1$s”</string>
@@ -100,14 +86,17 @@
     <string name="shortcut_search">Tìm shortcut</string>
     <string name="shortcut_empty">Không có shortcut nào khớp “%1$s”</string>
     <string name="shortcut_none">Không tìm thấy shortcut</string>
+    <string name="picker_close">Đóng</string>
+    <string name="state_expanded">Đang mở rộng</string>
+    <string name="state_collapsed">Đang thu gọn</string>
 
     <!-- Settings -->
     <string name="settings_title">Cài đặt</string>
     <string name="section_sensitivity">Độ nhạy</string>
-    <string name="setting_double_tap">Khoảng chạm hai lần</string>
-    <string name="setting_long_press">Thời gian nhấn giữ</string>
-    <string name="setting_swipe">Khoảng cách vuốt</string>
-    <string name="setting_padding">Mở rộng vùng chạm</string>
+    <string name="setting_double_tap">Chạm hai lần</string>
+    <string name="setting_long_press">Nhấn giữ</string>
+    <string name="setting_swipe">Vuốt</string>
+    <string name="setting_padding">Đệm</string>
     <string name="unit_ms">%1$d ms</string>
     <string name="unit_dp">%1$d dp</string>
     <string name="unit_percent">%1$d%%</string>
@@ -115,11 +104,13 @@
     <string name="setting_haptics">Rung phản hồi</string>
     <string name="section_position">Vị trí</string>
     <string name="section_size">Kích thước</string>
-    <string name="setting_area_x">Vị trí ngang</string>
-    <string name="setting_area_y">Vị trí dọc</string>
-    <string name="setting_area_width">Chiều rộng</string>
-    <string name="setting_area_height">Chiều cao</string>
+    <string name="setting_area_x">Ngang</string>
+    <string name="setting_area_y">Dọc</string>
+    <string name="setting_area_width">Rộng</string>
+    <string name="setting_area_height">Cao</string>
     <string name="reset_item_cd">Khôi phục mặc định</string>
+    <string name="slider_decrease_cd">Giảm %1$s</string>
+    <string name="slider_increase_cd">Tăng %1$s</string>
     <string name="section_appearance">Giao diện</string>
     <string name="setting_theme">Chủ đề</string>
     <string name="theme_system">Hệ thống</string>
@@ -138,10 +129,4 @@
     <string name="about_source_title">Mã nguồn</string>
     <string name="about_credits_title">Ghi công</string>
     <string name="about_shizuku_credit">Shizuku của RikkaApps, cho quyền truy cập đầu vào đặc quyền</string>
-    <string name="req_media_title">Điều khiển media</string>
-    <string name="req_media_ok">Play/Pause, Bài tiếp, Bài trước điều khiển trực tiếp trình phát đang hoạt động</string>
-    <string name="req_media_missing">Khuyến nghị: cấp quyền truy cập thông báo để cử chỉ media hoạt động ổn định. Totch chỉ dùng quyền này để tìm trình phát đang hoạt động, không đọc thông báo của bạn.</string>
-    <string name="req_battery_title">Pin</string>
-    <string name="req_battery_ok">Không giới hạn</string>
-    <string name="req_battery_missing">Khuyến nghị: cho phép dùng pin không giới hạn để Totch tiếp tục chạy nền.</string>
 </resources>

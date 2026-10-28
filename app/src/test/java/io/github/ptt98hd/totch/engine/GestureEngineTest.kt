@@ -7,7 +7,6 @@ import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.model.TouchAction
 import io.github.ptt98hd.totch.core.model.TouchEvent
 import io.github.ptt98hd.totch.core.settings.DefaultBindings
-import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.TestScope
@@ -170,17 +169,17 @@ class GestureEngineTest {
         e.onTouch(down(0))
         e.onTouch(up(10))
         e.onTouch(down(20))
-        e.onTouch(TouchEvent(TouchAction.MOVE, 500f, 200f, 30))
-        e.onTouch(up(40, y = 200f))
+        e.onTouch(TouchEvent(TouchAction.MOVE, 800f, 40f, 30))
+        e.onTouch(up(40, x = 800f))
         runCurrent()
-        assertEquals(listOf(Action.Home, Action.Notifications), dispatched)
+        assertEquals(listOf(Action.Home, Action.MediaNext), dispatched)
     }
 
     private fun move(t: Long, x: Float, y: Float = 40f) = TouchEvent(TouchAction.MOVE, x, y, t)
 
     @Test
-    fun `EN-9 swipe down is not dispatched in Shizuku mode`() = runTest {
-        val e = engine(Settings(enabled = true, mode = DetectionMode.SHIZUKU).bind(Gesture.SWIPE_DOWN to Action.Notifications))
+    fun `EN-9 swipe down is never dispatched`() = runTest {
+        val e = engine(Settings(enabled = true).bind(Gesture.SWIPE_DOWN to Action.Notifications))
         e.onTouch(down(0, y = 10f))
         e.onTouch(move(50, 500f, 200f))
         e.onTouch(up(100, 500f, 200f))
