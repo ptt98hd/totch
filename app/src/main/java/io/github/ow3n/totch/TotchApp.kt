@@ -1,14 +1,18 @@
 package io.github.ow3n.totch
 
 import android.app.Application
+import io.github.ow3n.totch.service.DefaultAppContainer
 
 class TotchApp : Application() {
-    lateinit var container: AppContainer
+    /** Platform object graph; also used directly by the services. */
+    internal lateinit var platform: DefaultAppContainer
         private set
+
+    /** Contract for the UI layer. */
+    val container: AppContainer get() = platform
 
     override fun onCreate() {
         super.onCreate()
-        // Replaced by the platform layer with the real DefaultAppContainer.
-        container = TODO("platform layer")
+        platform = DefaultAppContainer(this)
     }
 }

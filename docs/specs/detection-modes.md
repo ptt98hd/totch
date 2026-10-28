@@ -53,3 +53,15 @@ Trạng thái được expose qua `StateFlow<EngineStatus>` (singleton `GestureE
 | EN-2 | Gesture có binding `None` → dispatcher không được gọi, không rung |
 | EN-3 | Settings đổi → `recognizer.config` cập nhật ngay (FR-S3) |
 | EN-4 | DOWN rồi chờ (virtual time) 500 ms → LONG_PRESS được dispatch không cần sự kiện mới |
+| EN-5 | Timestamp sự kiện lệch đồng hồ của engine > 10 s (nguồn dùng clock khác) → tự quy đổi theo độ lệch, timeout vẫn đúng |
+| EN-6 | Dispatch `Ok` + `haptics` bật → rung; `Failed` → báo lỗi (toast), không rung |
+| EN-7 | Chạm ngoài vùng hoặc `region == null` → không dispatch |
+| EN-8 | Nhiều gesture liên tiếp được dispatch tuần tự, đúng thứ tự |
+
+Đồng hồ: engine dùng `SystemClock.uptimeMillis()` (CLOCK_MONOTONIC). `MotionEvent.eventTime` dùng cùng
+đồng hồ; `getevent` gọi `EVIOCSCLOCKID(CLOCK_MONOTONIC)` nên timestamp `-t` cũng vậy. EN-5 là lưới an toàn.
+
+Trạng thái (`resolveEngineStatus`, test `EngineStatusTest`): `Disabled` → (SHIZUKU) chưa chạy `WaitingShizuku`
+→ chưa cấp quyền `ShizukuPermissionRequired` → pipeline lỗi `Error` → xoay `PausedRotation` → pipeline chạy
+`Running`, còn lại `WaitingShizuku`; (ACCESSIBILITY) service chưa kết nối `AccessibilityRequired` → xoay
+`PausedRotation` → `Running`.

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_label">Cử chỉ notch Totch</string>
+    <string name="accessibility_service_description">Đặt một vùng chạm vô hình lên vùng tai thỏ để nhận cử chỉ và thực hiện các hành động hệ thống bạn đã gán (Quay lại, Màn hình chính, khóa màn hình…). Totch không đọc bất kỳ nội dung nào trên màn hình.</string>
+
+    <string name="platform_channel_name">Dịch vụ cử chỉ</string>
+    <string name="platform_channel_description">Hiển thị khi Totch nhận cử chỉ notch qua Shizuku</string>
+    <string name="platform_notification_title">Totch đang hoạt động</string>
+    <string name="platform_notification_running">Đang nhận cử chỉ tại notch</string>
+    <string name="platform_notification_waiting">Đang chờ Shizuku…</string>
+    <string name="platform_notification_permission">Cần cấp quyền Shizuku</string>
+    <string name="platform_notification_paused">Tạm dừng khi xoay ngang</string>
+
+    <string name="platform_error_no_touchscreen">Không tìm thấy màn hình cảm ứng cho getevent. Hãy thử chế độ Trợ năng.</string>
+    <string name="platform_error_stream_ended">Việc đọc dữ liệu chạm bị dừng bất ngờ. Hãy thử chế độ Trợ năng.</string>
+    <string name="platform_error_service_failed">Dịch vụ Shizuku dừng bất ngờ. Hãy tắt rồi bật lại Totch, hoặc thử chế độ Trợ năng.</string>
+
+    <string name="platform_action_failed">Không thể thực hiện: %s</string>
+    <string name="platform_action_none">Không làm gì</string>
+    <string name="platform_action_back">Quay lại</string>
+    <string name="platform_action_home">Màn hình chính</string>
+    <string name="platform_action_recents">Ứng dụng gần đây</string>
+    <string name="platform_action_lock">Khóa màn hình</string>
+    <string name="platform_action_screenshot">Chụp màn hình</string>
+    <string name="platform_action_notifications">Thông báo</string>
+    <string name="platform_action_quick_settings">Cài đặt nhanh</string>
+    <string name="platform_action_torch">Đèn pin</string>
+    <string name="platform_action_play_pause">Phát / tạm dừng</string>
+    <string name="platform_action_next">Bài tiếp theo</string>
+    <string name="platform_action_previous">Bài trước</string>
+    <string name="platform_action_volume_up">Tăng âm lượng</string>
+    <string name="platform_action_volume_down">Giảm âm lượng</string>
+    <string name="platform_action_launch_app">Mở ứng dụng</string>
+</resources>

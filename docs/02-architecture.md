@@ -202,7 +202,9 @@ sequenceDiagram
   EN->>EN: Gesture → binding → ActionDispatcher
 ```
 - `TouchUserService` chạy trong process của Shizuku với uid shell; giao tiếp qua AIDL
-  `ITouchService { InputDeviceInfo... start(ILineCallback cb); void stop(); String exec(String cmd); }`.
+  `ITouchService { void start(ILineCallback cb); void stop(); int exec(String cmd); destroy() }` và
+  `oneway ILineCallback { onDevice(path, name, minX, maxX, minY, maxY); onLines(String[] frame); onError(int) }`
+  (mỗi lần gọi `onLines` chứa các dòng của một khung, tới `SYN_REPORT`).
 - `ShizukuExecutor.execute` gọi `exec("input keyevent 4")` …
 - Shizuku binder chết → engine chuyển trạng thái `WAITING_SHIZUKU`, lắng nghe `OnBinderReceivedListener` để tự kết nối lại (NFR-8).
 
