@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -33,10 +31,9 @@ import androidx.navigation.toRoute
 import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.core.model.Gesture
-import io.github.ptt98hd.totch.ui.about.AboutRoute
-import io.github.ptt98hd.totch.ui.gestures.AppPickerRoute
 import io.github.ptt98hd.totch.ui.gestures.GesturesRoute
 import io.github.ptt98hd.totch.ui.home.HomeRoute
+import io.github.ptt98hd.totch.ui.picker.ActionPickerRoute
 import io.github.ptt98hd.totch.ui.settings.SettingsRoute
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
@@ -44,8 +41,7 @@ import kotlin.reflect.KClass
 @Serializable data object HomeDestination
 @Serializable data object GesturesDestination
 @Serializable data object SettingsDestination
-@Serializable data object AboutDestination
-@Serializable data class AppPickerDestination(val gesture: String)
+@Serializable data class ActionPickerDestination(val gesture: String)
 
 private data class TopLevel(
     val route: Any,
@@ -55,23 +51,26 @@ private data class TopLevel(
     val selectedIcon: ImageVector,
 )
 
+/** UI-41: Settings is reached from the top bar, so only two tabs remain. */
 private val topLevel = listOf(
     TopLevel(HomeDestination, HomeDestination::class, R.string.nav_home, Icons.Outlined.Home, Icons.Filled.Home),
     TopLevel(GesturesDestination, GesturesDestination::class, R.string.nav_gestures, Icons.Outlined.TouchApp, Icons.Filled.TouchApp),
-    TopLevel(SettingsDestination, SettingsDestination::class, R.string.nav_settings, Icons.Outlined.Settings, Icons.Filled.Settings),
 )
 
 private fun NavDestination?.isOn(routeClass: KClass<*>) = this?.hierarchy?.any { it.hasRoute(routeClass) } == true
 
 @Composable
-fun TotchNavHost(container: AppContainer) {
+fun TotchNavHost(container: AppContainer, modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
     val showBottomBar = topLevel.any { destination.isOn(it.routeClass) }
+    val openSettings = { navController.navigate(SettingsDestination) { launchSingleTop = true } }
+    val back: () -> Unit = { navController.popBackStack() }
 
     Scaffold(
-        // Each screen has its own Scaffold handling insets; this one only hosts the NavigationBar.
+        modifier = modifier,
+        // Each screen has its own Scaffold with the shared top bar; this one only hosts the NavigationBar.
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (showBottomBar) {
@@ -100,17 +99,18 @@ fun TotchNavHost(container: AppContainer) {
             startDestination = HomeDestination,
             modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
-            composable<HomeDestination> { HomeRoute(container) }
+            composable<HomeDestination> { HomeRoute(container, onOpenSettings = openSettings) }
             composable<GesturesDestination> {
-                GesturesRoute(container, onPickApp = { navController.navigate(AppPickerDestination(it.name)) })
+                GesturesRoute(
+                    container,
+                    onOpenSettings = openSettings,
+                    onPickAction = { navController.navigate(ActionPickerDestination(it.name)) },
+                )
             }
-            composable<SettingsDestination> {
-                SettingsRoute(container, onAbout = { navController.navigate(AboutDestination) })
-            }
-            composable<AboutDestination> { AboutRoute(onBack = { navController.popBackStack() }) }
-            composable<AppPickerDestination> { entry ->
-                val gesture = Gesture.valueOf(entry.toRoute<AppPickerDestination>().gesture)
-                AppPickerRoute(container, gesture, onBack = { navController.popBackStack() })
+            composable<SettingsDestination> { SettingsRoute(container, onBack = back) }
+            composable<ActionPickerDestination> { entry ->
+                val gesture = Gesture.valueOf(entry.toRoute<ActionPickerDestination>().gesture)
+                ActionPickerRoute(container, gesture, onBack = back)
             }
         }
     }

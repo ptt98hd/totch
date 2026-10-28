@@ -82,4 +82,10 @@ class ActionDispatcherTest {
         )
         local.forEach { assertEquals(setOf(Capability.LOCAL), ActionRequirements.of(it)) }
     }
+
+    @Test fun `AD-7 assistant and shortcuts run on accessibility or shizuku`() {
+        val system = setOf(Capability.ACCESSIBILITY, Capability.SHIZUKU)
+        assertEquals(system, ActionRequirements.of(Action.Assistant))
+        assertEquals(system, ActionRequirements.of(Action.LaunchShortcut("com.a", "id", "L", "intent:#Intent;end")))
+    }
 }

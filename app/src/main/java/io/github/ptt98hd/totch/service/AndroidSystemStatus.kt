@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.app.NotificationManagerCompat
 import io.github.ptt98hd.totch.Requirements
@@ -30,11 +31,14 @@ class AndroidSystemStatus(
     private val accessibilityEnabled = MutableStateFlow(false)
     private val notificationsGranted = MutableStateFlow(false)
     private val mediaAccessGranted = MutableStateFlow(false)
+    private val batteryUnrestricted = MutableStateFlow(false)
+    private val powerManager = context.getSystemService(PowerManager::class.java)
 
     override val requirements: StateFlow<Requirements> = combine(
-        shizuku.state, accessibilityEnabled, accessibility.service, notificationsGranted, mediaAccessGranted,
-    ) { s, enabled, service, notifications, media ->
-        Requirements(s.running, s.granted, enabled || service != null, notifications, media)
+        combine(shizuku.state, accessibilityEnabled, accessibility.service, ::Triple),
+        notificationsGranted, mediaAccessGranted, batteryUnrestricted,
+    ) { (s, enabled, service), notifications, media, battery ->
+        Requirements(s.running, s.granted, enabled || service != null, notifications, media, battery)
     }.stateIn(scope, SharingStarted.Eagerly, Requirements())
 
     init {
@@ -59,6 +63,7 @@ class AndroidSystemStatus(
             .any { ComponentName.unflattenFromString(it) == component }
         notificationsGranted.value = NotificationManagerCompat.from(context).areNotificationsEnabled()
         mediaAccessGranted.value = context.packageName in NotificationManagerCompat.getEnabledListenerPackages(context)
+        batteryUnrestricted.value = powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
     }
 
     override fun requestShizukuPermission() = shizuku.requestPermission()

@@ -20,12 +20,14 @@ class ShizukuExecutor(
     /** Bound UserService implies Shizuku binder alive and permission granted. */
     override fun isAvailable(): Boolean = service.value?.asBinder()?.isBinderAlive == true
 
-    override fun supports(action: Action): Boolean = action is Action.LaunchApp || ShellCommands.of(action) != null
+    override fun supports(action: Action): Boolean =
+        action is Action.LaunchApp || action is Action.LaunchShortcut || ShellCommands.of(action) != null
 
     override suspend fun execute(action: Action): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             val command = when (action) {
                 is Action.LaunchApp -> launchCommand(action.packageName)
+                is Action.LaunchShortcut -> ShellCommands.startIntent(action.intentUri)
                 else -> ShellCommands.of(action)
             } ?: error("unsupported")
             val service = service.value ?: error("unavailable")

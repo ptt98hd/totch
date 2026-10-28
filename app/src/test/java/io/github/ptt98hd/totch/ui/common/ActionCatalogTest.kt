@@ -38,6 +38,7 @@ class ActionCatalogTest {
     fun `catalog groups cover every fixed action exactly once`() {
         val all = ActionCatalog.groups.flatMap { it.actions }
         assertEquals(all.size, all.distinct().size)
-        assertEquals(14, all.size)
+        assertEquals(15, all.size)
+        assertTrue(Action.Assistant in ActionCatalog.groups.single { it.id == ActionGroupId.SYSTEM }.actions)
     }
 }

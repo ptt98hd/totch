@@ -1,0 +1,6 @@
+* Cử chỉ mới: vuốt trái/phải/xuống và giữ, tùy chọn lặp lại tới khi nhả tay.
+* Hành động mới: gọi trợ lý, mở shortcut của ứng dụng (nhóm theo app).
+* Thiết kế lại màn chọn hành động (Hệ thống & media / Ứng dụng / Shortcut), nhóm cử chỉ, reset cử chỉ.
+* Vùng notch được tô sáng trực tiếp; chỉnh vùng chạm thấy ngay.
+* Cài đặt giao diện (sáng/tối/AMOLED), ngôn ngữ, khởi động cùng máy; reset từng mục.
+* Sửa lỗi rung phản hồi. Icon mới.

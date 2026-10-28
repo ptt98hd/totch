@@ -20,7 +20,8 @@ object ActionRequirements {
     fun of(action: Action): Set<Capability> = when (action) {
         Action.None -> emptySet()
         Action.Back, Action.Home, Action.Recents, Action.LockScreen, Action.Screenshot,
-        Action.Notifications, Action.QuickSettings, is Action.LaunchApp -> system
+        Action.Notifications, Action.QuickSettings, is Action.LaunchApp, Action.Assistant,
+        is Action.LaunchShortcut -> system
         Action.ToggleTorch, Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious,
         Action.VolumeUp, Action.VolumeDown -> local
     }

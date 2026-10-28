@@ -15,6 +15,8 @@ class ShellCommandsTest {
             Action.Screenshot to "input keyevent 120",
             Action.Notifications to "cmd statusbar expand-notifications",
             Action.QuickSettings to "cmd statusbar expand-settings",
+            Action.Assistant to "input keyevent 219",
+            Action.LaunchShortcut("com.a", "id", "Label", "intent:#Intent;end") to null,
             Action.None to null,
             Action.ToggleTorch to null,
             Action.MediaPlayPause to null,
@@ -46,5 +48,25 @@ class ShellCommandsTest {
 
     @Test fun `SC-3 shell injection attempt returns null`() {
         assertNull(ShellCommands.launch("com.foo; rm -rf /", "X"))
+    }
+
+    @Test fun `SC-4 startIntent quotes the intent uri`() {
+        assertEquals(
+            "am start 'intent:#Intent;component=com.a/.B;end'",
+            ShellCommands.startIntent("intent:#Intent;component=com.a/.B;end"),
+        )
+        assertEquals("am start '#Intent;action=x;end'", ShellCommands.startIntent("#Intent;action=x;end"))
+    }
+
+    @Test fun `SC-5 single quotes cannot escape the quoted string`() {
+        assertEquals(
+            "am start 'intent:#Intent;S.q=a'\\''; reboot;'\\'';end'",
+            ShellCommands.startIntent("intent:#Intent;S.q=a'; reboot;';end"),
+        )
+    }
+
+    @Test fun `SC-6 non intent uris and control characters are rejected`() {
+        listOf("", "http://x", "; reboot", "intent:#Intent;S.a=1\nreboot;end", "intent:#Intent;\rend", "intent:\u0000")
+            .forEach { assertNull(ShellCommands.startIntent(it), it) }
     }
 }

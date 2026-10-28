@@ -7,6 +7,7 @@ import androidx.compose.material.icons.automirrored.outlined.VolumeDown
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.AdsClick
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.Assistant
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.FlashlightOn
 import androidx.compose.material.icons.outlined.Home
@@ -17,9 +18,13 @@ import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Screenshot
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
+import androidx.compose.material.icons.outlined.Shortcut
 import androidx.compose.material.icons.outlined.SwipeDown
+import androidx.compose.material.icons.outlined.SwipeDownAlt
 import androidx.compose.material.icons.outlined.SwipeLeft
+import androidx.compose.material.icons.outlined.SwipeLeftAlt
 import androidx.compose.material.icons.outlined.SwipeRight
+import androidx.compose.material.icons.outlined.SwipeRightAlt
 import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.ViewCarousel
@@ -39,6 +44,9 @@ val Gesture.labelRes: Int
         Gesture.SWIPE_DOWN -> R.string.gesture_swipe_down
         Gesture.SWIPE_LEFT -> R.string.gesture_swipe_left
         Gesture.SWIPE_RIGHT -> R.string.gesture_swipe_right
+        Gesture.SWIPE_DOWN_HOLD -> R.string.gesture_swipe_down_hold
+        Gesture.SWIPE_LEFT_HOLD -> R.string.gesture_swipe_left_hold
+        Gesture.SWIPE_RIGHT_HOLD -> R.string.gesture_swipe_right_hold
     }
 
 val Gesture.icon: ImageVector
@@ -49,6 +57,9 @@ val Gesture.icon: ImageVector
         Gesture.SWIPE_DOWN -> Icons.Outlined.SwipeDown
         Gesture.SWIPE_LEFT -> Icons.Outlined.SwipeLeft
         Gesture.SWIPE_RIGHT -> Icons.Outlined.SwipeRight
+        Gesture.SWIPE_DOWN_HOLD -> Icons.Outlined.SwipeDownAlt
+        Gesture.SWIPE_LEFT_HOLD -> Icons.Outlined.SwipeLeftAlt
+        Gesture.SWIPE_RIGHT_HOLD -> Icons.Outlined.SwipeRightAlt
     }
 
 /** Label of a fixed action; [Action.LaunchApp] maps to the generic "Open app…" entry. */
@@ -70,6 +81,8 @@ val Action.labelRes: Int
         Action.VolumeUp -> R.string.action_volume_up
         Action.VolumeDown -> R.string.action_volume_down
         is Action.LaunchApp -> R.string.action_open_app
+        Action.Assistant -> R.string.action_assistant
+        is Action.LaunchShortcut -> R.string.action_open_shortcut
     }
 
 val Action.icon: ImageVector
@@ -89,18 +102,20 @@ val Action.icon: ImageVector
         Action.VolumeUp -> Icons.AutoMirrored.Outlined.VolumeUp
         Action.VolumeDown -> Icons.AutoMirrored.Outlined.VolumeDown
         is Action.LaunchApp -> Icons.Outlined.Apps
+        Action.Assistant -> Icons.Outlined.Assistant
+        is Action.LaunchShortcut -> Icons.Outlined.Shortcut
     }
 
 @StringRes
 fun ActionGroupId.labelRes(): Int = when (this) {
     ActionGroupId.SYSTEM -> R.string.group_system
     ActionGroupId.MEDIA -> R.string.group_media
-    ActionGroupId.APPS -> R.string.group_apps
 }
 
-/** Human-readable action name; for LaunchApp shows the app label (UI-12) or the package name. */
+/** Human-readable action name; LaunchApp/LaunchShortcut show the app label (UI-12) or the package name. */
 @Composable
 fun actionDisplayName(action: Action, appLabel: String?): String = when (action) {
     is Action.LaunchApp -> stringResource(R.string.action_launch_app, appLabel ?: action.packageName)
+    is Action.LaunchShortcut -> stringResource(R.string.action_launch_shortcut, appLabel ?: action.packageName, action.label)
     else -> stringResource(action.labelRes)
 }

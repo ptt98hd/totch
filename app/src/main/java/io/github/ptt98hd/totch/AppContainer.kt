@@ -14,7 +14,8 @@ interface AppContainer {
     val engineStatus: StateFlow<EngineStatus>
     val systemStatus: SystemStatus
     val installedApps: InstalledApps
-    val touchAreaPreview: TouchAreaPreview
+    val appShortcuts: AppShortcuts
+    val touchArea: TouchArea
 }
 
 interface SettingsRepository {
@@ -40,6 +41,8 @@ data class Requirements(
     val notificationsGranted: Boolean = false,
     /** Notification access for [io.github.ptt98hd.totch.action.MediaListenerService] (media control, UI-3). */
     val mediaAccessGranted: Boolean = false,
+    /** App is exempt from battery optimization (FR-D7, recommended). */
+    val batteryUnrestricted: Boolean = false,
 )
 
 interface SystemStatus {
@@ -58,9 +61,25 @@ interface InstalledApps {
     fun labelOf(packageName: String): String?
 }
 
-interface TouchAreaPreview {
-    /** Notch region in screen pixels for the current settings, or null when inactive. */
+/** A static shortcut another app can be asked to open (actions spec §7). */
+data class ShortcutEntry(
+    val packageName: String,
+    val appLabel: String,
+    val id: String,
+    val label: String,
+    /** `Intent.toUri(Intent.URI_INTENT_SCHEME)` of the shortcut's last intent. */
+    val intentUri: String,
+)
+
+interface AppShortcuts {
+    /** Static shortcuts of launchable apps that Totch is able to open; unordered. */
+    suspend fun shortcuts(): List<ShortcutEntry>
+}
+
+/** Notch touch area for the in-app highlight (ui spec §2). */
+interface TouchArea {
+    /** Region in screen pixels for the saved settings, or null when inactive (landscape). */
     val region: StateFlow<Rect?>
-    /** Highlights the touch area on screen (accessibility overlay) for [durationMs]. Returns false if not possible. */
-    fun show(durationMs: Long = 3000): Boolean
+    /** Region the given (possibly unsaved draft) settings would produce on the current display. */
+    fun regionFor(settings: Settings): Rect?
 }

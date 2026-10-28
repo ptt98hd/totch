@@ -19,6 +19,9 @@ class SettingsTest {
                 Gesture.SWIPE_DOWN to Action.Notifications,
                 Gesture.SWIPE_LEFT to Action.MediaPrevious,
                 Gesture.SWIPE_RIGHT to Action.MediaNext,
+                Gesture.SWIPE_DOWN_HOLD to Action.None,
+                Gesture.SWIPE_LEFT_HOLD to Action.None,
+                Gesture.SWIPE_RIGHT_HOLD to Action.None,
             ),
             s.bindings,
         )
@@ -75,5 +78,91 @@ class SettingsTest {
         assertFalse(noDouble.toGestureConfig(2f).doubleTapEnabled)
         assertEquals(80f, noDouble.toGestureConfig(2f).swipeMinDistancePx)
         assertEquals(24f, noDouble.toGestureConfig(2f).touchSlopPx)
+    }
+
+    @Test fun `ST-9 v1_1 defaults`() {
+        val s = Settings()
+        assertEquals(emptySet(), s.repeatOnHold)
+        assertEquals(300, s.repeatIntervalMs)
+        assertEquals(ThemeMode.SYSTEM, s.theme)
+        assertFalse(s.amoledBlack)
+        assertEquals(AppLanguage.SYSTEM, s.language)
+        assertTrue(s.startOnBoot)
+        assertEquals(Gesture.entries.size, s.bindings.size)
+        assertEquals(
+            setOf(Gesture.LONG_PRESS, Gesture.SWIPE_DOWN_HOLD, Gesture.SWIPE_LEFT_HOLD, Gesture.SWIPE_RIGHT_HOLD),
+            HoldGestures,
+        )
+    }
+
+    @Test fun `ST-10 sanitized clamps repeat interval and filters repeatOnHold`() {
+        assertEquals(100, Settings(repeatIntervalMs = 1).sanitized().repeatIntervalMs)
+        assertEquals(1000, Settings(repeatIntervalMs = 99_999).sanitized().repeatIntervalMs)
+        val s = Settings(repeatOnHold = setOf(Gesture.TAP, Gesture.LONG_PRESS, Gesture.SWIPE_LEFT, Gesture.SWIPE_LEFT_HOLD)).sanitized()
+        assertEquals(setOf(Gesture.LONG_PRESS, Gesture.SWIPE_LEFT_HOLD), s.repeatOnHold)
+        assertEquals(9, s.bindings.size)
+    }
+
+    @Test fun `ST-12 swipe down gestures are unavailable in Shizuku mode`() {
+        val bound = Settings(
+            bindings = DefaultBindings + mapOf(Gesture.SWIPE_DOWN to Action.Home, Gesture.SWIPE_DOWN_HOLD to Action.VolumeUp),
+        )
+        val shizuku = bound.copy(mode = DetectionMode.SHIZUKU)
+        assertEquals(Action.None, shizuku.effectiveAction(Gesture.SWIPE_DOWN))
+        assertEquals(Action.None, shizuku.effectiveAction(Gesture.SWIPE_DOWN_HOLD))
+        assertEquals(Action.MediaNext, shizuku.effectiveAction(Gesture.SWIPE_RIGHT))
+        assertFalse(Gesture.SWIPE_DOWN.isAvailableIn(DetectionMode.SHIZUKU))
+        assertTrue(Gesture.SWIPE_DOWN.isAvailableIn(DetectionMode.ACCESSIBILITY))
+        val a11y = bound.copy(mode = DetectionMode.ACCESSIBILITY)
+        assertEquals(Action.Home, a11y.effectiveAction(Gesture.SWIPE_DOWN))
+        assertEquals(Action.VolumeUp, a11y.effectiveAction(Gesture.SWIPE_DOWN_HOLD))
+    }
+
+    @Test fun `ST-13 toGestureConfig derives hold and repeat sets from effective bindings`() {
+        val s = Settings(
+            bindings = DefaultBindings + mapOf(
+                Gesture.SWIPE_LEFT_HOLD to Action.VolumeDown,
+                Gesture.SWIPE_DOWN_HOLD to Action.Home,
+            ),
+            repeatOnHold = setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.SWIPE_RIGHT_HOLD, Gesture.LONG_PRESS, Gesture.SWIPE_DOWN_HOLD),
+            repeatIntervalMs = 250,
+        )
+        val a11y = s.toGestureConfig(1f)
+        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.SWIPE_DOWN_HOLD), a11y.holdSwipes)
+        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.LONG_PRESS, Gesture.SWIPE_DOWN_HOLD), a11y.repeating)
+        assertEquals(250, a11y.repeatIntervalMs)
+        val shizuku = s.copy(mode = DetectionMode.SHIZUKU).toGestureConfig(1f)
+        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD), shizuku.holdSwipes)
+        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.LONG_PRESS), shizuku.repeating)
+    }
+
+    private val customized = Settings(
+        enabled = true,
+        mode = DetectionMode.SHIZUKU,
+        bindings = DefaultBindings + (Gesture.TAP to Action.Home),
+        repeatOnHold = setOf(Gesture.LONG_PRESS),
+        doubleTapMs = 200, longPressMs = 900, swipeMinDistanceDp = 100, paddingDp = 0,
+        manualRegion = ManualRegionDp(0.2f, 50, 20), haptics = false, repeatIntervalMs = 500,
+        theme = ThemeMode.DARK, amoledBlack = true, language = AppLanguage.VIETNAMESE, startOnBoot = false,
+    )
+
+    @Test fun `ST-14 withDefaultPreferences keeps switch, mode and gestures`() {
+        assertEquals(
+            Settings(
+                enabled = true,
+                mode = DetectionMode.SHIZUKU,
+                bindings = customized.bindings,
+                repeatOnHold = setOf(Gesture.LONG_PRESS),
+            ),
+            customized.withDefaultPreferences(),
+        )
+    }
+
+    @Test fun `ST-15 withDefaultGestures only resets gestures`() {
+        assertEquals(
+            customized.copy(bindings = DefaultBindings, repeatOnHold = emptySet()),
+            customized.withDefaultGestures(),
+        )
+        assertEquals(Gesture.entries.toSet(), DefaultBindings.keys)
     }
 }

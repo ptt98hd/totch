@@ -4,8 +4,11 @@ import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.model.Gesture.DOUBLE_TAP
 import io.github.ptt98hd.totch.core.model.Gesture.LONG_PRESS
 import io.github.ptt98hd.totch.core.model.Gesture.SWIPE_DOWN
+import io.github.ptt98hd.totch.core.model.Gesture.SWIPE_DOWN_HOLD
 import io.github.ptt98hd.totch.core.model.Gesture.SWIPE_LEFT
+import io.github.ptt98hd.totch.core.model.Gesture.SWIPE_LEFT_HOLD
 import io.github.ptt98hd.totch.core.model.Gesture.SWIPE_RIGHT
+import io.github.ptt98hd.totch.core.model.Gesture.SWIPE_RIGHT_HOLD
 import io.github.ptt98hd.totch.core.model.Gesture.TAP
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.model.TouchAction
@@ -290,5 +293,129 @@ class GestureRecognizerTest {
         assertEquals(listOf(TAP), r.down(540, 50, 380))
         assertEquals(none, r.up(540, 50, 400))
         assertEquals(listOf(TAP), r.onTick(700))
+    }
+
+    // --- §4 swipe & hold, repeat while held (v1.1) ---
+
+    private fun holding(vararg holds: Gesture, repeating: Set<Gesture> = emptySet()) =
+        recognizer(GestureConfig(holdSwipes = holds.toSet(), repeating = repeating, repeatIntervalMs = 300))
+
+    @Test fun `GR-30 pausing after a swipe emits the hold gesture`() {
+        val r = holding(SWIPE_RIGHT_HOLD)
+        r.down(540, 50, 0)
+        assertEquals(none, r.move(610, 50, 50))
+        assertEquals(550L, r.nextDeadlineMs())
+        assertEquals(none, r.onTick(549))
+        assertEquals(listOf(SWIPE_RIGHT_HOLD), r.onTick(550))
+        assertEquals(none, r.up(610, 50, 700))
+        assertNull(r.nextDeadlineMs())
+    }
+
+    @Test fun `GR-31 without hold bindings a pause does not matter`() {
+        val r = holding()
+        r.down(540, 50, 0)
+        r.move(610, 50, 50)
+        assertNull(r.nextDeadlineMs())
+        assertEquals(none, r.onTick(2000))
+        assertEquals(listOf(SWIPE_RIGHT), r.up(610, 50, 2100))
+    }
+
+    @Test fun `GR-32 a finger that keeps moving never holds`() {
+        val r = holding(SWIPE_RIGHT_HOLD)
+        r.down(540, 50, 0)
+        var x = 540
+        var t = 0L
+        while (x < 690) {
+            x += 30
+            t += 100
+            assertEquals(none, r.move(x, 50, t))
+        }
+        assertEquals(listOf(SWIPE_RIGHT), r.up(x, 50, t))
+    }
+
+    @Test fun `GR-33 hold needs the swipe distance first and restarts at each new anchor`() {
+        val r = holding(SWIPE_RIGHT_HOLD)
+        r.down(540, 50, 0)
+        r.move(570, 50, 50)
+        assertNull(r.nextDeadlineMs())
+        assertEquals(none, r.onTick(700))
+        assertEquals(none, r.move(620, 50, 700))
+        assertEquals(none, r.onTick(1199))
+        assertEquals(listOf(SWIPE_RIGHT_HOLD), r.onTick(1200))
+    }
+
+    @Test fun `GR-34 swipe down and hold`() {
+        val r = holding(SWIPE_DOWN_HOLD)
+        r.down(540, 20, 0)
+        r.move(545, 90, 50)
+        assertEquals(listOf(SWIPE_DOWN_HOLD), r.onTick(550))
+    }
+
+    @Test fun `GR-35 held swipe repeats until release`() {
+        val r = holding(SWIPE_LEFT_HOLD, repeating = setOf(SWIPE_LEFT_HOLD))
+        r.down(540, 50, 0)
+        r.move(470, 50, 50)
+        assertEquals(listOf(SWIPE_LEFT_HOLD), r.onTick(550))
+        assertEquals(850L, r.nextDeadlineMs())
+        assertEquals(listOf(SWIPE_LEFT_HOLD), r.onTick(850))
+        assertEquals(listOf(SWIPE_LEFT_HOLD), r.onTick(1150))
+        assertEquals(none, r.up(470, 50, 1200))
+        assertNull(r.nextDeadlineMs())
+        assertEquals(none, r.onTick(5000))
+    }
+
+    @Test fun `GR-36 long press repeats until release`() {
+        val r = recognizer(GestureConfig(repeating = setOf(LONG_PRESS), repeatIntervalMs = 300))
+        r.down(540, 50, 0)
+        assertEquals(listOf(LONG_PRESS), r.onTick(500))
+        assertEquals(listOf(LONG_PRESS), r.onTick(800))
+        assertEquals(none, r.up(540, 50, 900))
+        assertEquals(none, r.onTick(5000))
+    }
+
+    @Test fun `GR-37 a late tick emits a single repeat`() {
+        val r = holding(SWIPE_LEFT_HOLD, repeating = setOf(SWIPE_LEFT_HOLD))
+        r.down(540, 50, 0)
+        r.move(470, 50, 50)
+        r.onTick(550)
+        assertEquals(listOf(SWIPE_LEFT_HOLD), r.onTick(1550))
+        assertEquals(1850L, r.nextDeadlineMs())
+    }
+
+    @Test fun `GR-38 moving while held emits nothing`() {
+        val r = holding(SWIPE_RIGHT_HOLD)
+        r.down(540, 50, 0)
+        r.move(610, 50, 50)
+        r.onTick(550)
+        assertEquals(none, r.move(670, 50, 600))
+        assertNull(r.nextDeadlineMs())
+        assertEquals(none, r.up(670, 50, 700))
+    }
+
+    @Test fun `GR-39 second finger stops repeating`() {
+        val r = holding(SWIPE_RIGHT_HOLD, repeating = setOf(SWIPE_RIGHT_HOLD))
+        r.down(540, 50, 0)
+        r.move(610, 50, 50)
+        r.onTick(550)
+        assertEquals(none, r.move(610, 50, 600, pc = 2))
+        assertNull(r.nextDeadlineMs())
+        assertEquals(none, r.onTick(2000))
+    }
+
+    @Test fun `GR-40 swipe up has no hold candidate`() {
+        val r = holding(SWIPE_RIGHT_HOLD, SWIPE_LEFT_HOLD, SWIPE_DOWN_HOLD)
+        r.down(540, 90, 0)
+        r.move(540, 10, 50)
+        assertNull(r.nextDeadlineMs())
+        assertEquals(none, r.onTick(2000))
+    }
+
+    @Test fun `GR-41 only bound hold directions wait`() {
+        val r = holding(SWIPE_LEFT_HOLD)
+        r.down(540, 50, 0)
+        r.move(610, 50, 50)
+        assertNull(r.nextDeadlineMs())
+        assertEquals(none, r.onTick(2000))
+        assertEquals(listOf(SWIPE_RIGHT), r.up(610, 50, 2100))
     }
 }

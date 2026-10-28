@@ -10,11 +10,11 @@
 
     <!-- Common -->
     <string name="cancel">Hủy</string>
-    <string name="close">Đóng</string>
     <string name="action_open">Mở</string>
     <string name="action_install">Tải về</string>
     <string name="action_grant">Cấp quyền</string>
     <string name="action_open_settings">Mở cài đặt</string>
+    <string name="action_allow">Cho phép</string>
     <string name="state_done">Đã xong</string>
     <string name="state_missing">Còn thiếu</string>
 
@@ -31,8 +31,6 @@
     <string name="mode_title">Chế độ nhận diện</string>
     <string name="mode_accessibility">Trợ năng</string>
     <string name="mode_shizuku">Shizuku</string>
-    <string name="mode_accessibility_desc">Một lớp phủ vô hình che vùng notch. Chạm vào vùng nhỏ đó chỉ do Totch xử lý.</string>
-    <string name="mode_shizuku_desc">Đọc thao tác chạm qua Shizuku. Không vẽ gì lên vùng notch.</string>
     <string name="requirements_title">Yêu cầu</string>
     <string name="req_shizuku_running_title">Dịch vụ Shizuku</string>
     <string name="req_shizuku_running_ok">Đang chạy</string>
@@ -46,21 +44,26 @@
     <string name="req_notifications_title">Thông báo</string>
     <string name="req_notifications_ok">Đã cho phép</string>
     <string name="req_notifications_missing">Cần để hiển thị thông báo của dịch vụ chạy nền.</string>
-    <string name="note_shizuku_shade">Ở chế độ Shizuku, Totch không chặn được thao tác chạm nên vuốt xuống từ notch cũng sẽ kéo thanh thông báo xuống. Nên gán “Vuốt xuống” cho “Mở thông báo”.</string>
-    <string name="onboarding_title">Bắt đầu</string>
-    <string name="onboarding_body">Totch biến vùng notch camera thành một nút bấm. Hãy chọn cách nhận diện thao tác chạm:</string>
-    <string name="onboarding_accessibility">Trợ năng: cài đặt đơn giản nhất, chỉ cần bật một dịch vụ hệ thống.</string>
-    <string name="onboarding_shizuku">Shizuku: hoàn toàn không có lớp phủ, nhưng cần ứng dụng Shizuku đang chạy.</string>
 
     <!-- Gestures -->
-    <string name="gestures_title">Cử chỉ</string>
-    <string name="gestures_intro">Chạm vào vùng notch để chạy hành động đã gán cho từng cử chỉ.</string>
     <string name="gesture_tap">Chạm</string>
     <string name="gesture_double_tap">Chạm hai lần</string>
     <string name="gesture_long_press">Nhấn giữ</string>
     <string name="gesture_swipe_down">Vuốt xuống</string>
     <string name="gesture_swipe_left">Vuốt sang trái</string>
     <string name="gesture_swipe_right">Vuốt sang phải</string>
+    <string name="gesture_swipe_down_hold">Vuốt xuống và giữ</string>
+    <string name="gesture_swipe_left_hold">Vuốt sang trái và giữ</string>
+    <string name="gesture_swipe_right_hold">Vuốt sang phải và giữ</string>
+    <string name="group_tap">Chạm</string>
+    <string name="group_press">Nhấn giữ</string>
+    <string name="group_swipe">Vuốt</string>
+    <string name="group_swipe_hold">Vuốt và giữ</string>
+    <string name="gesture_unavailable_shizuku">Không khả dụng ở chế độ Shizuku</string>
+    <string name="repeat_cd">Lặp lại khi giữ</string>
+    <string name="reset_gestures_cd">Khôi phục cử chỉ</string>
+    <string name="reset_gestures_title">Khôi phục cử chỉ?</string>
+    <string name="reset_gestures_message">Mọi cử chỉ trở về hành động mặc định và tắt lặp lại. Cài đặt được giữ nguyên.</string>
     <string name="action_none">Không làm gì</string>
     <string name="action_back">Quay lại</string>
     <string name="action_home">Màn hình chính</string>
@@ -77,53 +80,62 @@
     <string name="action_volume_down">Giảm âm lượng</string>
     <string name="action_open_app">Mở ứng dụng…</string>
     <string name="action_launch_app">Mở %1$s</string>
+    <string name="action_assistant">Gọi trợ lý</string>
+    <string name="action_open_shortcut">Mở shortcut…</string>
+    <string name="action_launch_shortcut">%1$s: %2$s</string>
     <string name="app_not_installed">Chưa cài đặt</string>
     <string name="group_system">Hệ thống</string>
     <string name="group_media">Media</string>
-    <string name="group_apps">Ứng dụng</string>
     <string name="action_unavailable_in_mode">Không khả dụng ở chế độ này</string>
-    <string name="sheet_title">Hành động cho %1$s</string>
-    <string name="selected">Đã chọn</string>
 
-    <!-- App picker -->
-    <string name="app_picker_title">Chọn ứng dụng</string>
+    <!-- Action picker -->
     <string name="app_picker_search">Tìm ứng dụng</string>
     <string name="app_picker_clear">Xóa tìm kiếm</string>
     <string name="app_picker_empty">Không có ứng dụng nào khớp “%1$s”</string>
     <string name="app_picker_none">Không tìm thấy ứng dụng</string>
+    <string name="tab_system">Hệ thống &amp; media</string>
+    <string name="tab_apps">Ứng dụng</string>
+    <string name="tab_shortcuts">Shortcut</string>
+    <string name="shortcut_search">Tìm shortcut</string>
+    <string name="shortcut_empty">Không có shortcut nào khớp “%1$s”</string>
+    <string name="shortcut_none">Không tìm thấy shortcut</string>
 
     <!-- Settings -->
     <string name="settings_title">Cài đặt</string>
-    <string name="about_cd">Giới thiệu</string>
     <string name="section_sensitivity">Độ nhạy</string>
     <string name="setting_double_tap">Khoảng chạm hai lần</string>
     <string name="setting_long_press">Thời gian nhấn giữ</string>
     <string name="setting_swipe">Khoảng cách vuốt</string>
+    <string name="setting_repeat_interval">Khoảng lặp lại</string>
     <string name="setting_padding">Mở rộng vùng chạm</string>
     <string name="unit_ms">%1$d ms</string>
     <string name="unit_dp">%1$d dp</string>
     <string name="unit_percent">%1$d%%</string>
     <string name="section_feedback">Phản hồi</string>
     <string name="setting_haptics">Rung phản hồi</string>
-    <string name="setting_haptics_desc">Rung khi nhận diện được cử chỉ</string>
     <string name="section_touch_area">Vùng chạm</string>
     <string name="setting_custom_area">Tùy chỉnh vùng chạm</string>
-    <string name="setting_custom_area_desc">Thay thế vùng được phát hiện từ phần khuyết màn hình</string>
     <string name="setting_area_x">Vị trí ngang</string>
     <string name="setting_area_width">Chiều rộng</string>
     <string name="setting_area_height">Chiều cao</string>
-    <string name="preview_button">Xem trước vùng chạm</string>
-    <string name="reset_button">Khôi phục mặc định</string>
     <string name="reset_title">Khôi phục cài đặt?</string>
-    <string name="reset_message">Cử chỉ đã gán, độ nhạy và vùng chạm sẽ trở về mặc định. Công tắc bật/tắt và chế độ nhận diện được giữ nguyên.</string>
+    <string name="reset_message">Độ nhạy, vùng chạm, phản hồi, giao diện và cài đặt hệ thống sẽ trở về mặc định. Cử chỉ, công tắc bật/tắt và chế độ nhận diện được giữ nguyên.</string>
     <string name="reset_confirm">Khôi phục</string>
-    <string name="preview_title">Vùng chạm</string>
-    <string name="preview_message">Vùng được tô màu là nơi Totch nhận thao tác chạm.</string>
-    <string name="preview_unavailable">Chưa có vùng chạm. Hãy bật cử chỉ và cấp đủ quyền trước.</string>
+    <string name="reset_settings_cd">Khôi phục cài đặt</string>
+    <string name="reset_item_cd">Khôi phục mặc định</string>
+    <string name="section_appearance">Giao diện</string>
+    <string name="setting_theme">Chủ đề</string>
+    <string name="theme_system">Hệ thống</string>
+    <string name="theme_light">Sáng</string>
+    <string name="theme_dark">Tối</string>
+    <string name="setting_amoled">Đen AMOLED</string>
+    <string name="setting_language">Ngôn ngữ</string>
+    <string name="language_system">Theo hệ thống</string>
+    <string name="section_system">Hệ thống</string>
+    <string name="setting_start_on_boot">Khởi động cùng máy</string>
+    <string name="section_about">Giới thiệu</string>
 
-    <!-- About -->
-    <string name="about_title">Giới thiệu</string>
-    <string name="about_tagline">Dùng notch camera làm nút cử chỉ.</string>
+    <!-- About (last section of Settings) -->
     <string name="about_version">Phiên bản %1$s</string>
     <string name="about_license_title">Giấy phép</string>
     <string name="about_source_title">Mã nguồn</string>
@@ -132,4 +144,7 @@
     <string name="req_media_title">Điều khiển media</string>
     <string name="req_media_ok">Play/Pause, Bài tiếp, Bài trước điều khiển trực tiếp trình phát đang hoạt động</string>
     <string name="req_media_missing">Khuyến nghị: cấp quyền truy cập thông báo để cử chỉ media hoạt động ổn định. Totch chỉ dùng quyền này để tìm trình phát đang hoạt động, không đọc thông báo của bạn.</string>
+    <string name="req_battery_title">Pin</string>
+    <string name="req_battery_ok">Không giới hạn</string>
+    <string name="req_battery_missing">Khuyến nghị: cho phép dùng pin không giới hạn để Totch tiếp tục chạy nền.</string>
 </resources>

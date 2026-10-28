@@ -29,9 +29,14 @@ Mục tiêu độ phủ: `:core` ≥ 90% dòng (NFR-6).
 | actions (AD-_, SC-_)               | `core/.../action/ActionDispatcherTest`, `ShellCommandsTest`                             |
 | settings (ST-\*)                   | `core/.../settings/SettingsTest`, `SettingsCodecTest`                                   |
 | detection-modes (EN-\*)            | `app/.../engine/GestureEngineTest`                                                      |
-| ui (UI-10, UI-11)                  | `app/.../ui/gestures/GesturesViewModelTest`, `AppPickerViewModelTest`                   |
 | ui (UI-1…UI-3)                     | `app/.../ui/home/HomeViewModelTest`                                                     |
 | actions §5 (MC-\*)                 | `app/.../action/MediaSessionsTest`                                                      |
+| actions §7 (SH-\*)                 | `app/.../ui/picker/ShortcutGroupingTest`                                                |
+| ui (UI-10, UI-11, UI-20…UI-22)     | `app/.../ui/picker/ActionPickerViewModelTest`                                           |
+| ui (UI-12…UI-16)                   | `app/.../ui/gestures/GesturesViewModelTest`                                             |
+| ui (UI-30…UI-32)                   | `app/.../ui/settings/SettingsViewModelTest`                                             |
+| ui (TH-2)                          | `app/.../ui/theme/AmoledTest`                                                           |
+| detection-modes (DM-22)            | `app/.../service/BootActionTest`                                                        |
 
 ## 4. Checklist thủ công trước release
 

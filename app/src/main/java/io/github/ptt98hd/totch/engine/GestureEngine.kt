@@ -8,7 +8,7 @@ import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.model.TouchEvent
 import io.github.ptt98hd.totch.core.settings.Settings
-import io.github.ptt98hd.totch.core.settings.actionFor
+import io.github.ptt98hd.totch.core.settings.effectiveAction
 import io.github.ptt98hd.totch.core.settings.toGestureConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -108,7 +108,7 @@ class GestureEngine(
 
     private fun emit(gestures: List<Gesture>) {
         for (g in gestures) {
-            val action = settings.actionFor(g)
+            val action = settings.effectiveAction(g)
             if (action != Action.None) actions.trySend(action)
         }
     }
