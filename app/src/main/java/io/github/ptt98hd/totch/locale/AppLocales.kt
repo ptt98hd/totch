@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
 import android.os.LocaleList
+import androidx.core.content.edit
 import io.github.ptt98hd.totch.core.settings.AppLanguage
 import java.util.Locale
 
@@ -25,7 +26,7 @@ object AppLocales {
             val wanted = language.tag?.let(LocaleList::forLanguageTags) ?: LocaleList.getEmptyLocaleList()
             if (manager.applicationLocales != wanted) manager.applicationLocales = wanted
         } else {
-            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_TAG, language.tag).apply()
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString(KEY_TAG, language.tag) }
         }
     }
 
