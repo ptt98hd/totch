@@ -12,7 +12,7 @@ android {
         applicationId = "io.github.ow3n.totch"
         minSdk = 31
         targetSdk = 36
-        versionCode = 1
+        versionCode = 10000
         versionName = "1.0.0"
     }
 

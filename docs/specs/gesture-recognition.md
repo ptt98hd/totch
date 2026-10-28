@@ -22,7 +22,17 @@ Yêu cầu: FR-G1…FR-G7, FR-S3 · Module: `:core` · Package: `io.github.ow3n.
 timeout đã tới hạn `≤ t` (như thể `onTick(t)` được gọi trước). Do đó kết quả không phụ thuộc
 việc `onTick` có được gọi đúng lúc hay không.
 
-Khoảng cách dùng Euclid: `hypot(x - downX, y - downY)`.
+Hệ quả: timeout tới hạn khi `t ≥ deadline`, nên DOWN thứ hai đúng tại `up + doubleTapMs` đã là
+cử chỉ mới (cửa sổ double tap thực tế là `< doubleTapMs`, xem GR-29).
+
+Khoảng cách dùng Euclid: `hypot(x - downX, y - downY)`; "vượt `touchSlop`" nghĩa là `> touchSlopPx`.
+
+**Phân loại vuốt** (tại UP, dùng `dx = x − downX`, `dy = y − downY`): nếu `|dy| > |dx|` → `SWIPE_DOWN`
+khi `dy ≥ swipeMinDistancePx`, ngược lại không phát (vuốt lên không hỗ trợ); nếu `|dx| ≥ |dy|` →
+`SWIPE_LEFT`/`SWIPE_RIGHT` theo dấu của `dx` khi `|dx| ≥ swipeMinDistancePx`.
+
+**Hủy nét chạm** (CANCEL, multi-touch, DOWN thiếu UP): nét hiện tại không phát gì, nhưng nếu đó là
+lần chạm thứ hai thì TAP đầu tiên (đã hoàn tất) vẫn được phát (GR-27).
 
 ## 3. Acceptance criteria
 
@@ -57,3 +67,6 @@ Giả định mặc định trong test: region = `Rect(400, 0, 680, 100)`, `doub
 | GR-24 | Bất kỳ | `reset()` | về Idle, xóa mọi TAP đang chờ, không phát gì |
 | GR-25 | Idle | MOVE/UP không có DOWN trước | bỏ qua |
 | GR-26 | Pressed | DOWN mới (thiếu UP — dữ liệu hỏng) | coi như nét cũ bị hủy, bắt đầu nét mới |
+| GR-27 | WaitingSecondTap → DOWN lần 2 | CANCEL, hoặc MOVE với `pointerCount=2` | phát `[TAP]` (của lần chạm 1) ngay lúc hủy; phần còn lại của nét bị bỏ qua |
+| GR-28 | Idle | DOWN(540,20), UP(540,90) không có MOVE ở giữa | vị trí UP được dùng để xét slop/vuốt → `[SWIPE_DOWN]` |
+| GR-29 | Idle | DOWN t0, UP t0+80, DOWN t0+380 (đúng `up+doubleTapMs`) | phát `[TAP]` tại DOWN thứ hai; lần chạm 2 là cử chỉ mới |

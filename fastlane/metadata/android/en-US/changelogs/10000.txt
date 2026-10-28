@@ -1,0 +1,5 @@
+Initial release:
+- 6 notch gestures: tap, double tap, long press, swipe down/left/right
+- System, flashlight, media, volume and app-launch actions
+- Shizuku and Accessibility detection modes
+- Material 3, dynamic color, English and Vietnamese

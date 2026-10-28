@@ -22,7 +22,8 @@ val DefaultBindings = mapOf(
     TAP to None, DOUBLE_TAP to LockScreen, LONG_PRESS to ToggleTorch,
     SWIPE_DOWN to Notifications, SWIPE_LEFT to MediaPrevious, SWIPE_RIGHT to MediaNext)
 fun Settings.actionFor(g: Gesture): Action = bindings[g] ?: Action.None
-fun Settings.toGestureConfig(density: Float): GestureConfig   // doubleTapEnabled = actionFor(DOUBLE_TAP) != None
+const val TOUCH_SLOP_DP = 12
+fun Settings.toGestureConfig(density: Float): GestureConfig   // touchSlopPx = TOUCH_SLOP_DP × density; doubleTapEnabled = actionFor(DOUBLE_TAP) != None
 ```
 
 ## 2. Tiêu chí
@@ -30,10 +31,10 @@ fun Settings.toGestureConfig(density: Float): GestureConfig   // doubleTapEnable
 | ID | Tiêu chí |
 |---|---|
 | ST-1 | `Settings()` mặc định khớp FR-S2 |
-| ST-2 | `sanitized()` kẹp: doubleTapMs 150–600, longPressMs 300–1500, swipeMinDistanceDp 16–200, paddingDp 0–48, manualRegion: fraction 0–1, widthDp 8–400, heightDp 8–100 |
+| ST-2 | `sanitized()` kẹp: doubleTapMs 150–600, longPressMs 300–1500, swipeMinDistanceDp 16–200, paddingDp 0–48, manualRegion: fraction 0–1 (NaN → 0.5), widthDp 8–400, heightDp 8–100 |
 | ST-3 | `sanitized()` bổ sung gesture còn thiếu trong `bindings` bằng `None` (đủ 6 key) |
 | ST-4 | `decode(encode(s)) == s` cho mọi settings hợp lệ, kể cả `LaunchApp("com.example")` |
-| ST-5 | `decode` của chuỗi rỗng/JSON hỏng/type lạ → `Settings()` mặc định, không ném exception |
+| ST-5 | `decode` của chuỗi rỗng/JSON hỏng/type lạ (kể cả `"type"` action không biết hoặc enum không biết) → `Settings()` mặc định cho **toàn bộ** cấu hình, không ném exception |
 | ST-6 | `decode` bỏ qua key không biết (tương thích ngược) và trả về đã `sanitized()` |
 | ST-7 | `toGestureConfig(density=2f)`: `swipeMinDistancePx = 80f`, `touchSlopPx = 12dp × density = 24f`, `doubleTapEnabled=false` khi DOUBLE_TAP → None |
 | ST-8 | JSON dùng tên ổn định (`@SerialName`), ví dụ action Back = `{"type":"back"}` |

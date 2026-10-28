@@ -1,0 +1,24 @@
+<p>Totch turns the notch (display cutout / punch-hole camera) of your phone into a multi-purpose touch button. Tap, double-tap, long-press or swipe right on the notch to trigger an action.</p>
+
+<p><b>Gestures:</b> tap, double tap, long press, swipe down, swipe left, swipe right.</p>
+
+<p><b>Actions:</b></p>
+<ul>
+<li>Back, Home, Recents, Lock screen, Screenshot</li>
+<li>Open notification shade or Quick Settings</li>
+<li>Toggle flashlight</li>
+<li>Media Play/Pause, Next, Previous; Volume up/down</li>
+<li>Launch any installed app</li>
+</ul>
+
+<p><b>Two detection modes, your choice:</b></p>
+<ul>
+<li><b>Shizuku mode</b> reads raw touch events with shell privileges through Shizuku. No Accessibility needed, but touches are not consumed: the system still receives them, so a swipe down also pulls the notification shade. Runs as a foreground service with a persistent notification.</li>
+<li><b>Accessibility mode</b> places a small invisible touch area exactly over the notch and consumes touches only inside that area.</li>
+</ul>
+
+<p><b>About the Accessibility service:</b> Totch uses the Accessibility API only to (1) draw the touch area over the notch and (2) perform global actions such as Back, Home, Recents, lock screen, screenshot and opening the notification shade. It does not read, collect or transmit any screen content or typed text. The service is optional; Shizuku mode works without it.</p>
+
+<p><b>Privacy:</b> no Internet permission, no ads, no trackers, no analytics. All settings stay on your device.</p>
+
+<p>Requires Android 12 or newer and a phone with a top display cutout. Gestures are disabled in landscape.</p>

@@ -1,0 +1,5 @@
+Phiên bản đầu tiên:
+- 6 cử chỉ tại notch: chạm, chạm đúp, nhấn giữ, vuốt xuống/trái/phải
+- Hành động hệ thống, đèn pin, media, âm lượng, mở ứng dụng
+- Hai chế độ nhận chạm: Shizuku và Trợ năng
+- Material 3, dynamic color, tiếng Anh và tiếng Việt

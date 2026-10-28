@@ -48,6 +48,8 @@ add device 2: /dev/input/event3
 - Giao thức MT type B: `ABS_MT_SLOT` chọn slot hiện tại (mặc định slot 0 nếu thiết bị không gửi SLOT).
 - Mỗi slot lưu `trackingId`, `x`, `y`. Sự kiện chỉ phát khi gặp `EV_SYN SYN_REPORT`.
 - **Primary** = slot đang hoạt động có chỉ số nhỏ nhất. `pointerCount` = số slot đang hoạt động.
+- `timeMs` của sự kiện phát ra lấy từ dòng `SYN_REPORT`. Dòng không có timestamp hoặc giá trị không phải hex bị bỏ qua.
+- Nếu các slot nhấc ở những khung khác nhau, khung trung gian phát `MOVE` (pointerCount giảm, primary có thể đổi), khung cuối phát `UP`.
 
 | ID | Tiêu chí |
 |---|---|

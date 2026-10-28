@@ -1,0 +1,24 @@
+<p>Totch biến vùng tai thỏ / lỗ camera trên điện thoại thành một nút cảm ứng đa năng. Chạm, chạm đúp, nhấn giữ hoặc vuốt ngay tại notch để kích hoạt hành động.</p>
+
+<p><b>Cử chỉ:</b> chạm, chạm đúp, nhấn giữ, vuốt xuống, vuốt trái, vuốt phải.</p>
+
+<p><b>Hành động:</b></p>
+<ul>
+<li>Back, Home, Recents, Khóa màn hình, Chụp màn hình</li>
+<li>Mở thanh thông báo hoặc Quick Settings</li>
+<li>Bật/tắt đèn pin</li>
+<li>Phát/Tạm dừng, Bài tiếp, Bài trước; Tăng/Giảm âm lượng</li>
+<li>Mở một ứng dụng bất kỳ đã cài</li>
+</ul>
+
+<p><b>Hai chế độ nhận chạm, tùy bạn chọn:</b></p>
+<ul>
+<li><b>Chế độ Shizuku</b> đọc sự kiện chạm thô với quyền shell qua Shizuku. Không cần Trợ năng, nhưng không chặn được chạm: hệ thống vẫn nhận chạm, nên vuốt xuống cũng sẽ kéo thanh thông báo. Chạy dưới dạng foreground service với thông báo thường trực.</li>
+<li><b>Chế độ Trợ năng (Accessibility)</b> đặt một vùng chạm nhỏ trong suốt đúng bằng vùng notch và chỉ tiêu thụ chạm trong vùng đó.</li>
+</ul>
+
+<p><b>Về dịch vụ Trợ năng:</b> Totch chỉ dùng Accessibility API để (1) vẽ vùng nhận chạm trên notch và (2) thực hiện các hành động toàn cục như Back, Home, Recents, khóa màn hình, chụp màn hình, mở thanh thông báo. Ứng dụng không đọc, không thu thập và không gửi đi bất kỳ nội dung màn hình hay văn bản nào. Dịch vụ này là tùy chọn; chế độ Shizuku hoạt động mà không cần nó.</p>
+
+<p><b>Quyền riêng tư:</b> không có quyền Internet, không quảng cáo, không trình theo dõi, không analytics. Mọi cài đặt chỉ lưu trên máy bạn.</p>
+
+<p>Yêu cầu Android 12 trở lên và điện thoại có tai thỏ/lỗ camera ở cạnh trên. Cử chỉ tự tắt khi xoay ngang.</p>

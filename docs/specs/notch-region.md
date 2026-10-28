@@ -20,3 +20,6 @@ sang trái, phải và dưới (cạnh trên luôn = 0), rồi kẹp trái/phả
 | NR-7 | padding đẩy rect ra ngoài màn (vd. cutout `(0,0,50,50)`, padding 20) | trái kẹp về 0: `(0,0,70,70)` |
 | NR-8 | rect kết quả có width ≤ 0 hoặc height ≤ 0 | `null` |
 | NR-9 | manual centerXFraction ngoài [0,1] | được kẹp vào [0,1] trước khi tính |
+
+Ghi chú: manual → `left = round(fraction × screenWidthPx − widthPx/2)`, `right = left + widthPx`;
+mặc định → `width = round(screenWidthPx × 0.2)`, `left = (screenWidthPx − width) / 2`. Cạnh trên của rect cutout luôn được đặt về 0.

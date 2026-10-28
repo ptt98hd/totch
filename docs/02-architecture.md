@@ -154,12 +154,13 @@ interface ActionExecutor {
 object ActionRequirements { fun of(action: Action): Set<Capability> }  // tập backend có thể chạy
 
 class ActionDispatcher(executors: List<ActionExecutor>) {
-    // Ưu tiên: LOCAL > ACCESSIBILITY > SHIZUKU. None → success, không gọi executor.
+    // Ưu tiên: LOCAL > ACCESSIBILITY > SHIZUKU. None → Skipped, không gọi executor.
     suspend fun dispatch(action: Action): DispatchResult
 }
 sealed interface DispatchResult { data object Ok; data object Skipped; data class Failed(val reason: String) }
 
-object ShellCommands { fun of(action: Action): String? }  // lệnh shell cho ShizukuExecutor
+object ShellCommands { fun of(action: Action): String?                          // lệnh shell cho ShizukuExecutor
+                       fun launch(packageName: String, activityName: String): String? }  // null nếu tên không hợp lệ
 ```
 
 ```kotlin
