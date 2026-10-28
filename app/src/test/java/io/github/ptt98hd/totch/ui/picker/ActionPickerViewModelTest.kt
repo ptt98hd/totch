@@ -95,13 +95,23 @@ class ActionPickerViewModelTest {
     }
 
     @Test
-    fun `UI-10 choosing a system action saves it and finishes`() = runTest {
-        val repo = FakeSettingsRepository()
+    fun `UI-10 choosing a system action saves it, switches the gesture on and finishes`() = runTest {
+        val repo = FakeSettingsRepository(Settings(disabledGestures = setOf(Gesture.SWIPE_RIGHT, Gesture.TAP)))
         val vm = vm(repo)
         vm.state.test {
             vm.select(Action.Assistant)
             assertEquals(Settings().bindings + (Gesture.SWIPE_RIGHT to Action.Assistant), repo.current.bindings)
+            assertEquals(setOf(Gesture.TAP), repo.current.disabledGestures)
             assertTrue(expectMostRecentItem().finished)
+        }
+    }
+
+    @Test
+    fun `UI-24 system query is kept in state`() = runTest {
+        val vm = vm(FakeSettingsRepository())
+        vm.state.test {
+            vm.setSystemQuery("vol")
+            assertEquals("vol", expectMostRecentItem().systemQuery)
         }
     }
 

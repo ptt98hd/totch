@@ -11,7 +11,4 @@ data class GestureConfig(
     val doubleTapEnabled: Boolean = true,
     /** `SWIPE_*_HOLD` gestures recognized when the finger pauses after a swipe. */
     val holdSwipes: Set<Gesture> = emptySet(),
-    /** Hold gestures re-emitted every [repeatIntervalMs] until release. */
-    val repeating: Set<Gesture> = emptySet(),
-    val repeatIntervalMs: Long = 300,
 )

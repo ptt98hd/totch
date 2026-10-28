@@ -15,9 +15,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** A slider of the Notch screen; only sliders have a reset button (UI-30, FR-S9). */
+/** A slider of the Preferences screen; only sliders have a reset button (UI-30, FR-S9). */
 enum class NotchSetting {
-    DOUBLE_TAP, LONG_PRESS, SWIPE_DISTANCE, REPEAT_INTERVAL,
+    DOUBLE_TAP, LONG_PRESS, SWIPE_DISTANCE,
     AREA_X, AREA_Y, AREA_WIDTH, AREA_HEIGHT, PADDING,
 }
 
@@ -34,7 +34,6 @@ fun NotchSetting.reset(s: Settings, auto: ManualRegionDp): Settings = when (this
     NotchSetting.DOUBLE_TAP -> s.copy(doubleTapMs = defaults.doubleTapMs)
     NotchSetting.LONG_PRESS -> s.copy(longPressMs = defaults.longPressMs)
     NotchSetting.SWIPE_DISTANCE -> s.copy(swipeMinDistanceDp = defaults.swipeMinDistanceDp)
-    NotchSetting.REPEAT_INTERVAL -> s.copy(repeatIntervalMs = defaults.repeatIntervalMs)
     NotchSetting.AREA_X -> s.area(auto) { it.copy(centerXFraction = auto.centerXFraction) }
     NotchSetting.AREA_Y -> s.area(auto) { it.copy(topDp = auto.topDp) }
     NotchSetting.AREA_WIDTH -> s.area(auto) { it.copy(widthDp = auto.widthDp) }
@@ -56,7 +55,7 @@ data class NotchSettingsUiState(
     fun isDefault(item: NotchSetting): Boolean = item.isDefault(settings, auto)
 }
 
-/** Notch settings: sensitivity, position, size and feedback (FR-U12). */
+/** Preferences (notch settings): feedback, sensitivity, position and size (FR-U12, FR-U17). */
 class NotchSettingsViewModel(
     private val settingsRepository: SettingsRepository,
     private val touchArea: TouchArea,
@@ -75,7 +74,6 @@ class NotchSettingsViewModel(
     fun setDoubleTapMs(value: Long) = save { it.copy(doubleTapMs = value) }
     fun setLongPressMs(value: Long) = save { it.copy(longPressMs = value) }
     fun setSwipeDistanceDp(value: Int) = save { it.copy(swipeMinDistanceDp = value) }
-    fun setRepeatIntervalMs(value: Long) = save { it.copy(repeatIntervalMs = value) }
     fun setPaddingDp(value: Int) = save { it.copy(paddingDp = value) }
     fun setHaptics(value: Boolean) = save { it.copy(haptics = value) }
 

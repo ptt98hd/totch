@@ -22,25 +22,32 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.Tab
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptt98hd.totch.AppContainer
@@ -51,32 +58,51 @@ import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.ui.common.ActionCatalog
+import io.github.ptt98hd.totch.ui.common.ActionGroup
 import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.TonalIcon
-import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.icon
 import io.github.ptt98hd.totch.ui.common.labelRes
 import io.github.ptt98hd.totch.ui.gestures.AppIcon
 import io.github.ptt98hd.totch.ui.theme.TotchTheme
 
+/**
+ * FR-U16: the action picker as a bottom sheet over the Gestures screen. Its view model lives exactly as long
+ * as the sheet, so every opening starts fresh.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActionPickerRoute(container: AppContainer, gesture: Gesture, onBack: () -> Unit) {
+fun ActionPickerSheet(container: AppContainer, gesture: Gesture, onDismiss: () -> Unit) {
+    val owner = remember(gesture) {
+        object : ViewModelStoreOwner {
+            override val viewModelStore = ViewModelStore()
+        }
+    }
+    DisposableEffect(owner) { onDispose { owner.viewModelStore.clear() } }
     val vm: ActionPickerViewModel =
-        viewModel(key = "picker-$gesture", factory = ActionPickerViewModel.factory(container, gesture))
+        viewModel(viewModelStoreOwner = owner, factory = ActionPickerViewModel.factory(container, gesture))
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(state.finished) { if (state.finished) onBack() }
-    ActionPickerScreen(
-        state = state,
-        callbacks = PickerCallbacks(
-            onTab = vm::selectTab,
-            onSelect = vm::select,
-            onSelectApp = vm::selectApp,
-            onSelectShortcut = vm::selectShortcut,
-            onAppQuery = vm::setAppQuery,
-            onShortcutQuery = vm::setShortcutQuery,
-            onBack = onBack,
-        ),
-    )
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    LaunchedEffect(state.finished) {
+        if (state.finished) {
+            sheetState.hide()
+            onDismiss()
+        }
+    }
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        ActionPickerContent(
+            state = state,
+            callbacks = PickerCallbacks(
+                onTab = vm::selectTab,
+                onSelect = vm::select,
+                onSelectApp = vm::selectApp,
+                onSelectShortcut = vm::selectShortcut,
+                onSystemQuery = vm::setSystemQuery,
+                onAppQuery = vm::setAppQuery,
+                onShortcutQuery = vm::setShortcutQuery,
+            ),
+        )
+    }
 }
 
 data class PickerCallbacks(
@@ -84,9 +110,9 @@ data class PickerCallbacks(
     val onSelect: (Action) -> Unit = {},
     val onSelectApp: (AppInfo) -> Unit = {},
     val onSelectShortcut: (ShortcutEntry) -> Unit = {},
+    val onSystemQuery: (String) -> Unit = {},
     val onAppQuery: (String) -> Unit = {},
     val onShortcutQuery: (String) -> Unit = {},
-    val onBack: () -> Unit = {},
 )
 
 private val PickerTab.labelRes: Int
@@ -96,82 +122,95 @@ private val PickerTab.labelRes: Int
         PickerTab.SHORTCUTS -> R.string.tab_shortcuts
     }
 
-/** FR-U9: tabbed action chooser (System & media / Apps / Shortcuts). */
+/** FR-U9, FR-U16: action chooser with segmented sections (System / Applications / Shortcuts), each searchable. */
 @Composable
-fun ActionPickerScreen(state: ActionPickerUiState, callbacks: PickerCallbacks, modifier: Modifier = Modifier) {
-    Scaffold(
-        modifier = modifier,
-        topBar = { TotchTopBar(stringResource(state.gesture.labelRes), onBack = callbacks.onBack) },
-    ) { padding ->
-        Column(Modifier.padding(top = padding.calculateTopPadding()).fillMaxSize().imePadding()) {
-            PrimaryTabRow(selectedTabIndex = state.tab.ordinal) {
-                PickerTab.entries.forEach { tab ->
-                    Tab(
-                        selected = state.tab == tab,
-                        onClick = { callbacks.onTab(tab) },
-                        text = { Text(stringResource(tab.labelRes), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, modifier: Modifier = Modifier) {
+    val resources = LocalResources.current
+    Column(modifier.fillMaxSize().imePadding()) {
+        Text(
+            stringResource(state.gesture.labelRes),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(horizontal = Gutter).padding(bottom = 16.dp),
+        )
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Gutter)) {
+            PickerTab.entries.forEach { tab ->
+                SegmentedButton(
+                    selected = state.tab == tab,
+                    onClick = { callbacks.onTab(tab) },
+                    shape = SegmentedButtonDefaults.itemShape(tab.ordinal, PickerTab.entries.size),
+                    label = { Text(stringResource(tab.labelRes), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                )
+            }
+        }
+        val bottom = PaddingValues(bottom = 16.dp)
+        when (state.tab) {
+            PickerTab.SYSTEM -> {
+                val groups = ActionCatalog.search(state.systemQuery) { resources.getString(it.labelRes) }
+                SearchableList(
+                    query = state.systemQuery,
+                    onQuery = callbacks.onSystemQuery,
+                    placeholder = stringResource(R.string.action_search),
+                    loading = false,
+                    empty = groups.isEmpty(),
+                    emptyText = stringResource(R.string.action_search_empty, state.systemQuery.trim()),
+                    contentPadding = bottom,
+                ) { systemTab(groups, state, callbacks.onSelect) }
+            }
+            PickerTab.APPS -> SearchableList(
+                query = state.appQuery,
+                onQuery = callbacks.onAppQuery,
+                placeholder = stringResource(R.string.app_picker_search),
+                loading = state.appsLoading,
+                empty = state.apps.isEmpty(),
+                emptyText = if (state.appQuery.isBlank()) {
+                    stringResource(R.string.app_picker_none)
+                } else {
+                    stringResource(R.string.app_picker_empty, state.appQuery.trim())
+                },
+                contentPadding = bottom,
+            ) {
+                val current = (state.current as? Action.LaunchApp)?.packageName
+                items(state.apps, key = { it.packageName }) { app ->
+                    Choice(
+                        selected = app.packageName == current,
+                        onClick = { callbacks.onSelectApp(app) },
+                        leading = { AppIcon(app.packageName) },
+                        title = app.label,
                     )
                 }
             }
-            val bottom = PaddingValues(bottom = padding.calculateBottomPadding() + 16.dp)
-            when (state.tab) {
-                PickerTab.SYSTEM -> LazyColumn(contentPadding = bottom) { systemTab(state, callbacks.onSelect) }
-                PickerTab.APPS -> SearchableList(
-                    query = state.appQuery,
-                    onQuery = callbacks.onAppQuery,
-                    placeholder = stringResource(R.string.app_picker_search),
-                    loading = state.appsLoading,
-                    empty = state.apps.isEmpty(),
-                    emptyText = if (state.appQuery.isBlank()) {
-                        stringResource(R.string.app_picker_none)
-                    } else {
-                        stringResource(R.string.app_picker_empty, state.appQuery.trim())
-                    },
-                    contentPadding = bottom,
-                ) {
-                    val current = (state.current as? Action.LaunchApp)?.packageName
-                    items(state.apps, key = { it.packageName }) { app ->
-                        Choice(
-                            selected = app.packageName == current,
-                            onClick = { callbacks.onSelectApp(app) },
-                            leading = { AppIcon(app.packageName) },
-                            title = app.label,
-                        )
+            PickerTab.SHORTCUTS -> SearchableList(
+                query = state.shortcutQuery,
+                onQuery = callbacks.onShortcutQuery,
+                placeholder = stringResource(R.string.shortcut_search),
+                loading = state.shortcutsLoading,
+                empty = state.shortcutGroups.isEmpty(),
+                emptyText = if (state.shortcutQuery.isBlank()) {
+                    stringResource(R.string.shortcut_none)
+                } else {
+                    stringResource(R.string.shortcut_empty, state.shortcutQuery.trim())
+                },
+                contentPadding = bottom,
+            ) {
+                val current = state.current as? Action.LaunchShortcut
+                state.shortcutGroups.forEach { group ->
+                    item(key = "app-${group.packageName}") {
+                        Row(
+                            Modifier.fillMaxWidth().padding(start = Gutter + 8.dp, end = Gutter, top = 16.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            AppIcon(group.packageName, size = 24.dp)
+                            Text(group.appLabel, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        }
                     }
-                }
-                PickerTab.SHORTCUTS -> SearchableList(
-                    query = state.shortcutQuery,
-                    onQuery = callbacks.onShortcutQuery,
-                    placeholder = stringResource(R.string.shortcut_search),
-                    loading = state.shortcutsLoading,
-                    empty = state.shortcutGroups.isEmpty(),
-                    emptyText = if (state.shortcutQuery.isBlank()) {
-                        stringResource(R.string.shortcut_none)
-                    } else {
-                        stringResource(R.string.shortcut_empty, state.shortcutQuery.trim())
-                    },
-                    contentPadding = bottom,
-                ) {
-                    val current = state.current as? Action.LaunchShortcut
-                    state.shortcutGroups.forEach { group ->
-                        item(key = "app-${group.packageName}") {
-                            Row(
-                                Modifier.fillMaxWidth().padding(start = Gutter + 8.dp, end = Gutter, top = 16.dp, bottom = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                AppIcon(group.packageName, size = 24.dp)
-                                Text(group.appLabel, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                            }
-                        }
-                        items(group.shortcuts, key = { "sc-${it.packageName}-${it.id}" }) { entry ->
-                            Choice(
-                                selected = current?.packageName == entry.packageName && current.shortcutId == entry.id,
-                                onClick = { callbacks.onSelectShortcut(entry) },
-                                leading = { TonalIcon(Action.LaunchShortcut("", "", "", "").icon) },
-                                title = entry.label,
-                            )
-                        }
+                    items(group.shortcuts, key = { "sc-${it.packageName}-${it.id}" }) { entry ->
+                        Choice(
+                            selected = current?.packageName == entry.packageName && current.shortcutId == entry.id,
+                            onClick = { callbacks.onSelectShortcut(entry) },
+                            leading = { TonalIcon(Action.LaunchShortcut("", "", "", "").icon) },
+                            title = entry.label,
+                        )
                     }
                 }
             }
@@ -179,8 +218,8 @@ fun ActionPickerScreen(state: ActionPickerUiState, callbacks: PickerCallbacks, m
     }
 }
 
-private fun LazyListScope.systemTab(state: ActionPickerUiState, onSelect: (Action) -> Unit) {
-    ActionCatalog.groups.forEach { group ->
+private fun LazyListScope.systemTab(groups: List<ActionGroup>, state: ActionPickerUiState, onSelect: (Action) -> Unit) {
+    groups.forEach { group ->
         item(key = "header-${group.id}") {
             Text(
                 stringResource(group.id.labelRes()),
@@ -268,7 +307,7 @@ private fun SearchableList(
 @Composable
 private fun ActionPickerSystemPreview() {
     TotchTheme {
-        ActionPickerScreen(
+        ActionPickerContent(
             state = ActionPickerUiState(gesture = Gesture.TAP, current = Action.Home, mode = DetectionMode.SHIZUKU),
             callbacks = PickerCallbacks(),
         )
@@ -284,7 +323,7 @@ private fun ActionPickerShortcutsPreview() {
         ShortcutEntry("org.example.camera", "Camera", "selfie", "Selfie", "intent:#Intent;end"),
     )
     TotchTheme {
-        ActionPickerScreen(
+        ActionPickerContent(
             state = ActionPickerUiState(
                 gesture = Gesture.SWIPE_RIGHT_HOLD,
                 tab = PickerTab.SHORTCUTS,

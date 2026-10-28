@@ -82,8 +82,6 @@ class SettingsTest {
 
     @Test fun `ST-9 v1_1 defaults`() {
         val s = Settings()
-        assertEquals(emptySet(), s.repeatOnHold)
-        assertEquals(300, s.repeatIntervalMs)
         assertEquals(ThemeMode.SYSTEM, s.theme)
         assertFalse(s.amoledBlack)
         assertEquals(AppLanguage.SYSTEM, s.language)
@@ -95,12 +93,10 @@ class SettingsTest {
         )
     }
 
-    @Test fun `ST-10 sanitized clamps repeat interval and filters repeatOnHold`() {
-        assertEquals(100, Settings(repeatIntervalMs = 1).sanitized().repeatIntervalMs)
-        assertEquals(1000, Settings(repeatIntervalMs = 99_999).sanitized().repeatIntervalMs)
-        val s = Settings(repeatOnHold = setOf(Gesture.TAP, Gesture.LONG_PRESS, Gesture.SWIPE_LEFT, Gesture.SWIPE_LEFT_HOLD)).sanitized()
-        assertEquals(setOf(Gesture.LONG_PRESS, Gesture.SWIPE_LEFT_HOLD), s.repeatOnHold)
+    @Test fun `ST-10 sanitized completes bindings`() {
+        val s = Settings(bindings = mapOf(Gesture.TAP to Action.Home)).sanitized()
         assertEquals(9, s.bindings.size)
+        assertEquals(Action.Home, s.bindings[Gesture.TAP])
     }
 
     @Test fun `ST-12 swipe down gestures are unavailable in Shizuku mode`() {
@@ -118,22 +114,44 @@ class SettingsTest {
         assertEquals(Action.VolumeUp, a11y.effectiveAction(Gesture.SWIPE_DOWN_HOLD))
     }
 
-    @Test fun `ST-13 toGestureConfig derives hold and repeat sets from effective bindings`() {
+    @Test fun `ST-13 toGestureConfig derives hold swipes from effective bindings`() {
         val s = Settings(
             bindings = DefaultBindings + mapOf(
                 Gesture.SWIPE_LEFT_HOLD to Action.VolumeDown,
                 Gesture.SWIPE_DOWN_HOLD to Action.Home,
             ),
-            repeatOnHold = setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.SWIPE_RIGHT_HOLD, Gesture.LONG_PRESS, Gesture.SWIPE_DOWN_HOLD),
-            repeatIntervalMs = 250,
         )
-        val a11y = s.toGestureConfig(1f)
-        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.SWIPE_DOWN_HOLD), a11y.holdSwipes)
-        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.LONG_PRESS, Gesture.SWIPE_DOWN_HOLD), a11y.repeating)
-        assertEquals(250, a11y.repeatIntervalMs)
-        val shizuku = s.copy(mode = DetectionMode.SHIZUKU).toGestureConfig(1f)
-        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD), shizuku.holdSwipes)
-        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.LONG_PRESS), shizuku.repeating)
+        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.SWIPE_DOWN_HOLD), s.toGestureConfig(1f).holdSwipes)
+        assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD), s.copy(mode = DetectionMode.SHIZUKU).toGestureConfig(1f).holdSwipes)
+    }
+
+    @Test fun `ST-19 disabled gestures keep their binding but do nothing`() {
+        val s = Settings(
+            bindings = DefaultBindings + (Gesture.SWIPE_LEFT_HOLD to Action.VolumeDown),
+            disabledGestures = setOf(Gesture.DOUBLE_TAP, Gesture.SWIPE_LEFT_HOLD),
+        )
+        assertEquals(Action.None, s.effectiveAction(Gesture.DOUBLE_TAP))
+        assertEquals(Action.LockScreen, s.actionFor(Gesture.DOUBLE_TAP))
+        assertEquals(Action.VolumeDown, s.actionFor(Gesture.SWIPE_LEFT_HOLD))
+        assertEquals(Action.MediaNext, s.effectiveAction(Gesture.SWIPE_RIGHT))
+        val config = s.toGestureConfig(1f)
+        assertFalse(config.doubleTapEnabled)
+        assertEquals(emptySet(), config.holdSwipes)
+    }
+
+    @Test fun `ST-20 switching a gesture off and on keeps its action`() {
+        val s = Settings()
+        assertTrue(s.isGestureOn(Gesture.DOUBLE_TAP))
+        assertFalse(s.isGestureOn(Gesture.TAP)) // bound to None
+        val off = s.withGestureOn(Gesture.DOUBLE_TAP, false)
+        assertFalse(off.isGestureOn(Gesture.DOUBLE_TAP))
+        assertEquals(setOf(Gesture.DOUBLE_TAP), off.disabledGestures)
+        assertEquals(s.bindings, off.bindings)
+        assertEquals(s, off.withGestureOn(Gesture.DOUBLE_TAP, true))
+        val bound = off.withBinding(Gesture.DOUBLE_TAP, Action.Home)
+        assertEquals(Action.Home, bound.actionFor(Gesture.DOUBLE_TAP))
+        assertTrue(bound.isGestureOn(Gesture.DOUBLE_TAP))
+        assertEquals(emptySet(), bound.disabledGestures)
     }
 
     @Test fun `ST-17 manual region top is clamped`() {

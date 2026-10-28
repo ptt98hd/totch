@@ -1,0 +1,6 @@
+* Each gesture now has an on/off switch; switching it off keeps the assigned action.
+* Actions are picked in a bottom sheet with System / Applications / Shortcuts sections, all searchable.
+* New action: show the volume panel.
+* Home: the notch gestures card shows a check / cross status icon.
+* The Notch tab is now called Preferences: feedback first, sliders snap to round values.
+* Removed "repeat while held": hold gestures run their action once.

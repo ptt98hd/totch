@@ -83,18 +83,16 @@
 | MT-X17 | Shortcut tĩnh (vd. Chrome "New incognito tab", Camera "Selfie") khi đang ở app khác | Shortcut mở đúng màn hình | [ ]/[ ] |
 | MT-X18 | Gỡ app có shortcut đã gán rồi kích hoạt | Toast lỗi; màn Gestures hiện "Not installed" | [ ]/[ ] |
 
-## 4b. Vuốt và giữ, lặp lại (v1.1)
+## 4b. Vuốt và giữ (v1.1; lặp lại đã bỏ ở v1.3)
 
 Chuẩn bị: Vuốt phải & giữ = Tăng âm lượng, Vuốt trái & giữ = Giảm âm lượng, Nhấn giữ = Đèn pin.
 
 | ID | Kịch bản | Kỳ vọng | KQ A/S |
 |---|---|---|---|
-| MT-H1 | Vuốt phải rồi giữ yên ~0,5 s, không bật lặp lại | Âm lượng tăng 1 nấc; nhả tay không có gì thêm | [ ]/[ ] |
-| MT-H2 | Bật "Lặp lại" cho Vuốt phải & giữ; vuốt phải rồi giữ 2 s | Âm lượng tăng liên tục (~3 nấc/giây) tới khi nhả | [ ]/[ ] |
+| MT-H1 | Vuốt phải rồi giữ yên ~0,5 s | Âm lượng tăng 1 nấc; nhả tay không có gì thêm | [ ]/[ ] |
+| MT-H2 | Vuốt phải rồi giữ 3 s | Âm lượng chỉ tăng **1** nấc (không lặp, FR-G11) | [ ]/[ ] |
 | MT-H3 | Vuốt phải nhanh rồi nhả ngay | Chạy hành động của "Vuốt sang phải" (không phải bản giữ) | [ ]/[ ] |
-| MT-H4 | Bật lặp lại cho Nhấn giữ = Giảm âm lượng, giữ 2 s | Âm lượng giảm liên tục tới khi nhả | [ ]/[ ] |
-| MT-H5 | Đang lặp, đặt thêm ngón thứ 2 | Dừng lặp ngay | [ ]/[ ] |
-| MT-H6 | Notch → Repeat interval 1000 ms, lặp lại MT-H2 | Tăng chậm ~1 nấc/giây | [ ]/[ ] |
+| MT-H4 | Gestures: không còn nút Lặp lại; Preferences: không còn slider Repeat interval | Đúng | [ ] |
 
 ## 5. Media (lỗi 1.0.0: không hoạt động ở chế độ Trợ năng)
 
@@ -161,10 +159,15 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-U5 | Bật "Themed icons" (Android 13+) | Icon hiển thị dạng đơn sắc theo theme | [ ] |
 | MT-U6 | Cỡ chữ hệ thống lớn nhất | Không vỡ layout; slider và nút dùng được | [ ] |
 | MT-U7 | Action picker → tab Ứng dụng: tìm "spo" / "SPO" | Kết quả giống nhau (không phân biệt hoa thường) | [ ] |
-| MT-U10 | Top bar | Cố định khi cuộn, tên màn hình bên trái; Home/Gestures/Notch có icon Settings bên phải; Cài đặt có nút Back | [ ] |
-| MT-U13 | Bottom bar | 3 mục Home, Gestures, Notch; ẩn ở Cài đặt và Action picker | [ ] |
+| MT-U10 | Top bar | Cố định khi cuộn, tên màn hình bên trái; Home/Gestures/Preferences có icon Settings bên phải; Cài đặt có nút Back | [ ] |
+| MT-U13 | Bottom bar | 3 mục Home, Gestures, Preferences; ẩn ở Cài đặt | [ ] |
 | MT-U14 | Cài đặt → Chủ đề / Ngôn ngữ | Dòng có chevron ›; bấm mở dialog chọn, chọn xong áp dụng ngay | [ ] |
-| MT-U11 | Action picker | 3 tab; mở đúng tab của hành động đang gán; tab Shortcut nhóm theo app, tìm kiếm được | [ ] |
+| MT-U11 | Action picker (bottom sheet) | Segmented button System / Applications / Shortcuts; mở đúng mục của hành động đang gán; cả 3 mục tìm kiếm được; không có "Không làm gì" | [ ] |
+| MT-U15 | Home: thẻ Notch gestures | Icon ✓ (đang chạy) / ✗ trong box bên trái | [ ] |
+| MT-U16 | Gestures: tắt switch của Double tap đang gán Khóa màn hình, bật lại | Khi tắt: không bấm chọn được, chạm đúp không khóa máy; bật lại: vẫn là Khóa màn hình | [ ] |
+| MT-U17 | Gestures: bật switch của cử chỉ chưa gán gì | Mở sheet chọn hành động; đóng sheet không chọn → switch vẫn tắt | [ ] |
+| MT-U18 | Preferences | Thứ tự Phản hồi → Độ nhạy → Vị trí → Kích thước; slider nhảy theo nấc tròn | [ ] |
+| MT-A13 | Gán một cử chỉ = Bảng âm lượng (cả 2 chế độ) | Thanh âm lượng hệ thống hiện ra, mức âm không đổi | [ ]/[ ] |
 | MT-U12 | Icon mới ở launcher, đổi hình nền, bật Themed icons | Icon theo thiết kế mới, đổi màu theo hình nền; themed icon đơn sắc rõ | [ ] |
 | MT-U8 | Icon thông báo thường trực (Shizuku) | Icon đơn sắc rõ ràng, không phải khối trắng | [ ] |
 | MT-U9 | TalkBack: duyệt Home và Gestures | Các nút/thẻ đọc được nhãn có nghĩa | [ ] |

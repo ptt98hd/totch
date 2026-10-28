@@ -30,6 +30,7 @@
     <string name="platform_action_previous">Bài trước</string>
     <string name="platform_action_volume_up">Tăng âm lượng</string>
     <string name="platform_action_volume_down">Giảm âm lượng</string>
+    <string name="platform_action_volume_panel">Bảng âm lượng</string>
     <string name="platform_action_launch_app">Mở ứng dụng</string>
     <string name="platform_action_assistant">Trợ lý</string>
     <string name="platform_action_shortcut">Mở shortcut</string>

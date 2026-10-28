@@ -33,6 +33,7 @@
     <string name="platform_action_previous">Previous track</string>
     <string name="platform_action_volume_up">Volume up</string>
     <string name="platform_action_volume_down">Volume down</string>
+    <string name="platform_action_volume_panel">Volume panel</string>
     <string name="platform_action_launch_app">Open app</string>
     <string name="platform_action_assistant">Assistant</string>
     <string name="platform_action_shortcut">Open shortcut</string>

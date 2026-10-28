@@ -35,10 +35,26 @@ class ActionCatalogTest {
     }
 
     @Test
-    fun `catalog groups cover every fixed action exactly once`() {
+    fun `UI-23 catalog groups cover every fixed action except None exactly once`() {
         val all = ActionCatalog.groups.flatMap { it.actions }
         assertEquals(all.size, all.distinct().size)
         assertEquals(15, all.size)
+        assertFalse(Action.None in all)
         assertTrue(Action.Assistant in ActionCatalog.groups.single { it.id == ActionGroupId.SYSTEM }.actions)
+        val media = ActionCatalog.groups.single { it.id == ActionGroupId.MEDIA }.actions
+        assertEquals(Action.VolumePanel, media[media.indexOf(Action.VolumeDown) + 1])
+    }
+
+    @Test
+    fun `UI-24 search matches labels case-insensitively and hides empty groups`() {
+        val label: (Action) -> String = { it.toString() }
+        assertEquals(ActionCatalog.groups, ActionCatalog.search("  ", label))
+        val volume = ActionCatalog.search(" VOLUME", label)
+        assertEquals(listOf(ActionGroupId.MEDIA), volume.map { it.id })
+        assertEquals(listOf(Action.VolumeUp, Action.VolumeDown, Action.VolumePanel), volume.single().actions)
+        val home = ActionCatalog.search("home", label)
+        assertEquals(listOf(ActionGroupId.SYSTEM), home.map { it.id })
+        assertEquals(listOf<Action>(Action.Home), home.single().actions)
+        assertEquals(emptyList(), ActionCatalog.search("zzz", label))
     }
 }

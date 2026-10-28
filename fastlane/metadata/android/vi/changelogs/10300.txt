@@ -1,0 +1,6 @@
+* Mỗi cử chỉ có switch bật/tắt riêng; tắt vẫn giữ hành động đã gán.
+* Chọn hành động trong bottom sheet với các mục Hệ thống / Ứng dụng / Shortcut, mục nào cũng tìm kiếm được.
+* Hành động mới: mở bảng âm lượng.
+* Home: thẻ cử chỉ notch có icon trạng thái ✓ / ✗.
+* Tab Notch đổi thành Tuỳ chỉnh: phản hồi lên đầu, slider nhảy theo nấc tròn.
+* Bỏ "lặp lại khi giữ": cử chỉ giữ chỉ chạy hành động một lần.

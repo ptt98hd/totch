@@ -41,6 +41,15 @@ fun statusText(status: EngineStatus): StatusText = when (status) {
     EngineStatus.PausedRotation -> StatusText(R.string.status_paused_rotation)
 }
 
+/** State icon in the box of the master card (UI-42). */
+enum class MasterIcon { CHECK, ERROR, OFF }
+
+fun masterIcon(status: EngineStatus): MasterIcon = when (status) {
+    EngineStatus.Running -> MasterIcon.CHECK
+    is EngineStatus.Error -> MasterIcon.ERROR
+    else -> MasterIcon.OFF
+}
+
 data class HomeUiState(
     val loading: Boolean = true,
     val enabled: Boolean = false,

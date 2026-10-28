@@ -102,8 +102,7 @@ data class GestureConfig(
     val doubleTapMs: Long = 300, val longPressMs: Long = 500,
     val touchSlopPx: Float = 24f, val swipeMinDistancePx: Float = 60f,
     val doubleTapEnabled: Boolean = true,   // false => FR-G5: TAP phát ngay khi UP
-    val holdSwipes: Set<Gesture> = emptySet(), val repeating: Set<Gesture> = emptySet(),  // v1.1
-    val repeatIntervalMs: Long = 300,
+    val holdSwipes: Set<Gesture> = emptySet(),  // v1.1 (v1.3: bỏ repeating / repeatIntervalMs)
 )
 
 class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) {
@@ -184,9 +183,9 @@ enum class DetectionMode { SHIZUKU, ACCESSIBILITY }
     val manualRegion: ManualRegionDp? = null,
     val haptics: Boolean = true,
     // v1.1
-    val repeatOnHold: Set<Gesture> = emptySet(), val repeatIntervalMs: Long = 300,
     val theme: ThemeMode = ThemeMode.SYSTEM, val amoledBlack: Boolean = false,
     val language: AppLanguage = AppLanguage.SYSTEM, val startOnBoot: Boolean = true,
+    val disabledGestures: Set<Gesture> = emptySet(),   // v1.3 (FR-G12)
 ) { fun sanitized(): Settings }   // clamp theo FR-S4
 // effectiveAction: xem specs/settings.md
 

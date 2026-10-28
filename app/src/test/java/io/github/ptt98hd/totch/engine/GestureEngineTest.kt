@@ -191,20 +191,28 @@ class GestureEngineTest {
     }
 
     @Test
-    fun `EN-10 swipe right and hold repeats until release`() = runTest {
-        val e = engine(
-            Settings(enabled = true, repeatOnHold = setOf(Gesture.SWIPE_RIGHT_HOLD), repeatIntervalMs = 300)
-                .bind(Gesture.SWIPE_RIGHT_HOLD to Action.VolumeUp),
-        )
+    fun `EN-10 swipe right and hold fires once`() = runTest {
+        val e = engine(Settings(enabled = true).bind(Gesture.SWIPE_RIGHT_HOLD to Action.VolumeUp))
         e.onTouch(down(0, x = 420f))
         e.onTouch(move(50, 560f))
-        advanceTimeBy(50 + 500 + 2 * 300)
+        advanceTimeBy(50 + 500 + 2000)
         runCurrent()
-        assertEquals(List<Action>(3) { Action.VolumeUp }, dispatched)
-        assertEquals(3, haptics)
+        assertEquals(listOf<Action>(Action.VolumeUp), dispatched)
+        assertEquals(1, haptics)
         e.onTouch(up(testScheduler.currentTime, 560f))
         advanceTimeBy(2000)
         runCurrent()
-        assertEquals(3, dispatched.size)
+        assertEquals(1, dispatched.size)
+    }
+
+    @Test
+    fun `EN-11 a switched off gesture dispatches nothing`() = runTest {
+        val e = engine(Settings(enabled = true, disabledGestures = setOf(Gesture.SWIPE_RIGHT)))
+        e.onTouch(down(0, x = 420f))
+        e.onTouch(move(50, 560f))
+        e.onTouch(up(100, 560f))
+        advanceTimeBy(1000)
+        runCurrent()
+        assertTrue(dispatched.isEmpty())
     }
 }

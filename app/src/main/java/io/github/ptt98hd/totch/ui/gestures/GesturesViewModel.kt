@@ -10,12 +10,15 @@ import io.github.ptt98hd.totch.SettingsRepository
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DetectionMode
-import io.github.ptt98hd.totch.core.settings.HoldGestures
 import io.github.ptt98hd.totch.core.settings.actionFor
 import io.github.ptt98hd.totch.core.settings.isAvailableIn
+import io.github.ptt98hd.totch.core.settings.isGestureOn
+import io.github.ptt98hd.totch.core.settings.withGestureOn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -30,7 +33,8 @@ val GestureGroups: List<Pair<GestureGroup, List<Gesture>>> = listOf(
 )
 
 /**
- * One gesture row. [appLabel] is set for LaunchApp/LaunchShortcut whose app is installed (UI-12);
+ * One gesture row. [action] is the bound action, remembered while the gesture is switched off; [on] is the
+ * state of its switch (UI-16). [appLabel] is set for LaunchApp/LaunchShortcut whose app is installed (UI-12);
  * [enabled] is false for gestures unavailable in the current mode (UI-14).
  */
 data class GestureRow(
@@ -38,8 +42,7 @@ data class GestureRow(
     val action: Action,
     val appLabel: String? = null,
     val enabled: Boolean = true,
-    val repeatable: Boolean = false,
-    val repeat: Boolean = false,
+    val on: Boolean = false,
 )
 
 data class GestureSection(val group: GestureGroup, val rows: List<GestureRow>)
@@ -47,14 +50,18 @@ data class GestureSection(val group: GestureGroup, val rows: List<GestureRow>)
 data class GesturesUiState(
     val groups: List<GestureSection> = emptyList(),
     val mode: DetectionMode = DetectionMode.ACCESSIBILITY,
+    /** Gesture whose action picker sheet is open (UI-17). */
+    val picking: Gesture? = null,
 )
 
 class GesturesViewModel(
     private val settingsRepository: SettingsRepository,
     private val installedApps: InstalledApps,
 ) : ViewModel() {
+    private val picking = MutableStateFlow<Gesture?>(null)
+
     val state: StateFlow<GesturesUiState> =
-        settingsRepository.settings.map { settings ->
+        combine(settingsRepository.settings, picking) { settings, picking ->
             GesturesUiState(
                 groups = GestureGroups.map { (group, gestures) ->
                     GestureSection(
@@ -71,23 +78,37 @@ class GesturesViewModel(
                                 action = action,
                                 appLabel = pkg?.let(installedApps::labelOf),
                                 enabled = gesture.isAvailableIn(settings.mode),
-                                repeatable = gesture in HoldGestures,
-                                repeat = gesture in settings.repeatOnHold,
+                                on = settings.isGestureOn(gesture),
                             )
                         },
                     )
                 },
                 mode = settings.mode,
+                picking = picking,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GesturesUiState())
 
-    /** UI-15 */
-    fun setRepeat(gesture: Gesture, repeat: Boolean) {
+    /** UI-16, UI-17: switching on a gesture without an action opens the picker; it is switched on once one is picked. */
+    fun setOn(gesture: Gesture, on: Boolean) {
         viewModelScope.launch {
-            settingsRepository.update {
-                it.copy(repeatOnHold = if (repeat) it.repeatOnHold + gesture else it.repeatOnHold - gesture)
+            val settings = settingsRepository.settings.first()
+            if (on && settings.actionFor(gesture) == Action.None) {
+                picking.value = gesture
+            } else {
+                settingsRepository.update { it.withGestureOn(gesture, on) }
             }
         }
+    }
+
+    /** UI-17: actions can only be chosen for a gesture that is switched on. */
+    fun openPicker(gesture: Gesture) {
+        viewModelScope.launch {
+            if (settingsRepository.settings.first().isGestureOn(gesture)) picking.value = gesture
+        }
+    }
+
+    fun closePicker() {
+        picking.value = null
     }
 
     companion object {

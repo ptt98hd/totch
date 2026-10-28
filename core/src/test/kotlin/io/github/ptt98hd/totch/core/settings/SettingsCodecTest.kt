@@ -95,7 +95,6 @@ class SettingsCodecTest {
         val shortcut = Action.LaunchShortcut("com.a", "compose", "New message", "intent:#Intent;component=com.a/.B;end")
         val s = Settings(
             bindings = DefaultBindings + mapOf(Gesture.TAP to Action.Assistant, Gesture.SWIPE_LEFT_HOLD to shortcut),
-            repeatOnHold = setOf(Gesture.SWIPE_LEFT_HOLD),
             theme = ThemeMode.DARK, amoledBlack = true, language = AppLanguage.VIETNAMESE, startOnBoot = false,
         )
         assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
@@ -117,5 +116,23 @@ class SettingsCodecTest {
         assertEquals(ManualRegionDp(0.3f, 100, 40, topDp = 0), s.manualRegion)
         val offset = Settings(manualRegion = ManualRegionDp(0.3f, 100, 40, topDp = 12))
         assertEquals(offset, SettingsCodec.decode(SettingsCodec.encode(offset)))
+    }
+
+    @Test fun `ST-18 v1_2 JSON with repeat fields still decodes`() {
+        val s = SettingsCodec.decode(
+            """{"bindings":{"TAP":{"type":"home"}},"repeatOnHold":["LONG_PRESS"],"repeatIntervalMs":500}""",
+        )
+        assertEquals(Action.Home, s.bindings[Gesture.TAP])
+        assertEquals(emptySet(), s.disabledGestures)
+    }
+
+    @Test fun `ST-21 disabled gestures and volume panel round trip`() {
+        val s = Settings(
+            bindings = DefaultBindings + (Gesture.TAP to Action.VolumePanel),
+            disabledGestures = setOf(Gesture.TAP, Gesture.SWIPE_DOWN),
+        )
+        assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
+        val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
+        assertEquals("""{"type":"volume_panel"}""", json.getValue("bindings").jsonObject.getValue("TAP").toString())
     }
 }

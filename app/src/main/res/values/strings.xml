@@ -5,7 +5,7 @@
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_gestures">Gestures</string>
-    <string name="nav_notch">Notch</string>
+    <string name="nav_preferences">Preferences</string>
     <string name="nav_settings">Settings</string>
     <string name="nav_back">Back</string>
 
@@ -61,7 +61,7 @@
     <string name="group_swipe">Swipe</string>
     <string name="group_swipe_hold">Swipe &amp; hold</string>
     <string name="gesture_unavailable_shizuku">Not available in Shizuku mode</string>
-    <string name="repeat_cd">Repeat while held</string>
+    <string name="gesture_switch_cd">%1$s on or off</string>
     <string name="action_none">Do nothing</string>
     <string name="action_back">Back</string>
     <string name="action_home">Home</string>
@@ -76,6 +76,7 @@
     <string name="action_previous">Previous track</string>
     <string name="action_volume_up">Volume up</string>
     <string name="action_volume_down">Volume down</string>
+    <string name="action_volume_panel">Volume panel</string>
     <string name="action_open_app">Open app…</string>
     <string name="action_launch_app">Open %1$s</string>
     <string name="action_assistant">Open assistant</string>
@@ -87,12 +88,14 @@
     <string name="action_unavailable_in_mode">Not available in this mode</string>
 
     <!-- Action picker -->
+    <string name="action_search">Search actions</string>
+    <string name="action_search_empty">No actions match “%1$s”</string>
     <string name="app_picker_search">Search apps</string>
     <string name="app_picker_clear">Clear search</string>
     <string name="app_picker_empty">No apps match “%1$s”</string>
     <string name="app_picker_none">No apps found</string>
-    <string name="tab_system">System &amp; media</string>
-    <string name="tab_apps">Apps</string>
+    <string name="tab_system">System</string>
+    <string name="tab_apps">Applications</string>
     <string name="tab_shortcuts">Shortcuts</string>
     <string name="shortcut_search">Search shortcuts</string>
     <string name="shortcut_empty">No shortcuts match “%1$s”</string>
@@ -104,7 +107,6 @@
     <string name="setting_double_tap">Double-tap window</string>
     <string name="setting_long_press">Long-press duration</string>
     <string name="setting_swipe">Swipe distance</string>
-    <string name="setting_repeat_interval">Repeat interval</string>
     <string name="setting_padding">Touch area padding</string>
     <string name="unit_ms">%1$d ms</string>
     <string name="unit_dp">%1$d dp</string>
