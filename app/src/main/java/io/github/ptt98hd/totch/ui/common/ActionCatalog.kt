@@ -5,26 +5,24 @@ import io.github.ptt98hd.totch.core.action.Capability
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.settings.DetectionMode
 
-enum class ActionGroupId { SYSTEM, MEDIA, APPS }
+enum class ActionGroupId { SYSTEM, MEDIA }
 
 data class ActionGroup(val id: ActionGroupId, val actions: List<Action>)
 
-/** Actions offered in the gesture bottom sheet, grouped (docs/specs/ui.md, Gestures). */
+/** Fixed actions of the picker's "System & media" tab, grouped (docs/specs/ui.md, Action picker). */
 object ActionCatalog {
     val groups: List<ActionGroup> = listOf(
         ActionGroup(
             ActionGroupId.SYSTEM,
             listOf(
                 Action.None, Action.Back, Action.Home, Action.Recents, Action.LockScreen,
-                Action.Screenshot, Action.Notifications, Action.QuickSettings, Action.ToggleTorch,
+                Action.Screenshot, Action.Notifications, Action.QuickSettings, Action.Assistant, Action.ToggleTorch,
             ),
         ),
         ActionGroup(
             ActionGroupId.MEDIA,
             listOf(Action.MediaPlayPause, Action.MediaPrevious, Action.MediaNext, Action.VolumeUp, Action.VolumeDown),
         ),
-        // The APPS group holds the "Open app…" entry, which navigates to the app picker instead.
-        ActionGroup(ActionGroupId.APPS, emptyList()),
     )
 
     /** Whether [action] can run in [mode] according to the capability matrix (docs/specs/actions.md §1). */

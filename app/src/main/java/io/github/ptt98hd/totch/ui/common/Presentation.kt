@@ -110,7 +110,6 @@ val Action.icon: ImageVector
 fun ActionGroupId.labelRes(): Int = when (this) {
     ActionGroupId.SYSTEM -> R.string.group_system
     ActionGroupId.MEDIA -> R.string.group_media
-    ActionGroupId.APPS -> R.string.group_apps
 }
 
 /** Human-readable action name; LaunchApp/LaunchShortcut show the app label (UI-12) or the package name. */
