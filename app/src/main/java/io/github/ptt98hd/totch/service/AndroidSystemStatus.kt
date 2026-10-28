@@ -29,11 +29,12 @@ class AndroidSystemStatus(
     private val component = ComponentName(context, NotchAccessibilityService::class.java)
     private val accessibilityEnabled = MutableStateFlow(false)
     private val notificationsGranted = MutableStateFlow(false)
+    private val mediaAccessGranted = MutableStateFlow(false)
 
     override val requirements: StateFlow<Requirements> = combine(
-        shizuku.state, accessibilityEnabled, accessibility.service, notificationsGranted,
-    ) { s, enabled, service, notifications ->
-        Requirements(s.running, s.granted, enabled || service != null, notifications)
+        shizuku.state, accessibilityEnabled, accessibility.service, notificationsGranted, mediaAccessGranted,
+    ) { s, enabled, service, notifications, media ->
+        Requirements(s.running, s.granted, enabled || service != null, notifications, media)
     }.stateIn(scope, SharingStarted.Eagerly, Requirements())
 
     init {
@@ -42,6 +43,9 @@ class AndroidSystemStatus(
         }
         context.contentResolver.registerContentObserver(
             Settings.Secure.getUriFor(Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES), false, observer,
+        )
+        context.contentResolver.registerContentObserver(
+            Settings.Secure.getUriFor(ENABLED_NOTIFICATION_LISTENERS), false, observer,
         )
         refresh()
     }
@@ -54,7 +58,13 @@ class AndroidSystemStatus(
             .split(':')
             .any { ComponentName.unflattenFromString(it) == component }
         notificationsGranted.value = NotificationManagerCompat.from(context).areNotificationsEnabled()
+        mediaAccessGranted.value = context.packageName in NotificationManagerCompat.getEnabledListenerPackages(context)
     }
 
     override fun requestShizukuPermission() = shizuku.requestPermission()
+
+    private companion object {
+        /** Hidden `Settings.Secure.ENABLED_NOTIFICATION_LISTENERS`; stable since API 18. */
+        const val ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners"
+    }
 }

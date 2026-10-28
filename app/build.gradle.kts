@@ -12,8 +12,8 @@ android {
         applicationId = "io.github.ptt98hd.totch"
         minSdk = 31
         targetSdk = 36
-        versionCode = 10000
-        versionName = "1.0.0"
+        versionCode = 10001
+        versionName = "1.0.1"
     }
 
     buildTypes {

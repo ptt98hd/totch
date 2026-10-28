@@ -55,7 +55,7 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     val accessibility = AccessibilityBridge()
     override val installedApps = PackageManagerInstalledApps(app.packageManager)
 
-    private val localExecutor = LocalExecutor(app)
+    private val localExecutor = LocalExecutor(app, accessibility)
 
     val pipeline: ShizukuTouchPipeline = ShizukuTouchPipeline(app, shizuku, display.state, onTouch = { engine.onTouch(it) }, onReset = { engine.reset() })
 

@@ -38,6 +38,8 @@ data class Requirements(
     val shizukuGranted: Boolean = false,
     val accessibilityEnabled: Boolean = false,
     val notificationsGranted: Boolean = false,
+    /** Notification access for [io.github.ptt98hd.totch.action.MediaListenerService] (media control, UI-3). */
+    val mediaAccessGranted: Boolean = false,
 )
 
 interface SystemStatus {

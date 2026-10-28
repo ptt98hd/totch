@@ -56,9 +56,30 @@ Yêu cầu: FR-A1…FR-A10 · Module: `:core` (logic) + `:app` (executor)
 
 | Executor | Thực thi |
 |---|---|
-| `LocalExecutor` | Đèn pin: `CameraManager.setTorchMode` trên camera có flash, lưu trạng thái qua `TorchCallback`. Media: `AudioManager.dispatchMediaKeyEvent` (DOWN+UP). Âm lượng: `adjustStreamVolume(STREAM_MUSIC, ±1, FLAG_SHOW_UI)` |
+| `LocalExecutor` | Đèn pin: `CameraManager.setTorchMode` trên camera có flash, lưu trạng thái qua `TorchCallback`. Media: xem §5. Âm lượng: `adjustStreamVolume(STREAM_MUSIC, ±1, FLAG_SHOW_UI)` |
 | `AccessibilityExecutor` | `performGlobalAction(GLOBAL_ACTION_BACK/HOME/RECENTS/LOCK_SCREEN/TAKE_SCREENSHOT/NOTIFICATIONS/QUICK_SETTINGS)`; LaunchApp: `startActivity(launchIntent)` từ service. `isAvailable()` = service đang chạy |
 | `ShizukuExecutor` | `ITouchService.exec(ShellCommands…)`. `isAvailable()` = Shizuku binder sống + đã cấp quyền + UserService đã bind |
 
 Phản hồi: nếu `Ok` và `haptics` bật → rung `EFFECT_TICK` (FR-A10). Nếu `Failed` → Toast ngắn
 "Không thể thực hiện: <tên hành động>" (FR-A9).
+
+## 5. Điều khiển media (FR-A6, R5)
+
+Thứ tự thử cho `MediaPlayPause` / `MediaNext` / `MediaPrevious`:
+1. Có quyền *Notification access* (`MediaListenerService`) → `MediaSessionManager.getActiveSessions` →
+   chọn phiên theo `chooseMediaSession` → `transportControls` (`play`/`pause` theo trạng thái, `skipToNext`, `skipToPrevious`).
+2. Không có quyền hoặc không có phiên nào; `MediaPlayPause` và Accessibility service đang chạy →
+   `performGlobalAction(GLOBAL_ACTION_KEYCODE_HEADSETHOOK)` (hệ thống tự gửi phím, không bị chặn).
+3. Còn lại → `AudioManager.dispatchMediaKeyEvent` (DOWN+UP).
+
+`MediaListenerService` (NotificationListenerService) **không** đọc thông báo: không override `onNotificationPosted`,
+chỉ tồn tại để hệ thống cho phép `getActiveSessions`.
+
+`chooseMediaSession(sessions: List<MediaSessionInfo>): Int?` — `MediaSessionInfo(packageName, playing)`, danh sách theo thứ tự ưu tiên của hệ thống.
+
+| ID | Tiêu chí |
+|---|---|
+| MC-1 | Danh sách rỗng → `null` |
+| MC-2 | Có phiên đang phát → chỉ số của phiên đang phát **đầu tiên** |
+| MC-3 | Không phiên nào đang phát → `0` (phiên ưu tiên cao nhất, thường là phiên vừa dừng) |
+| MC-4 | PlayPause trên phiên đang phát → `pause()`, ngược lại → `play()` (`mediaCommand(action, playing)`) |

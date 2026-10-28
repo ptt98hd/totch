@@ -1,0 +1,3 @@
+* Fixed: media gestures (Play/Pause, Next, Previous) not working in Accessibility mode. Grant the optional notification access for the most reliable media control.
+* New dynamic app icon that follows your wallpaper colors (Material You), with themed icon support.
+* New notification icon.

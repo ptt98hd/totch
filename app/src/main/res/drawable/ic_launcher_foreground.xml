@@ -1,29 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Top edge of a phone with a pill-shaped notch and two tap ripples. Single color, so it doubles as the monochrome icon. -->
+<!-- Phone screen with a camera island, touch ripples and a swipe-down hint. Monet colors. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <!-- Phone outline (top part) -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M30,80V44a10,10 0,0 1,10 -10h28a10,10 0,0 1,10 10v36" />
-    <!-- Notch pill -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M49,38h10a3,3 0,0 1,0 6h-10a3,3 0,0 1,0 -6z" />
-    <!-- Tap ripples -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="3"
-        android:strokeLineCap="round"
-        android:pathData="M62.19,49.74A10,10 0,0 1,45.81 49.74" />
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeAlpha="0.7"
-        android:strokeWidth="3"
-        android:strokeLineCap="round"
-        android:pathData="M67.93,53.75A17,17 0,0 1,40.07 53.75" />
+    <path android:fillColor="@android:color/system_accent1_600" android:pathData="M40,25h28a17,17 0 0 1 17,17v66h-62v-66a17,17 0 0 1 17,-17z" />
+    <path android:strokeColor="@android:color/system_accent1_200" android:strokeAlpha="0.55"
+        android:strokeWidth="2.2" android:pathData="M43,30.5h22a10,10 0 0 1 0,20h-22a10,10 0 0 1 0,-20z" />
+    <path android:strokeColor="@android:color/system_accent1_100" android:strokeAlpha="0.85"
+        android:strokeWidth="2.2" android:pathData="M45.5,33.5h17a7,7 0 0 1 0,14h-17a7,7 0 0 1 0,-14z" />
+    <path android:fillColor="@android:color/system_accent1_900" android:fillType="evenOdd"
+        android:pathData="M45.5,36h17a4.5,4.5 0 0 1 0,9h-17a4.5,4.5 0 0 1 0,-9z M60.5,40.5m-2,0a2,2 0 1 0 4,0a2,2 0 1 0 -4,0z" />
+    <path android:strokeColor="@android:color/system_accent3_100" android:strokeWidth="3.6"
+        android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M46.5,61l7.5,6.5l7.5,-6.5" />
+    <path android:strokeColor="@android:color/system_accent3_100" android:strokeAlpha="0.5" android:strokeWidth="3.6"
+        android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M46.5,71l7.5,6.5l7.5,-6.5" />
 </vector>

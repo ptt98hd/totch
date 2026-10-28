@@ -28,6 +28,8 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers, no `INTERNET` perm
 
 The Accessibility service is used **only** to draw the touch area over the notch and to perform global actions (Back, Home, lock screen, ...). It does not read screen content.
 
+Optional **notification access** is recommended when media actions are bound: Totch uses it only to find the active media session and send play/pause/skip commands (more reliable than media key events). It never reads notifications.
+
 ## Requirements
 
 - Android 12 (API 31) or newer, phone with a top display cutout

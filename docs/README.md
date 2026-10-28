@@ -6,6 +6,7 @@
 | 02 | [Thiết kế hệ thống](02-architecture.md) | Module, API lõi, luồng, quyền, ADR |
 | 03 | [Kiểm thử](03-testing.md) | Quy trình TDD, ma trận truy vết, checklist thủ công |
 | 04 | [Phát hành F-Droid](04-release-fdroid.md) | Versioning, build, metadata, quy trình submit |
+| 05 | [Checklist test thủ công](05-manual-test-checklist.md) | Kịch bản test trên máy thật, lịch sử kết quả |
 | — | [specs/](specs/) | Spec chi tiết theo tính năng, có ID tiêu chí chấp nhận |
 
 ## Quy trình làm việc (spec-driven + TDD)

@@ -132,4 +132,7 @@
     <string name="about_credits_title">Credits</string>
     <string name="about_shizuku_credit">Shizuku by RikkaApps, for privileged input access</string>
     <string name="about_shizuku_url" translatable="false">https://shizuku.rikka.app/</string>
+    <string name="req_media_title">Media control</string>
+    <string name="req_media_ok">Play/Pause, Next and Previous control the active player directly</string>
+    <string name="req_media_missing">Recommended: allow notification access so media gestures work reliably. Totch only uses it to find the active player and never reads your notifications.</string>
 </resources>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monet: colors follow the wallpaper palette (system_accent*, API 31+). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@android:color/system_accent1_100" />
+</shape>

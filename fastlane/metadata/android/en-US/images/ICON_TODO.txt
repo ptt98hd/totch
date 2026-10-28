@@ -1,3 +1,0 @@
-TODO: add icon.png here (512x512 PNG, exported from the app's adaptive launcher icon).
-Add screenshots to phoneScreenshots/ (e.g. 1.png, 2.png ...). Then delete this file.
-F-Droid falls back to en-US images for other locales, so vi/images can stay empty.

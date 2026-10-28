@@ -73,6 +73,7 @@ import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.SectionHeader
 import io.github.ptt98hd.totch.ui.common.isShizukuInstalled
 import io.github.ptt98hd.totch.ui.common.openAccessibilitySettings
+import io.github.ptt98hd.totch.ui.common.openMediaAccessSettings
 import io.github.ptt98hd.totch.ui.common.openAppNotificationSettings
 import io.github.ptt98hd.totch.ui.common.openShizuku
 import io.github.ptt98hd.totch.ui.common.withGutters
@@ -107,6 +108,7 @@ fun HomeRoute(container: AppContainer) {
                 RequirementType.SHIZUKU_RUNNING -> context.openShizuku()
                 RequirementType.SHIZUKU_PERMISSION -> vm.requestShizukuPermission()
                 RequirementType.ACCESSIBILITY -> context.openAccessibilitySettings()
+                RequirementType.MEDIA_ACCESS -> context.openMediaAccessSettings()
                 RequirementType.NOTIFICATIONS ->
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationAsked) {
                         notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -278,6 +280,9 @@ private fun RequirementType.strings() = when (this) {
     RequirementType.NOTIFICATIONS -> RequirementStrings(
         R.string.req_notifications_title, R.string.req_notifications_ok, R.string.req_notifications_missing,
     )
+    RequirementType.MEDIA_ACCESS -> RequirementStrings(
+        R.string.req_media_title, R.string.req_media_ok, R.string.req_media_missing,
+    )
 }
 
 @Composable
@@ -318,7 +323,7 @@ private fun RequirementRow(item: RequirementItem, shizukuInstalled: Boolean, onA
                     RequirementType.SHIZUKU_RUNNING ->
                         if (shizukuInstalled) R.string.action_open else R.string.action_install
                     RequirementType.SHIZUKU_PERMISSION, RequirementType.NOTIFICATIONS -> R.string.action_grant
-                    RequirementType.ACCESSIBILITY -> R.string.action_open_settings
+                    RequirementType.ACCESSIBILITY, RequirementType.MEDIA_ACCESS -> R.string.action_open_settings
                 }
                 FilledTonalButton(onClick = { onAction(item.type) }, enabled = item.actionEnabled) {
                     Text(stringResource(label))

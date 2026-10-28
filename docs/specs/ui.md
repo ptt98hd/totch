@@ -26,6 +26,7 @@ Yêu cầu: FR-U1…FR-U6 · Module: `:app` · Package: `io.github.ptt98hd.totch
 │ │ ✓/✗ Shizuku permission[Grant]│ │
 │ │ ✓/✗ Accessibility     [Open] │ │  (chỉ hiện ở Accessibility mode)
 │ │ ✓/✗ Notifications     [Grant]│ │  (Shizuku mode, Android 13+)
+│ │ ✓/✗ Media control     [Open] │ │  (cả 2 mode, khi có gesture gán Play/Pause/Next/Previous)
 │ └──────────────────────────────┘ │
 │ ⓘ Note về R2 khi ở Shizuku mode  │
 └──────────────────────────────────┘
@@ -34,6 +35,7 @@ Yêu cầu: FR-U1…FR-U6 · Module: `:app` · Package: `io.github.ptt98hd.totch
 |---|---|
 | UI-1 | Switch tắt được khi thiếu quyền; bật khi thiếu quyền vẫn lưu `enabled=true` và hiển thị thẻ yêu cầu |
 | UI-2 | Status text ánh xạ 1-1 từ `EngineStatus` |
+| UI-3 | Thẻ "Media control" (khuyến nghị) chỉ hiện khi có binding là action media; nút mở trang Notification access chi tiết của `MediaListenerService` |
 
 ### Gestures (FR-U2, FR-U3)
 - `LazyColumn` 6 `ListItem`: icon cử chỉ, tên cử chỉ, `supportingContent` = tên hành động đang gán.

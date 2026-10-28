@@ -234,6 +234,7 @@ duy nhất trên `Dispatchers.Default` → không polling (NFR-3).
 | `QUERY_ALL_PACKAGES` → **không dùng**; thay bằng `<queries>` intent MAIN/LAUNCHER | App picker |
 | `BIND_ACCESSIBILITY_SERVICE` (service) | Accessibility mode |
 | Shizuku `ShizukuProvider` | Theo yêu cầu thư viện Shizuku |
+| `MediaListenerService` (`BIND_NOTIFICATION_LISTENER_SERVICE`, tùy chọn) | Điều khiển media qua `MediaController` (actions spec §5); không đọc thông báo |
 | Không có `INTERNET` | NFR-4 |
 
 ## 7. Stack & phiên bản

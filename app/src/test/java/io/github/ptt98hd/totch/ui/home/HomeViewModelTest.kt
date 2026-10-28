@@ -3,6 +3,8 @@ package io.github.ptt98hd.totch.ui.home
 import app.cash.turbine.test
 import io.github.ptt98hd.totch.EngineStatus
 import io.github.ptt98hd.totch.Requirements
+import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
@@ -18,6 +20,9 @@ import kotlin.test.assertTrue
 
 class HomeViewModelTest {
     @get:Rule val main = MainDispatcherRule()
+
+    /** Bindings without media actions, so the optional media card (UI-3) stays hidden. */
+    private val noMedia = Gesture.entries.associateWith { Action.None }
 
     private val allStatuses = listOf(
         EngineStatus.Disabled,
@@ -38,7 +43,7 @@ class HomeViewModelTest {
 
     @Test
     fun `UI-1 enabling while requirements are missing still saves enabled=true and shows requirement cards`() = runTest {
-        val repo = FakeSettingsRepository(Settings(enabled = false, mode = DetectionMode.ACCESSIBILITY))
+        val repo = FakeSettingsRepository(Settings(enabled = false, mode = DetectionMode.ACCESSIBILITY, bindings = noMedia))
         val vm = vm(repo)
         vm.state.test {
             vm.setEnabled(true)
@@ -79,7 +84,7 @@ class HomeViewModelTest {
 
     @Test
     fun `FR-D4 Shizuku mode lists Shizuku running, permission and notification requirements`() = runTest {
-        val repo = FakeSettingsRepository(Settings(mode = DetectionMode.SHIZUKU))
+        val repo = FakeSettingsRepository(Settings(mode = DetectionMode.SHIZUKU, bindings = noMedia))
         val sys = FakeSystemStatus(Requirements(shizukuRunning = true, shizukuGranted = false, notificationsGranted = true))
         vm(repo, sys = sys).state.test {
             assertEquals(
@@ -95,7 +100,7 @@ class HomeViewModelTest {
 
     @Test
     fun `FR-D4 Shizuku permission cannot be requested while Shizuku is not running`() = runTest {
-        val repo = FakeSettingsRepository(Settings(mode = DetectionMode.SHIZUKU))
+        val repo = FakeSettingsRepository(Settings(mode = DetectionMode.SHIZUKU, bindings = noMedia))
         vm(repo, notifications = false).state.test {
             val reqs = expectMostRecentItem().requirements
             assertEquals(2, reqs.size)
@@ -127,6 +132,34 @@ class HomeViewModelTest {
             assertTrue(expectMostRecentItem().showOnboarding)
             sys.requirements.value = Requirements(accessibilityEnabled = true)
             assertFalse(expectMostRecentItem().showOnboarding)
+        }
+    }
+
+    @Test
+    fun `UI-3 media control card is shown in both modes when a media action is bound`() = runTest {
+        DetectionMode.entries.forEach { mode ->
+            val bindings = noMedia + (Gesture.SWIPE_RIGHT to Action.MediaNext)
+            val repo = FakeSettingsRepository(Settings(mode = mode, bindings = bindings))
+            vm(repo, sys = FakeSystemStatus(Requirements(mediaAccessGranted = false))).state.test {
+                val media = expectMostRecentItem().requirements.single { it.type == RequirementType.MEDIA_ACCESS }
+                assertFalse(media.satisfied, "$mode")
+            }
+        }
+    }
+
+    @Test
+    fun `UI-3 media control card reflects the granted state`() = runTest {
+        val repo = FakeSettingsRepository(Settings(bindings = noMedia + (Gesture.TAP to Action.MediaPlayPause)))
+        vm(repo, sys = FakeSystemStatus(Requirements(mediaAccessGranted = true))).state.test {
+            assertTrue(expectMostRecentItem().requirements.single { it.type == RequirementType.MEDIA_ACCESS }.satisfied)
+        }
+    }
+
+    @Test
+    fun `UI-3 media control card is hidden when no media action is bound`() = runTest {
+        val repo = FakeSettingsRepository(Settings(bindings = noMedia + (Gesture.TAP to Action.VolumeUp)))
+        vm(repo).state.test {
+            assertTrue(expectMostRecentItem().requirements.none { it.type == RequirementType.MEDIA_ACCESS })
         }
     }
 }

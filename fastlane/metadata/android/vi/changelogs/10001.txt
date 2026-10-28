@@ -1,0 +1,3 @@
+* Sửa lỗi: cử chỉ media (Play/Pause, Bài tiếp, Bài trước) không hoạt động ở chế độ Trợ năng. Cấp quyền truy cập thông báo (tùy chọn) để điều khiển media ổn định nhất.
+* Icon ứng dụng động mới đổi màu theo hình nền (Material You), hỗ trợ themed icon.
+* Icon thông báo mới.

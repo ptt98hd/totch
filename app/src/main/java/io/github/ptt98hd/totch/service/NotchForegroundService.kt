@@ -62,7 +62,7 @@ class NotchForegroundService : LifecycleService() {
             PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_totch)
             .setContentTitle(getString(R.string.platform_notification_title))
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))

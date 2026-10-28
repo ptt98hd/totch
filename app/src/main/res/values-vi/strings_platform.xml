@@ -31,4 +31,5 @@
     <string name="platform_action_volume_up">Tăng âm lượng</string>
     <string name="platform_action_volume_down">Giảm âm lượng</string>
     <string name="platform_action_launch_app">Mở ứng dụng</string>
+    <string name="media_listener_label">Totch điều khiển media</string>
 </resources>

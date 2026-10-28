@@ -12,6 +12,7 @@ import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.SettingsRepository
 import io.github.ptt98hd.totch.SystemStatus
+import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.settings.DetectionMode
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class RequirementType { SHIZUKU_RUNNING, SHIZUKU_PERMISSION, ACCESSIBILITY, NOTIFICATIONS }
+enum class RequirementType { SHIZUKU_RUNNING, SHIZUKU_PERMISSION, ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS }
 
 /** A requirement card. [actionEnabled] is false when its button cannot do anything yet. */
 data class RequirementItem(val type: RequirementType, val satisfied: Boolean, val actionEnabled: Boolean = true)
@@ -47,15 +48,24 @@ data class HomeUiState(
     val showOnboarding: Boolean = false,
 )
 
-internal fun requirementsFor(mode: DetectionMode, r: Requirements, notificationPermissionRequired: Boolean) =
+private val mediaActions = setOf(Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious)
+
+internal fun requirementsFor(
+    mode: DetectionMode,
+    r: Requirements,
+    notificationPermissionRequired: Boolean,
+    mediaBound: Boolean,
+) = buildList {
     when (mode) {
-        DetectionMode.ACCESSIBILITY -> listOf(RequirementItem(RequirementType.ACCESSIBILITY, r.accessibilityEnabled))
-        DetectionMode.SHIZUKU -> buildList {
+        DetectionMode.ACCESSIBILITY -> add(RequirementItem(RequirementType.ACCESSIBILITY, r.accessibilityEnabled))
+        DetectionMode.SHIZUKU -> {
             add(RequirementItem(RequirementType.SHIZUKU_RUNNING, r.shizukuRunning))
             add(RequirementItem(RequirementType.SHIZUKU_PERMISSION, r.shizukuGranted, actionEnabled = r.shizukuRunning))
             if (notificationPermissionRequired) add(RequirementItem(RequirementType.NOTIFICATIONS, r.notificationsGranted))
         }
     }
+    if (mediaBound) add(RequirementItem(RequirementType.MEDIA_ACCESS, r.mediaAccessGranted)) // UI-3
+}
 
 class HomeViewModel(
     private val settingsRepository: SettingsRepository,
@@ -72,7 +82,12 @@ class HomeViewModel(
                 enabled = settings.enabled,
                 mode = settings.mode,
                 status = status,
-                requirements = requirementsFor(settings.mode, reqs, notificationPermissionRequired),
+                requirements = requirementsFor(
+                    settings.mode,
+                    reqs,
+                    notificationPermissionRequired,
+                    mediaBound = settings.bindings.values.any { it in mediaActions },
+                ),
                 showOnboarding = !reqs.shizukuGranted && !reqs.accessibilityEnabled,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())

@@ -76,7 +76,7 @@ tham chiếu ID tương ứng.
 | FR-D1 | **Shizuku mode**: đọc sự kiện chạm thô qua `getevent -lt` chạy với quyền shell (Shizuku UserService); không chặn chạm của hệ thống |
 | FR-D2 | Tự tìm thiết bị input cảm ứng (có `ABS_MT_POSITION_X/Y`) và quy đổi tọa độ thô → pixel màn hình |
 | FR-D3 | **Accessibility mode**: đặt overlay `TYPE_ACCESSIBILITY_OVERLAY` đúng bằng vùng notch, nhận và **tiêu thụ** chạm |
-| FR-D4 | Hiển thị trạng thái từng điều kiện (Shizuku chạy? đã cấp quyền? Accessibility bật?) và nút dẫn tới nơi cấp quyền |
+| FR-D4 | Hiển thị trạng thái từng điều kiện (Shizuku chạy? đã cấp quyền? Accessibility bật? Notification access khi có gán hành động media?) và nút dẫn tới nơi cấp quyền |
 | FR-D5 | Shizuku mode chạy trong foreground service có thông báo thường trực (yêu cầu hệ thống) |
 | FR-D6 | Tự khởi động lại sau reboot nếu người dùng đã bật (Shizuku mode: khi Shizuku sẵn sàng) |
 
@@ -88,7 +88,7 @@ tham chiếu ID tương ứng.
 | FR-A3 | Khóa màn hình, Chụp màn hình | Shizuku hoặc Accessibility |
 | FR-A4 | Mở thanh thông báo, Mở Quick Settings | Shizuku hoặc Accessibility |
 | FR-A5 | Bật/tắt đèn pin | Không cần quyền đặc biệt (CameraManager) |
-| FR-A6 | Play/Pause, Bài tiếp, Bài trước | Không cần quyền đặc biệt (AudioManager) |
+| FR-A6 | Play/Pause, Bài tiếp, Bài trước | Khuyến nghị quyền *Notification access* (điều khiển trực tiếp `MediaController`); không có quyền → gửi phím media (không ổn định ở Accessibility mode — lỗi MT-M3 của bản 1.0.0) |
 | FR-A7 | Tăng / Giảm âm lượng (hiện thanh âm lượng hệ thống) | Không cần quyền đặc biệt |
 | FR-A8 | Mở một ứng dụng đã cài do người dùng chọn | Shizuku hoặc Accessibility (vượt giới hạn mở Activity từ nền) |
 | FR-A9 | Nếu không có backend nào thực thi được hành động, hiển thị toast lỗi ngắn, không crash |
@@ -131,5 +131,6 @@ tham chiếu ID tương ứng.
 |---|---|---|
 | R1 | Một số ROM chặn shell đọc `/dev/input` | Phát hiện lỗi, gợi ý dùng Accessibility mode |
 | R2 | Shizuku mode không chặn được chạm: vuốt xuống ở notch vẫn kéo thanh thông báo của hệ thống | Ghi rõ trong UI; khuyến nghị gán SWIPE_DOWN = Thông báo ở mode này |
+| R5 | Android bỏ qua phím media từ app không có foreground service (quan sát thực tế ở Accessibility mode) | Ưu tiên `MediaController` qua Notification access; Play/Pause dự phòng bằng `GLOBAL_ACTION_KEYCODE_HEADSETHOOK` |
 | R3 | F-Droid soi kỹ app dùng AccessibilityService | Khai báo rõ mục đích trong mô tả, `isAccessibilityTool=false`, không đọc nội dung cửa sổ |
 | R4 | Tọa độ thô có thể bị xoay/đảo trục so với màn hình | Spec quy đổi có xử lý; MVP chỉ chạy ở ROTATION_0 |

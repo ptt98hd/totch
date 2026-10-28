@@ -18,6 +18,7 @@
 </ul>
 
 <p><b>About the Accessibility service:</b> Totch uses the Accessibility API only to (1) draw the touch area over the notch and (2) perform global actions such as Back, Home, Recents, lock screen, screenshot and opening the notification shade. It does not read, collect or transmit any screen content or typed text. The service is optional; Shizuku mode works without it.</p>
+<p><b>About notification access (optional):</b> if you bind Play/Pause, Next or Previous, Totch recommends granting notification access. It is used only to find the active media player and send it play/pause/skip commands. Totch does not read, store or transmit any notification.</p>
 
 <p><b>Privacy:</b> no Internet permission, no ads, no trackers, no analytics. All settings stay on your device.</p>
 

@@ -129,4 +129,7 @@
     <string name="about_source_title">Mã nguồn</string>
     <string name="about_credits_title">Ghi công</string>
     <string name="about_shizuku_credit">Shizuku của RikkaApps, cho quyền truy cập đầu vào đặc quyền</string>
+    <string name="req_media_title">Điều khiển media</string>
+    <string name="req_media_ok">Play/Pause, Bài tiếp, Bài trước điều khiển trực tiếp trình phát đang hoạt động</string>
+    <string name="req_media_missing">Khuyến nghị: cấp quyền truy cập thông báo để cử chỉ media hoạt động ổn định. Totch chỉ dùng quyền này để tìm trình phát đang hoạt động, không đọc thông báo của bạn.</string>
 </resources>
