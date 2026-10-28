@@ -21,4 +21,13 @@ sealed interface Action {
     @Serializable @SerialName("volume_up") data object VolumeUp : Action
     @Serializable @SerialName("volume_down") data object VolumeDown : Action
     @Serializable @SerialName("launch_app") data class LaunchApp(val packageName: String) : Action
+    @Serializable @SerialName("assistant") data object Assistant : Action
+
+    /** Static app shortcut; [label] is kept for display, [intentUri] is `Intent.toUri(URI_INTENT_SCHEME)`. */
+    @Serializable @SerialName("launch_shortcut") data class LaunchShortcut(
+        val packageName: String,
+        val shortcutId: String,
+        val label: String,
+        val intentUri: String,
+    ) : Action
 }

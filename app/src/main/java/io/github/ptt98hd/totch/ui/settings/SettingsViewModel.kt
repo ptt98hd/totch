@@ -6,7 +6,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.SettingsRepository
-import io.github.ptt98hd.totch.TouchAreaPreview
+import io.github.ptt98hd.totch.TouchArea
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
@@ -31,12 +31,12 @@ private data class Dialogs(val inAppPreview: Boolean = false, val confirmReset: 
 
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,
-    private val touchAreaPreview: TouchAreaPreview,
+    private val touchArea: TouchArea,
 ) : ViewModel() {
     private val dialogs = MutableStateFlow(Dialogs())
 
     val state: StateFlow<SettingsUiState> =
-        combine(settingsRepository.settings, touchAreaPreview.region, dialogs) { settings, region, d ->
+        combine(settingsRepository.settings, touchArea.region, dialogs) { settings, region, d ->
             SettingsUiState(
                 loading = false,
                 settings = settings,
@@ -62,9 +62,7 @@ class SettingsViewModel(
 
     fun setManualRegion(region: ManualRegionDp) = save { it.copy(manualRegion = region) }
 
-    fun preview() {
-        if (!touchAreaPreview.show(PREVIEW_DURATION_MS)) dialogs.update { it.copy(inAppPreview = true) }
-    }
+    fun preview() = dialogs.update { it.copy(inAppPreview = true) }
 
     fun dismissPreview() = dialogs.update { it.copy(inAppPreview = false) }
 
@@ -82,7 +80,7 @@ class SettingsViewModel(
         const val PREVIEW_DURATION_MS = 3_000L
 
         fun factory(container: AppContainer) = viewModelFactory {
-            initializer { SettingsViewModel(container.settingsRepository, container.touchAreaPreview) }
+            initializer { SettingsViewModel(container.settingsRepository, container.touchArea) }
         }
     }
 }

@@ -23,3 +23,9 @@ sang trái, phải và dưới (cạnh trên luôn = 0), rồi kẹp trái/phả
 
 Ghi chú: manual → `left = round(fraction × screenWidthPx − widthPx/2)`, `right = left + widthPx`;
 mặc định → `width = round(screenWidthPx × 0.2)`, `left = (screenWidthPx − width) / 2`. Cạnh trên của rect cutout luôn được đặt về 0.
+
+## Hiển thị vùng chạm trong app (v1.1 — FR-U8)
+`TouchArea.regionFor(settings)` = `notchRegion(settings, display hiện tại)` (cùng hàm engine dùng), để UI
+vẽ vùng của **bản nháp** settings khi người dùng đang kéo slider. Highlight vẽ trong cửa sổ của
+`MainActivity` (edge-to-edge, `layoutInDisplayCutoutMode=shortEdges`), quy đổi tọa độ màn hình → cửa sổ
+bằng vị trí cửa sổ trên màn hình. Không cần overlay hay quyền mới; ở landscape (`null`) không vẽ.

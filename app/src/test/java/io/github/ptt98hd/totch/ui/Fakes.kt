@@ -5,7 +5,9 @@ import io.github.ptt98hd.totch.InstalledApps
 import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.SettingsRepository
 import io.github.ptt98hd.totch.SystemStatus
-import io.github.ptt98hd.totch.TouchAreaPreview
+import io.github.ptt98hd.totch.AppShortcuts
+import io.github.ptt98hd.totch.ShortcutEntry
+import io.github.ptt98hd.totch.TouchArea
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.Dispatchers
@@ -47,11 +49,15 @@ class FakeSystemStatus(initial: Requirements = Requirements()) : SystemStatus {
     override fun requestShizukuPermission() { permissionRequests++ }
 }
 
-class FakeTouchAreaPreview(initial: Rect? = null, private val canShow: Boolean = true) : TouchAreaPreview {
+class FakeTouchArea(initial: Rect? = null, private val regionOf: (Settings) -> Rect? = { initial }) : TouchArea {
     override val region: StateFlow<Rect?> = MutableStateFlow(initial)
-    var showCalls = 0
-    override fun show(durationMs: Long): Boolean {
-        showCalls++
-        return canShow
+    override fun regionFor(settings: Settings): Rect? = regionOf(settings)
+}
+
+class FakeAppShortcuts(private val entries: List<ShortcutEntry> = emptyList()) : AppShortcuts {
+    var loads = 0
+    override suspend fun shortcuts(): List<ShortcutEntry> {
+        loads++
+        return entries
     }
 }

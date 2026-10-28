@@ -19,8 +19,10 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
         data object Idle : State
         data object Ignoring : State
         data class Pressed(val x: Float, val y: Float, val timeMs: Long, val isSecond: Boolean) : State
-        data class Moved(val x: Float, val y: Float) : State
-        data object LongPressed : State
+        /** Swipe candidate from ([x],[y]); the anchor is where the finger last came to rest (spec §4). */
+        data class Moved(val x: Float, val y: Float, val anchorX: Float, val anchorY: Float, val anchorTimeMs: Long) : State
+        /** LONG_PRESS or `SWIPE_*_HOLD` emitted; [nextRepeatMs] is set while repeating. */
+        data class Held(val gesture: Gesture, val nextRepeatMs: Long?) : State
         data class WaitingSecondTap(val upTimeMs: Long) : State
     }
 
@@ -43,6 +45,8 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
     fun nextDeadlineMs(): Long? = when (val s = state) {
         is State.Pressed -> s.timeMs + config.longPressMs
         is State.WaitingSecondTap -> s.upTimeMs + config.doubleTapMs
+        is State.Moved -> if (holdCandidate(s) != null) s.anchorTimeMs + config.longPressMs else null
+        is State.Held -> s.nextRepeatMs
         else -> null
     }
 
@@ -56,12 +60,16 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
         when (val s = state) {
             is State.Pressed -> {
                 if (s.isSecond) out += Gesture.TAP
-                out += Gesture.LONG_PRESS
-                state = State.LongPressed
+                hold(Gesture.LONG_PRESS, nowMs, out)
             }
             is State.WaitingSecondTap -> {
                 out += Gesture.TAP
                 state = State.Idle
+            }
+            is State.Moved -> hold(holdCandidate(s) ?: return, nowMs, out)
+            is State.Held -> {
+                out += s.gesture
+                state = s.copy(nextRepeatMs = nowMs + config.repeatIntervalMs) // one repeat per tick, no burst
             }
             else -> Unit
         }
@@ -89,7 +97,9 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
         }
         if (s is State.Pressed && hypot(e.x - s.x, e.y - s.y) > config.touchSlopPx) {
             if (s.isSecond) out += Gesture.TAP // GR-15
-            state = State.Moved(s.x, s.y)
+            state = State.Moved(s.x, s.y, e.x, e.y, e.timeMs)
+        } else if (s is State.Moved && hypot(e.x - s.anchorX, e.y - s.anchorY) > config.touchSlopPx) {
+            state = s.copy(anchorX = e.x, anchorY = e.y, anchorTimeMs = e.timeMs)
         }
     }
 
@@ -111,7 +121,7 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
                 state = State.Idle
                 swipe(e.x - s.x, e.y - s.y)?.let { out += it }
             }
-            State.LongPressed, State.Ignoring -> state = State.Idle
+            is State.Held, State.Ignoring -> state = State.Idle
             State.Idle, is State.WaitingSecondTap -> Unit // GR-25
         }
     }
@@ -125,6 +135,23 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
             dx < 0 -> Gesture.SWIPE_LEFT
             else -> Gesture.SWIPE_RIGHT
         }
+    }
+
+    private fun hold(gesture: Gesture, nowMs: Long, out: MutableList<Gesture>) {
+        out += gesture
+        val next = if (gesture in config.repeating) nowMs + config.repeatIntervalMs else null
+        state = State.Held(gesture, next)
+    }
+
+    /** Hold gesture for a finger resting at the anchor, if that direction is bound (spec §4). */
+    private fun holdCandidate(s: State.Moved): Gesture? {
+        val held = when (swipe(s.anchorX - s.x, s.anchorY - s.y)) {
+            Gesture.SWIPE_DOWN -> Gesture.SWIPE_DOWN_HOLD
+            Gesture.SWIPE_LEFT -> Gesture.SWIPE_LEFT_HOLD
+            Gesture.SWIPE_RIGHT -> Gesture.SWIPE_RIGHT_HOLD
+            else -> null
+        }
+        return held?.takeIf { it in config.holdSwipes }
     }
 
     private fun inStroke() = when (state) {

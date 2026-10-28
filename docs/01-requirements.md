@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)** · Cập nhật: 2026-10-28
+> Trạng thái: **Đã chốt v1.0 (MVP)**, **v1.1 đang làm** (§8) · Cập nhật: 2026-10-28
 
 ## 1. Tầm nhìn
 
@@ -25,7 +25,7 @@ App là **native Android (Kotlin + Jetpack Compose, Material 3 / Material You)**
 |---|---|
 | Notch region | Hình chữ nhật trên màn hình nơi nhận cử chỉ, mặc định = bounding rect của display cutout ở cạnh trên, mở rộng thêm `padding` |
 | Detection mode | Cơ chế nhận chạm: `SHIZUKU` (đọc `getevent`) hoặc `ACCESSIBILITY` (overlay) |
-| Gesture | Một trong 6 cử chỉ: TAP, DOUBLE_TAP, LONG_PRESS, SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT |
+| Gesture | Một trong 9 cử chỉ: TAP, DOUBLE_TAP, LONG_PRESS, SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT và (v1.1) SWIPE_DOWN_HOLD, SWIPE_LEFT_HOLD, SWIPE_RIGHT_HOLD |
 | Action | Hành động được gán cho một gesture |
 | Binding | Cặp (Gesture → Action) |
 
@@ -40,7 +40,7 @@ App là **native Android (Kotlin + Jetpack Compose, Material 3 / Material You)**
 - Giao diện Material 3, dynamic color, dark theme, tiếng Anh + tiếng Việt.
 
 ### 4.2 Ngoài phạm vi (để sau v1)
-- Lệnh shell tùy chỉnh, Tasker intent, shortcut của app khác.
+- Lệnh shell tùy chỉnh, Tasker intent, shortcut động / đã ghim của app khác (chỉ launcher mặc định đọc được).
 - Hành động theo từng ứng dụng đang chạy (per-app profile).
 - Nhận cử chỉ ở chế độ ngang (landscape) — MVP **tự tắt** khi xoay ngang.
 - Cử chỉ nhiều ngón, vuốt lên.
@@ -120,7 +120,7 @@ tham chiếu ID tương ứng.
 | NFR-2 | Độ trễ từ lúc nhả tay đến lúc thực thi hành động ≤ 100 ms (không tính chờ double-tap) |
 | NFR-3 | CPU khi rảnh ≈ 0: không polling; chỉ xử lý khi có sự kiện input |
 | NFR-4 | Không có quyền INTERNET, không thư viện độc quyền (yêu cầu F-Droid), không tracking |
-| NFR-5 | Build tái lập (reproducible) bằng Gradle wrapper, JDK 17 |
+| NFR-5 | Build tái lập (reproducible) bằng Gradle wrapper, JDK 21 (bytecode Java 17) |
 | NFR-6 | Logic lõi (nhận cử chỉ, parse getevent, vùng notch, bindings) là Kotlin thuần, phủ unit test ≥ 90% dòng |
 | NFR-7 | Ngôn ngữ: English (mặc định), Tiếng Việt |
 | NFR-8 | Không crash khi Shizuku chết giữa chừng; tự chuyển trạng thái "chờ Shizuku" |
@@ -134,3 +134,24 @@ tham chiếu ID tương ứng.
 | R5 | Android bỏ qua phím media từ app không có foreground service (quan sát thực tế ở Accessibility mode) | Ưu tiên `MediaController` qua Notification access; Play/Pause dự phòng bằng `GLOBAL_ACTION_KEYCODE_HEADSETHOOK` |
 | R3 | F-Droid soi kỹ app dùng AccessibilityService | Khai báo rõ mục đích trong mô tả, `isAccessibilityTool=false`, không đọc nội dung cửa sổ |
 | R4 | Tọa độ thô có thể bị xoay/đảo trục so với màn hình | Spec quy đổi có xử lý; MVP chỉ chạy ở ROTATION_0 |
+
+## 8. Phiên bản 1.1
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-G8 | Cử chỉ **vuốt và giữ** (trái / phải / xuống): vuốt đủ xa rồi giữ yên ngón ≥ `longPressMs` | [gesture-recognition §4](specs/gesture-recognition.md) |
+| FR-G9 | Tùy chọn **lặp lại khi giữ** cho từng cử chỉ giữ (Long press, vuốt và giữ): hành động lặp theo `repeatIntervalMs` tới khi nhả | [gesture-recognition §4](specs/gesture-recognition.md) |
+| FR-G10 | Shizuku mode: vô hiệu Swipe down và Swipe down & hold (hệ thống luôn kéo thanh thông báo, R2) | [settings](specs/settings.md) |
+| FR-A10 | (sửa lỗi) Rung phản hồi hoạt động ổn định ở cả 2 mode | [actions §6](specs/actions.md) |
+| FR-A11 | Hành động **Gọi trợ lý** (trợ lý mặc định của hệ thống) | [actions](specs/actions.md) |
+| FR-A12 | Hành động **Mở shortcut** (shortcut tĩnh của app, nhóm theo app) | [actions §7](specs/actions.md) |
+| FR-S5 | Reset tách bạch: reset từng mục cài đặt; reset tổng chỉ reset cài đặt; reset gestures riêng ở màn Gestures | [settings](specs/settings.md), [ui](specs/ui.md) |
+| FR-S6 | Giao diện: theme System / Light / Dark, chế độ AMOLED black | [ui](specs/ui.md) |
+| FR-S7 | Ngôn ngữ hiển thị: theo hệ thống (fallback tiếng Anh) hoặc chọn English / Tiếng Việt | [ui](specs/ui.md) |
+| FR-S8 | Bật/tắt khởi động cùng máy | [detection-modes §4](specs/detection-modes.md) |
+| FR-D7 | Khuyến nghị bỏ tối ưu pin (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) | [detection-modes §4b](specs/detection-modes.md) |
+| FR-U7 | Top bar tĩnh hiện tên màn hình; Settings mở từ icon bên trái top bar; bottom bar còn Home, Gestures | [ui §1](specs/ui.md) |
+| FR-U8 | Highlight vùng notch trực tiếp trên màn hình khi mở app; chỉnh vùng chạm thấy thay đổi ngay (bỏ dialog preview) | [ui §2](specs/ui.md) |
+| FR-U9 | Màn chọn hành động dạng tab: Hệ thống & media / Ứng dụng / Shortcut | [ui §3](specs/ui.md) |
+| FR-U10 | Giao diện gọn: bỏ các đoạn mô tả không cần thiết; About thành section cuối của Settings | [ui](specs/ui.md) |
+| FR-U11 | Icon mới theo ảnh tham khảo, vẫn là dynamic (Monet + themed icon) | [ui](specs/ui.md) |

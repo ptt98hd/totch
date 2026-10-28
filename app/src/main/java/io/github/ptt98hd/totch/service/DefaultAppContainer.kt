@@ -6,10 +6,11 @@ import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.EngineStatus
 import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.SystemStatus
-import io.github.ptt98hd.totch.TouchAreaPreview
+import io.github.ptt98hd.totch.AppShortcuts
+import io.github.ptt98hd.totch.ShortcutEntry
+import io.github.ptt98hd.totch.TouchArea
 import io.github.ptt98hd.totch.accessibility.AccessibilityBridge
 import io.github.ptt98hd.totch.accessibility.AccessibilityExecutor
-import io.github.ptt98hd.totch.accessibility.OverlayTouchAreaPreview
 import io.github.ptt98hd.totch.action.AndroidFeedback
 import io.github.ptt98hd.totch.action.LocalExecutor
 import io.github.ptt98hd.totch.action.PackageManagerInstalledApps
@@ -82,7 +83,15 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, EngineStatus.Disabled)
 
     override val systemStatus: SystemStatus = AndroidSystemStatus(app, shizuku, accessibility, scope)
-    override val touchAreaPreview: TouchAreaPreview = OverlayTouchAreaPreview(region, accessibility)
+    override val touchArea: TouchArea = object : TouchArea {
+        override val region: StateFlow<Rect?> = this@DefaultAppContainer.region
+        override fun regionFor(settings: Settings): Rect? = notchRegion(settings, display.state.value)
+    }
+
+    // TODO(platform): static shortcut parser (actions spec §7).
+    override val appShortcuts: AppShortcuts = object : AppShortcuts {
+        override suspend fun shortcuts(): List<ShortcutEntry> = emptyList()
+    }
 
     init {
         scope.launch { combine(settings, display.state) { s, d -> s to d.density }.collect { (s, d) -> engine.updateSettings(s, d) } }

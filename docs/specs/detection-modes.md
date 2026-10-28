@@ -1,6 +1,6 @@
 # Spec: Chế độ nhận chạm & vòng đời service
 
-Yêu cầu: FR-D1…FR-D6, NFR-3, NFR-8 · Module: `:app`
+Yêu cầu: FR-D1…FR-D7, FR-S8, FR-G10, NFR-3, NFR-8 · Module: `:app`
 
 ## 1. Trạng thái engine
 
@@ -42,6 +42,12 @@ Trạng thái được expose qua `StateFlow<EngineStatus>` (singleton `GestureE
 |---|---|
 | DM-20 | `BOOT_COMPLETED` + `enabled && mode == SHIZUKU` → start foreground service (vào `WaitingShizuku` nếu Shizuku chưa sẵn) |
 | DM-21 | Accessibility mode tự hoạt động lại sau boot vì hệ thống tự bind service |
+| DM-22 | `startOnBoot=false` (FR-S8): `BOOT_COMPLETED` → lưu `enabled=false` (cả 2 mode; overlay bị gỡ, service Shizuku không chạy) cho tới khi người dùng bật lại. `startOnBoot=true` → như DM-20/21. Quyết định là hàm thuần `bootAction(settings)` → `START_SERVICE` / `DISABLE` / `NONE` |
+
+## 4b. Tối ưu pin (FR-D7)
+`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`: Home có thẻ khuyến nghị "Không giới hạn pin" (cả 2 mode) khi
+`PowerManager.isIgnoringBatteryOptimizations` = false; nút mở hộp thoại hệ thống
+`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`. Không bắt buộc để chạy.
 
 ## 5. Engine (kiểm thử JVM được)
 `GestureEngine` nhận `TouchEvent`, giữ một `GestureRecognizer`, lập lịch đúng 1 coroutine cho
@@ -57,6 +63,8 @@ Trạng thái được expose qua `StateFlow<EngineStatus>` (singleton `GestureE
 | EN-6 | Dispatch `Ok` + `haptics` bật → rung; `Failed` → báo lỗi (toast), không rung |
 | EN-7 | Chạm ngoài vùng hoặc `region == null` → không dispatch |
 | EN-8 | Nhiều gesture liên tiếp được dispatch tuần tự, đúng thứ tự |
+| EN-9 | Mode SHIZUKU, `SWIPE_DOWN` gán `Notifications` → vuốt xuống không dispatch gì (FR-G10, dùng `effectiveAction`) |
+| EN-10 | `SWIPE_RIGHT_HOLD` gán `VolumeUp`, `repeatOnHold` chứa nó: vuốt phải rồi giữ 500 + 2×300 ms (virtual time) → `VolumeUp` dispatch 3 lần; nhả tay → dừng |
 
 Đồng hồ: engine dùng `SystemClock.uptimeMillis()` (CLOCK_MONOTONIC). `MotionEvent.eventTime` dùng cùng
 đồng hồ; `getevent` gọi `EVIOCSCLOCKID(CLOCK_MONOTONIC)` nên timestamp `-t` cũng vậy. EN-5 là lưới an toàn.

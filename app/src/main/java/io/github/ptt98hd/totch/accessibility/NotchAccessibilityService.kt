@@ -19,10 +19,8 @@ import io.github.ptt98hd.totch.core.model.TouchEvent
 import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.service.DefaultAppContainer
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -36,7 +34,6 @@ class NotchAccessibilityService : AccessibilityService() {
     private lateinit var windowManager: WindowManager
     private var scope: CoroutineScope? = null
     private var overlay: View? = null
-    private var previewJob: Job? = null
 
     override fun onServiceConnected() {
         platform = (application as TotchApp).platform
@@ -70,24 +67,6 @@ class NotchAccessibilityService : AccessibilityService() {
         startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
-    /** Tints [rect] with the dynamic primary color for [durationMs] without intercepting touches. */
-    fun showPreview(rect: Rect, durationMs: Long): Boolean {
-        val scope = scope ?: return false
-        previewJob?.cancel()
-        previewJob = scope.launch {
-            val view = View(this@NotchAccessibilityService).apply {
-                setBackgroundColor(getColor(android.R.color.system_accent1_500) and 0x00FFFFFF or PREVIEW_ALPHA)
-            }
-            if (!place(view, rect, touchable = false, attached = false)) return@launch
-            try {
-                delay(durationMs)
-            } finally {
-                removeView(view)
-            }
-        }
-        return true
-    }
-
     private fun updateOverlay(rect: Rect?) {
         platform.engine.reset()
         if (rect == null) {
@@ -96,11 +75,11 @@ class NotchAccessibilityService : AccessibilityService() {
             return
         }
         val view = overlay ?: TouchView(this) { platform.engine.onTouch(it) }
-        overlay = view.takeIf { place(it, rect, touchable = true, attached = overlay != null) }
+        overlay = view.takeIf { place(it, rect, attached = overlay != null) }
     }
 
-    private fun place(view: View, rect: Rect, touchable: Boolean, attached: Boolean): Boolean = try {
-        val params = layoutParams(rect, touchable)
+    private fun place(view: View, rect: Rect, attached: Boolean): Boolean = try {
+        val params = layoutParams(rect)
         if (attached) windowManager.updateViewLayout(view, params) else windowManager.addView(view, params)
         true
     } catch (e: RuntimeException) { // BadTokenException / IllegalStateException when the service is going away
@@ -123,12 +102,11 @@ class NotchAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun layoutParams(rect: Rect, touchable: Boolean) = LayoutParams(
+    private fun layoutParams(rect: Rect) = LayoutParams(
         rect.width,
         rect.height,
         LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-        LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_LAYOUT_IN_SCREEN or LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-            (if (touchable) 0 else LayoutParams.FLAG_NOT_TOUCHABLE),
+        LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_LAYOUT_IN_SCREEN or LayoutParams.FLAG_LAYOUT_NO_LIMITS,
         PixelFormat.TRANSLUCENT,
     ).apply {
         gravity = Gravity.TOP or Gravity.START
@@ -136,7 +114,7 @@ class NotchAccessibilityService : AccessibilityService() {
         y = rect.top
         layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
         fitInsetsTypes = 0
-        title = if (touchable) "Totch notch" else "Totch preview"
+        title = "Totch notch"
     }
 
     /** Converts screen-space touches (rawX/rawY, uptime clock) into [TouchEvent]s. */
@@ -158,6 +136,5 @@ class NotchAccessibilityService : AccessibilityService() {
 
     private companion object {
         const val TAG = "TotchA11y"
-        const val PREVIEW_ALPHA = 0x66 shl 24 // ~40 %
     }
 }

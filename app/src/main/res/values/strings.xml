@@ -61,6 +61,9 @@
     <string name="gesture_swipe_down">Swipe down</string>
     <string name="gesture_swipe_left">Swipe left</string>
     <string name="gesture_swipe_right">Swipe right</string>
+    <string name="gesture_swipe_down_hold">Swipe down &amp; hold</string>
+    <string name="gesture_swipe_left_hold">Swipe left &amp; hold</string>
+    <string name="gesture_swipe_right_hold">Swipe right &amp; hold</string>
     <string name="action_none">Do nothing</string>
     <string name="action_back">Back</string>
     <string name="action_home">Home</string>
@@ -77,6 +80,9 @@
     <string name="action_volume_down">Volume down</string>
     <string name="action_open_app">Open app…</string>
     <string name="action_launch_app">Open %1$s</string>
+    <string name="action_assistant">Open assistant</string>
+    <string name="action_open_shortcut">Open shortcut…</string>
+    <string name="action_launch_shortcut">%1$s: %2$s</string>
     <string name="app_not_installed">Not installed</string>
     <string name="group_system">System</string>
     <string name="group_media">Media</string>

@@ -1,6 +1,6 @@
 # 02 — Thiết kế hệ thống
 
-> Trạng thái: **Đã chốt v1.0** · Liên quan: [01-requirements.md](01-requirements.md)
+> Trạng thái: **Đã chốt v1.0**, cập nhật cho v1.1 · Liên quan: [01-requirements.md](01-requirements.md)
 
 ## 1. Tổng quan
 
@@ -70,7 +70,8 @@ enum class TouchAction { DOWN, MOVE, UP, CANCEL }
 data class TouchEvent(val action: TouchAction, val x: Float, val y: Float,
                       val timeMs: Long, val pointerCount: Int = 1)
 
-enum class Gesture { TAP, DOUBLE_TAP, LONG_PRESS, SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT }
+enum class Gesture { TAP, DOUBLE_TAP, LONG_PRESS, SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT,
+                    SWIPE_DOWN_HOLD, SWIPE_LEFT_HOLD, SWIPE_RIGHT_HOLD }   // *_HOLD: v1.1
 
 @Serializable sealed interface Action {
     @Serializable @SerialName("none")          data object None : Action
@@ -88,6 +89,9 @@ enum class Gesture { TAP, DOUBLE_TAP, LONG_PRESS, SWIPE_DOWN, SWIPE_LEFT, SWIPE_
     @Serializable @SerialName("volume_up")     data object VolumeUp : Action
     @Serializable @SerialName("volume_down")   data object VolumeDown : Action
     @Serializable @SerialName("launch_app")    data class LaunchApp(val packageName: String) : Action
+    @Serializable @SerialName("assistant")     data object Assistant : Action                       // v1.1
+    @Serializable @SerialName("launch_shortcut") data class LaunchShortcut(val packageName: String,  // v1.1
+        val shortcutId: String, val label: String, val intentUri: String) : Action
 }
 ```
 
@@ -98,6 +102,8 @@ data class GestureConfig(
     val doubleTapMs: Long = 300, val longPressMs: Long = 500,
     val touchSlopPx: Float = 24f, val swipeMinDistancePx: Float = 60f,
     val doubleTapEnabled: Boolean = true,   // false => FR-G5: TAP phát ngay khi UP
+    val holdSwipes: Set<Gesture> = emptySet(), val repeating: Set<Gesture> = emptySet(),  // v1.1
+    val repeatIntervalMs: Long = 300,
 )
 
 class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) {
@@ -160,7 +166,8 @@ class ActionDispatcher(executors: List<ActionExecutor>) {
 sealed interface DispatchResult { data object Ok; data object Skipped; data class Failed(val reason: String) }
 
 object ShellCommands { fun of(action: Action): String?                          // lệnh shell cho ShizukuExecutor
-                       fun launch(packageName: String, activityName: String): String? }  // null nếu tên không hợp lệ
+                       fun launch(packageName: String, activityName: String): String?    // null nếu tên không hợp lệ
+                       fun startIntent(intentUri: String): String? }                  // v1.1, SC-4…SC-6
 ```
 
 ```kotlin
@@ -176,7 +183,12 @@ enum class DetectionMode { SHIZUKU, ACCESSIBILITY }
     val swipeMinDistanceDp: Int = 40, val paddingDp: Int = 8,
     val manualRegion: ManualRegionDp? = null,
     val haptics: Boolean = true,
+    // v1.1
+    val repeatOnHold: Set<Gesture> = emptySet(), val repeatIntervalMs: Long = 300,
+    val theme: ThemeMode = ThemeMode.SYSTEM, val amoledBlack: Boolean = false,
+    val language: AppLanguage = AppLanguage.SYSTEM, val startOnBoot: Boolean = true,
 ) { fun sanitized(): Settings }   // clamp theo FR-S4
+// effectiveAction, withDefaultPreferences, withDefaultGestures: xem specs/settings.md
 
 object SettingsCodec { fun encode(s: Settings): String; fun decode(json: String): Settings } // lỗi → mặc định
 ```
@@ -229,7 +241,9 @@ duy nhất trên `Dispatchers.Default` → không polling (NFR-3).
 |---|---|
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` | Service Shizuku mode |
 | `POST_NOTIFICATIONS` | Thông báo thường trực |
-| `RECEIVE_BOOT_COMPLETED` | FR-D6 |
+| `RECEIVE_BOOT_COMPLETED` | FR-D6, FR-S8 |
+| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | FR-D7 (khuyến nghị, v1.1) |
+| `android:localeConfig` (`xml/locales_config`) | FR-S7: ngôn ngữ theo app trong cài đặt hệ thống (Android 13+) |
 | `VIBRATE` | FR-A10 |
 | `QUERY_ALL_PACKAGES` → **không dùng**; thay bằng `<queries>` intent MAIN/LAUNCHER | App picker |
 | `BIND_ACCESSIBILITY_SERVICE` (service) | Accessibility mode |
@@ -254,3 +268,9 @@ duy nhất trên `Dispatchers.Default` → không polling (NFR-3).
 - **ADR-2 `:core` thuần JVM** — cho phép TDD nhanh (< 5 s), không cần emulator.
 - **ADR-3 Settings lưu JSON trong 1 key** — schema đơn giản, migrate dễ, giải mã lỗi thì về mặc định.
 - **ADR-4 minSdk 31** — dynamic color luôn có; `WindowMetrics`/`DisplayCutout` ổn định.
+- **ADR-5 Lặp khi giữ nằm trong recognizer** (v1.1) — lặp lại là deadline của state `Held`, nên vẫn chỉ có 1 timer
+  (NFR-3), test được bằng `onTick` và engine không cần biết gì thêm.
+- **ADR-6 Chỉ shortcut tĩnh** (v1.1) — `LauncherApps.getShortcuts`/`startShortcut` chỉ dành cho launcher mặc định;
+  shortcut tĩnh đọc được từ manifest của app (qua `<queries>` sẵn có) và mở bằng intent của chính nó.
+- **ADR-7 Highlight notch trong Activity** (v1.1) — vẽ trong cửa sổ của app (edge-to-edge, cutout `shortEdges`)
+  thay vì overlay: chạy được ở cả 2 mode, không cần quyền, cập nhật theo bản nháp khi kéo slider.

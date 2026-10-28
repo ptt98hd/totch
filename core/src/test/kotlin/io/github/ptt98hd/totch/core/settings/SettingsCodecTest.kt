@@ -16,7 +16,7 @@ class SettingsCodecTest {
             Settings(
                 enabled = true,
                 mode = DetectionMode.SHIZUKU,
-                bindings = mapOf(
+                bindings = DefaultBindings + mapOf(
                     Gesture.TAP to Action.LaunchApp("com.example"),
                     Gesture.DOUBLE_TAP to Action.None,
                     Gesture.LONG_PRESS to Action.Screenshot,
@@ -73,5 +73,42 @@ class SettingsCodecTest {
             assertEquals("""{"type":"$name"}""", encoded)
         }
         assertEquals("ACCESSIBILITY", json.getValue("mode").jsonPrimitive.content)
+    }
+
+    @Test fun `ST-11 v1_0 json keeps bindings and defaults new fields`() {
+        val s = SettingsCodec.decode(
+            """{"enabled":true,"mode":"SHIZUKU","bindings":{"TAP":{"type":"home"},"DOUBLE_TAP":{"type":"lock"},""" +
+                """"LONG_PRESS":{"type":"torch"},"SWIPE_DOWN":{"type":"notifications"},"SWIPE_LEFT":{"type":"previous"},""" +
+                """"SWIPE_RIGHT":{"type":"next"}},"doubleTapMs":300,"longPressMs":500,"swipeMinDistanceDp":40,""" +
+                """"paddingDp":8,"manualRegion":null,"haptics":true}""",
+        )
+        assertEquals(true, s.enabled)
+        assertEquals(Action.Home, s.bindings[Gesture.TAP])
+        assertEquals(Action.None, s.bindings[Gesture.SWIPE_RIGHT_HOLD])
+        assertEquals(
+            Settings().copy(enabled = true, mode = DetectionMode.SHIZUKU, bindings = DefaultBindings + (Gesture.TAP to Action.Home)),
+            s,
+        )
+    }
+
+    @Test fun `ST-16 new actions and enums round trip with stable names`() {
+        val shortcut = Action.LaunchShortcut("com.a", "compose", "New message", "intent:#Intent;component=com.a/.B;end")
+        val s = Settings(
+            bindings = DefaultBindings + mapOf(Gesture.TAP to Action.Assistant, Gesture.SWIPE_LEFT_HOLD to shortcut),
+            repeatOnHold = setOf(Gesture.SWIPE_LEFT_HOLD),
+            theme = ThemeMode.DARK, amoledBlack = true, language = AppLanguage.VIETNAMESE, startOnBoot = false,
+        )
+        assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
+        ThemeMode.entries.forEach { t -> assertEquals(t, SettingsCodec.decode(SettingsCodec.encode(Settings(theme = t))).theme) }
+        AppLanguage.entries.forEach { l -> assertEquals(l, SettingsCodec.decode(SettingsCodec.encode(Settings(language = l))).language) }
+
+        val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
+        assertEquals("dark", json.getValue("theme").jsonPrimitive.content)
+        assertEquals("vi", json.getValue("language").jsonPrimitive.content)
+        val bindings = json.getValue("bindings").jsonObject
+        assertEquals("""{"type":"assistant"}""", bindings.getValue("TAP").toString())
+        assertEquals("launch_shortcut", bindings.getValue("SWIPE_LEFT_HOLD").jsonObject.getValue("type").jsonPrimitive.content)
+        assertEquals("system", Json.parseToJsonElement(SettingsCodec.encode(Settings())).jsonObject.getValue("language").jsonPrimitive.content)
+        assertEquals("en", Json.parseToJsonElement(SettingsCodec.encode(Settings(language = AppLanguage.ENGLISH))).jsonObject.getValue("language").jsonPrimitive.content)
     }
 }

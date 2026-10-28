@@ -24,6 +24,7 @@ class AndroidFeedback(private val context: Context, private val apps: InstalledA
     override fun onFailed(action: Action, reason: String) {
         val name = when (action) {
             is Action.LaunchApp -> apps.labelOf(action.packageName) ?: action.packageName
+            is Action.LaunchShortcut -> action.label
             else -> context.getString(labelOf(action))
         }
         main.post { Toast.makeText(context, context.getString(R.string.platform_action_failed, name), Toast.LENGTH_SHORT).show() }
@@ -46,5 +47,7 @@ class AndroidFeedback(private val context: Context, private val apps: InstalledA
         Action.VolumeUp -> R.string.platform_action_volume_up
         Action.VolumeDown -> R.string.platform_action_volume_down
         is Action.LaunchApp -> R.string.platform_action_launch_app
+        Action.Assistant -> R.string.platform_action_assistant
+        is Action.LaunchShortcut -> R.string.platform_action_shortcut
     }
 }
