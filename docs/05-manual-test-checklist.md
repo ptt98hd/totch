@@ -8,7 +8,7 @@
 
 | Mục | Giá trị |
 |---|---|
-| Phiên bản app | 1.0.2 (10002) |
+| Phiên bản app | 1.1.0 (10100) |
 | Máy / ROM / Android | |
 | Kiểu notch (giọt nước / đục lỗ giữa / đục lỗ góc / không có) | |
 | Phiên bản Shizuku | |
@@ -18,10 +18,10 @@
 
 | ID | Kịch bản | Kỳ vọng | KQ |
 |---|---|---|---|
-| MT-I1 | Cài mới, mở app | Home hiện thẻ giới thiệu 2 chế độ; công tắc chính tắt; không crash | [ ] |
+| MT-I1 | Cài mới, mở app | Home gọn (không có đoạn mô tả dài); công tắc chính tắt; không crash | [ ] |
 | MT-I2 | Bật công tắc khi chưa cấp quyền nào | Công tắc vẫn bật; thẻ yêu cầu quyền hiện ✗ kèm nút hành động; status báo thiếu quyền | [ ] |
 | MT-I3 | Chuyển qua lại 2 chế độ bằng segmented button | Danh sách thẻ yêu cầu đổi theo chế độ; lựa chọn được lưu sau khi đóng/mở app | [ ] |
-| MT-I4 | Cập nhật đè từ 1.0.0 lên 1.0.1 | Cài đặt và binding cũ được giữ nguyên | [ ] |
+| MT-I4 | Cập nhật đè từ 1.0.x lên 1.1.0 | Cài đặt và binding cũ được giữ nguyên; 3 cử chỉ "vuốt và giữ" mới = "Không làm gì" | [ ] |
 
 ## 2. Chế độ Trợ năng (Accessibility)
 
@@ -52,7 +52,7 @@
 | MT-S4 | Bấm "Grant" → **Cho phép** | Thẻ ✓; status "Running"; có thông báo thường trực | [ ] |
 | MT-S5 | (Android 13+) Từ chối quyền thông báo | Service vẫn chạy; thẻ Notifications ✗; bấm lại mở trang cài đặt thông báo của app | [ ] |
 | MT-S6 | Lặp lại MT-A2…MT-A7 ở chế độ Shizuku | Tất cả đúng như chế độ Trợ năng | [ ] |
-| MT-S7 | Vuốt xuống ở notch | Totch chạy hành động **và** thanh thông báo hệ thống cũng kéo xuống (hạn chế đã biết R2) | [ ] |
+| MT-S7 | Vuốt xuống ở notch | Chỉ thanh thông báo hệ thống kéo xuống; Totch **không** chạy hành động nào (FR-G10). Màn Gestures: 2 dòng vuốt xuống bị mờ | [ ] |
 | MT-S8 | Độ trễ: chạm (TAP gán Home) và cảm nhận | Ghi lại: tức thì / chậm nhẹ (< 0,5 s) / chậm rõ (> 0,5 s) | [ ] |
 | MT-S9 | Dừng Shizuku (Stop) khi app đang chạy | Status "Waiting for Shizuku"; không crash | [ ] |
 | MT-S10 | Khởi động lại Shizuku sau MT-S9 | Tự chạy lại, **không** cần mở app | [ ] |
@@ -79,6 +79,23 @@
 | MT-X13 | Mở app đã chọn khi đang ở launcher | App được mở | [ ]/[ ] |
 | MT-X14 | Mở app khi app đó đang chạy nền | App được đưa lên trước (không tạo bản sao) | [ ]/[ ] |
 | MT-X15 | Gỡ app đã gán rồi kích hoạt cử chỉ | Toast lỗi; màn Gestures hiện "Not installed" | [ ]/[ ] |
+| MT-X16 | Gọi trợ lý | Trợ lý mặc định (Gemini / Google Assistant / …) mở lên | [ ]/[ ] |
+| MT-X17 | Shortcut tĩnh (vd. Chrome "New incognito tab", Camera "Selfie") khi đang ở app khác | Shortcut mở đúng màn hình | [ ]/[ ] |
+| MT-X18 | Gỡ app có shortcut đã gán rồi kích hoạt | Toast lỗi; màn Gestures hiện "Not installed" | [ ]/[ ] |
+
+## 4b. Vuốt và giữ, lặp lại (v1.1)
+
+Chuẩn bị: Vuốt phải & giữ = Tăng âm lượng, Vuốt trái & giữ = Giảm âm lượng, Nhấn giữ = Đèn pin.
+
+| ID | Kịch bản | Kỳ vọng | KQ A/S |
+|---|---|---|---|
+| MT-H1 | Vuốt phải rồi giữ yên ~0,5 s, không bật lặp lại | Âm lượng tăng 1 nấc; nhả tay không có gì thêm | [ ]/[ ] |
+| MT-H2 | Bật "Lặp lại" cho Vuốt phải & giữ; vuốt phải rồi giữ 2 s | Âm lượng tăng liên tục (~3 nấc/giây) tới khi nhả | [ ]/[ ] |
+| MT-H3 | Vuốt phải nhanh rồi nhả ngay | Chạy hành động của "Vuốt sang phải" (không phải bản giữ) | [ ]/[ ] |
+| MT-H4 | Bật lặp lại cho Nhấn giữ = Giảm âm lượng, giữ 2 s | Âm lượng giảm liên tục tới khi nhả | [ ]/[ ] |
+| MT-H5 | Đang lặp, đặt thêm ngón thứ 2 | Dừng lặp ngay | [ ]/[ ] |
+| MT-H6 | Settings → Repeat interval 1000 ms, lặp lại MT-H2 | Tăng chậm ~1 nấc/giây | [ ]/[ ] |
+| MT-H7 | Gestures → Reset gestures → Đồng ý | Binding về mặc định, tắt mọi lặp lại; cài đặt khác giữ nguyên | [ ] |
 
 ## 5. Media (lỗi 1.0.0: không hoạt động ở chế độ Trợ năng)
 
@@ -102,19 +119,20 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 
 | ID | Kịch bản | Kỳ vọng | KQ |
 |---|---|---|---|
-| MT-R1 | Settings → "Preview touch area" (chế độ Trợ năng) | Vùng tô màu xuất hiện đúng trên notch ~3 s | [ ] |
-| MT-R2 | Preview ở chế độ Shizuku | Hiện hình minh họa vùng chạm trong app | [ ] |
-| MT-R3 | Tăng padding lên 48 dp rồi preview | Vùng to ra 2 bên và phía dưới; cạnh trên vẫn sát mép | [ ] |
-| MT-R4 | Bật "Custom touch area", kéo vị trí ngang về 10% | Vùng chạm dời sang trái; cử chỉ chỉ nhận ở vị trí mới | [ ] |
+| MT-R1 | Mở app (cả 2 chế độ) | Vùng chạm được tô màu trực tiếp trên notch ở mọi màn hình | [ ] |
+| MT-R2 | Xoay ngang khi đang mở app | Không còn highlight | [ ] |
+| MT-R3 | Kéo slider padding lên 48 dp (đang kéo, chưa nhả) | Highlight to ra theo ngón tay; cạnh trên vẫn sát mép | [ ] |
+| MT-R4 | Bật "Custom touch area", kéo vị trí ngang về 10% | Highlight dời sang trái ngay khi kéo; cử chỉ chỉ nhận ở vị trí mới | [ ] |
 | MT-R5 | Máy không có notch (hoặc giả lập) | Vùng mặc định ở giữa cạnh trên, rộng ~20% | [ ] |
 | MT-R6 | Xoay ngang (app hỗ trợ xoay, vd. YouTube) | Status "Paused"; chạm vùng cũ không kích hoạt gì | [ ] |
 | MT-R7 | Xoay dọc lại | Hoạt động lại không cần mở app | [ ] |
 | MT-R8 | Double-tap window = 600 ms rồi chạm đúp chậm | Vẫn nhận double tap; với 150 ms thì chạm đúp chậm thành 2 TAP | [ ] |
 | MT-R9 | Long-press = 1500 ms | Phải giữ đủ 1,5 s mới kích hoạt | [ ] |
 | MT-R10 | Swipe distance = 200 dp, vuốt ngắn | Vuốt ngắn không kích hoạt; vuốt dài thì có | [ ] |
-| MT-R11 | Tắt haptics | Không rung khi kích hoạt | [ ] |
+| MT-R11 | Bật haptics (cả 2 chế độ, kể cả khi "Phản hồi chạm" của hệ thống tắt) / tắt haptics | Bật: rung rõ mỗi lần hành động chạy (lỗi 1.0.x); tắt: không rung | [ ]/[ ] |
 | MT-R12 | Đổi cài đặt khi đang chạy | Có hiệu lực ngay, không cần tắt/bật | [ ] |
-| MT-R13 | "Reset to defaults" → Hủy, rồi → Đồng ý | Hủy: không đổi gì; Đồng ý: về mặc định nhưng giữ công tắc và chế độ | [ ] |
+| MT-R13 | Nút reset tổng ở top bar Settings → Hủy, rồi → Đồng ý | Hủy: không đổi gì; Đồng ý: cài đặt về mặc định, **giữ** công tắc, chế độ và toàn bộ gestures | [ ] |
+| MT-R15 | Đổi 1 mục (vd. Long-press) rồi bấm nút ↺ của mục đó | Chỉ mục đó về mặc định; nút ↺ mờ đi | [ ] |
 | MT-R14 | Force stop app trong Cài đặt hệ thống rồi mở lại | Cài đặt còn nguyên | [ ] |
 
 ## 7. Khởi động lại máy
@@ -125,18 +143,26 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-B2 | Chế độ Shizuku, Shizuku khởi động bằng root/ADB không dây sau boot | Thông báo "Waiting for Shizuku" → tự chuyển "Running" khi Shizuku sẵn sàng | [ ] |
 | MT-B3 | Chế độ Shizuku, Shizuku **không** tự khởi động | Thông báo "Waiting for Shizuku"; khởi động Shizuku thủ công → tự chạy | [ ] |
 | MT-B4 | Công tắc chính tắt → reboot | Không có service/thông báo nào chạy | [ ] |
+| MT-B5 | Tắt "Start on boot", công tắc chính bật → reboot (cả 2 chế độ) | Sau boot không nhận cử chỉ; mở app thấy công tắc chính tắt | [ ]/[ ] |
 
 ## 8. Giao diện
 
 | ID | Kịch bản | Kỳ vọng | KQ |
 |---|---|---|---|
-| MT-U1 | Bật Dark mode hệ thống | Mọi màn hình (Home, Gestures, App picker, Settings, About, bottom sheet, dialog) đổi tối; chữ đọc rõ | [ ] |
-| MT-U2 | Đổi ngôn ngữ hệ thống sang Tiếng Việt | Toàn bộ chữ là tiếng Việt, không bị cắt chữ; toast lỗi cũng tiếng Việt | [ ] |
+| MT-U1 | Theme = System, bật Dark mode hệ thống | Mọi màn hình (Home, Gestures, Action picker, Settings, dialog) đổi tối; chữ đọc rõ | [ ] |
+| MT-U1b | Theme = Light / Dark (khác hệ thống) | App theo lựa chọn; icon status bar đọc rõ | [ ] |
+| MT-U1c | Dark + AMOLED black | Nền đen tuyệt đối; thẻ/vùng chứa vẫn phân biệt được | [ ] |
+| MT-U2 | Ngôn ngữ = System, đổi ngôn ngữ hệ thống sang Tiếng Việt / tiếng Pháp | Tiếng Việt: toàn bộ chữ tiếng Việt, kể cả toast; tiếng Pháp: tiếng Anh | [ ] |
+| MT-U2b | Settings → Ngôn ngữ = Tiếng Việt khi máy đang tiếng Anh (Android 12 và 13+) | App đổi ngay sang tiếng Việt; giữ sau khi mở lại | [ ] |
+| MT-U2c | (Android 13+) Đổi ngôn ngữ của Totch trong Cài đặt hệ thống → Ứng dụng | Mở lại app: mục Ngôn ngữ trong Settings khớp | [ ] |
 | MT-U3 | Đổi hình nền (màu khác hẳn) | Màu app đổi theo (Material You) | [ ] |
 | MT-U4 | Sau MT-U3, xem icon ở launcher | Icon đổi màu theo hình nền mới (có thể cần vài giây/khởi động lại launcher) | [ ] |
 | MT-U5 | Bật "Themed icons" (Android 13+) | Icon hiển thị dạng đơn sắc theo theme | [ ] |
 | MT-U6 | Cỡ chữ hệ thống lớn nhất | Không vỡ layout; slider và nút dùng được | [ ] |
-| MT-U7 | App picker: tìm "spo" / "SPO" | Kết quả giống nhau (không phân biệt hoa thường) | [ ] |
+| MT-U7 | Action picker → tab Ứng dụng: tìm "spo" / "SPO" | Kết quả giống nhau (không phân biệt hoa thường) | [ ] |
+| MT-U10 | Top bar | Cố định khi cuộn, hiện tên màn hình; Home/Gestures có icon Settings bên trái; Settings có nút Back | [ ] |
+| MT-U11 | Action picker | 3 tab; mở đúng tab của hành động đang gán; tab Shortcut nhóm theo app, tìm kiếm được | [ ] |
+| MT-U12 | Icon mới ở launcher, đổi hình nền, bật Themed icons | Icon theo thiết kế mới, đổi màu theo hình nền; themed icon đơn sắc rõ | [ ] |
 | MT-U8 | Icon thông báo thường trực (Shizuku) | Icon đơn sắc rõ ràng, không phải khối trắng | [ ] |
 | MT-U9 | TalkBack: duyệt Home và Gestures | Các nút/thẻ đọc được nhãn có nghĩa | [ ] |
 
@@ -145,6 +171,7 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | ID | Kịch bản | Kỳ vọng | KQ |
 |---|---|---|---|
 | MT-P1 | Bật Battery saver | Cử chỉ vẫn hoạt động | [ ] |
+| MT-P5 | Thẻ "Battery" ở Home → bấm → Cho phép | Hộp thoại hệ thống hiện; quay lại thẻ chuyển ✓ | [ ] |
 | MT-P2 | Để máy qua đêm với app bật (mỗi chế độ 1 đêm) | Totch không nằm trong top tiêu thụ pin; sáng ra vẫn hoạt động | [ ] |
 | MT-P3 | Dùng bình thường 1 ngày | Không có crash, không có toast lỗi lạ | [ ] |
 | MT-P4 | Gỡ cài đặt Shizuku khi đang ở chế độ Shizuku | Không crash; status "Waiting for Shizuku" | [ ] |

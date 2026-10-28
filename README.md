@@ -9,13 +9,13 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers, no `INTERNET` perm
 
 ## Features
 
-- **6 gestures** on the notch area: tap, double tap, long press, swipe down, swipe left, swipe right.
+- **9 gestures** on the notch area: tap, double tap, long press, swipe down / left / right, and swipe down / left / right **& hold**. Hold gestures can repeat their action until you lift your finger (great for volume).
 - **Actions** (one per gesture, or "Do nothing"):
-  - System: Back, Home, Recents, Lock screen, Screenshot, Notification shade, Quick Settings
+  - System: Back, Home, Recents, Lock screen, Screenshot, Notification shade, Quick Settings, Assistant
   - Flashlight toggle; media Play/Pause, Next, Previous; Volume up/down
-  - Launch any installed app
-- Adjustable sensitivity, manual notch region, haptic feedback.
-- Material 3 with dynamic color and dark theme; English and Vietnamese.
+  - Launch any installed app, or one of its static app shortcuts
+- Adjustable sensitivity, manual notch region shown live on screen, haptic feedback, start on boot.
+- Material 3 with dynamic color; light / dark / AMOLED black theme; English and Vietnamese (or follow the system).
 - Automatically disabled in landscape.
 
 ## Detection modes
@@ -23,7 +23,7 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers, no `INTERNET` perm
 | | Shizuku mode | Accessibility mode |
 |---|---|---|
 | How | Reads raw touch events (`getevent`) with shell privileges via [Shizuku](https://shizuku.rikka.app/) | Places a small accessibility overlay exactly over the notch |
-| Consumes touches | **No** — the system still receives them, so e.g. a swipe down also pulls the notification shade | **Yes**, but only inside the notch area |
+| Consumes touches | **No** — the system still receives them, so swipe-down gestures are disabled in this mode (they would also pull the notification shade) | **Yes**, but only inside the notch area |
 | Needs | Shizuku running and permission granted; persistent notification (foreground service) | Accessibility service enabled |
 
 The Accessibility service is used **only** to draw the touch area over the notch and to perform global actions (Back, Home, lock screen, ...). It does not read screen content.

@@ -1,0 +1,6 @@
+* New gestures: swipe left/right/down & hold, with optional repeat until release.
+* New actions: open the assistant, open app shortcuts (grouped by app).
+* Redesigned action picker (System & media / Apps / Shortcuts), grouped gestures, reset gestures.
+* Notch area highlighted live in the app; touch area edits show instantly.
+* Theme (light/dark/AMOLED), language and start-on-boot settings; per-item reset.
+* Fixed: haptic feedback. New icon.
