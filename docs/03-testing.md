@@ -33,8 +33,10 @@ Mục tiêu độ phủ: `:core` ≥ 90% dòng (NFR-6).
 | actions §5 (MC-\*)                 | `app/.../action/MediaSessionsTest`                                                      |
 | actions §7 (SH-\*)                 | `app/.../ui/picker/ShortcutGroupingTest`                                                |
 | ui (UI-10, UI-11, UI-20…UI-22)     | `app/.../ui/picker/ActionPickerViewModelTest`                                           |
-| ui (UI-12…UI-16)                   | `app/.../ui/gestures/GesturesViewModelTest`                                             |
-| ui (UI-30…UI-32)                   | `app/.../ui/settings/SettingsViewModelTest`                                             |
+| ui (UI-12…UI-15)                   | `app/.../ui/gestures/GesturesViewModelTest`                                             |
+| ui (UI-30, UI-31, UI-33, UI-34)    | `app/.../ui/notch/NotchSettingsViewModelTest`                                           |
+| ui (UI-32)                         | `app/.../ui/settings/AppSettingsViewModelTest`                                          |
+| notch-region (NR-12…NR-14)         | `app/.../engine/RegionTest`                                                             |
 | ui (TH-2)                          | `app/.../ui/theme/AmoledTest`                                                           |
 | detection-modes (DM-22)            | `app/.../service/BootActionTest`                                                        |
 

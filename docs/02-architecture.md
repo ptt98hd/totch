@@ -50,7 +50,7 @@ totch/
 │       ├── accessibility/        # NotchAccessibilityService, AccessibilityExecutor
 │       ├── service/              # NotchForegroundService, BootReceiver
 │       ├── action/               # LocalExecutor (torch, media, volume), AppLauncher
-│       └── ui/                   # theme/, home/, gestures/, settings/, about/, navigation
+│       └── ui/                   # theme/, home/, gestures/, notch/, settings/ (app settings + about), navigation
 └── docs/
 ```
 
@@ -188,7 +188,7 @@ enum class DetectionMode { SHIZUKU, ACCESSIBILITY }
     val theme: ThemeMode = ThemeMode.SYSTEM, val amoledBlack: Boolean = false,
     val language: AppLanguage = AppLanguage.SYSTEM, val startOnBoot: Boolean = true,
 ) { fun sanitized(): Settings }   // clamp theo FR-S4
-// effectiveAction, withDefaultPreferences, withDefaultGestures: xem specs/settings.md
+// effectiveAction: xem specs/settings.md
 
 object SettingsCodec { fun encode(s: Settings): String; fun decode(json: String): Settings } // lỗi → mặc định
 ```

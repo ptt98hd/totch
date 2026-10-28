@@ -1,15 +1,15 @@
 # Spec: Giao diện (Material 3)
 
-Yêu cầu: FR-U1…FR-U11, FR-S5…FR-S8 · Module: `:app` · Package: `io.github.ptt98hd.totch.ui`
+Yêu cầu: FR-U1…FR-U14, FR-S6…FR-S9, FR-R5, FR-R6 · Module: `:app` · Package: `io.github.ptt98hd.totch.ui`
 
 ## 1. Nguyên tắc
 - Jetpack Compose + Material 3, `dynamicLightColorScheme/dynamicDarkColorScheme`, edge-to-edge.
 - Một Activity (`MainActivity`), Navigation Compose.
-- **Top bar tĩnh** (`TopAppBar` pinned, không co giãn khi cuộn) trên mọi màn hình, tiêu đề = tên màn hình hiện tại.
-  - Home, Gestures: icon **Settings ở bên trái** (navigation icon) → mở Settings.
-  - Settings, Action picker: nút **Back** ở bên trái.
-  - Hành động riêng của màn hình nằm bên phải (vd. Reset).
-- `NavigationBar` dưới cùng chỉ có **Home** và **Gestures**; ẩn ở Settings / Action picker.
+- **Top bar tĩnh** (`TopAppBar` pinned, không co giãn khi cuộn) trên mọi màn hình, tiêu đề = tên màn hình hiện tại
+  ở bên trái.
+  - Home, Gestures, Notch: chỉ có tiêu đề + icon **Settings ở bên phải** → mở **Cài đặt ứng dụng**. Không có nút nào khác.
+  - Cài đặt ứng dụng, Action picker: nút **Back** ở bên trái, không có action bên phải.
+- `NavigationBar` dưới cùng có 3 mục: **Home**, **Gestures**, **Notch** (icon Tune); ẩn ở Cài đặt ứng dụng / Action picker.
 - Mỗi màn hình có `ViewModel` riêng, expose `StateFlow<UiState>`; Composable stateless nhận `state` + lambda → test được.
 - Giao diện gọn: không có đoạn mô tả giải thích dài (bỏ mô tả chế độ, lời dẫn màn Gestures, thẻ onboarding,
   ghi chú R2, summary của các switch hiển nhiên).
@@ -17,13 +17,13 @@ Yêu cầu: FR-U1…FR-U11, FR-S5…FR-S8 · Module: `:app` · Package: `io.gith
 
 | ID | Tiêu chí |
 |---|---|
-| UI-40 | Top bar pinned, tiêu đề = tên màn hình; Home/Gestures: icon Settings bên trái; Settings/Picker: Back bên trái |
-| UI-41 | Bottom bar chỉ có Home, Gestures; ẩn khi ở Settings / Action picker |
+| UI-40 | Top bar pinned, tiêu đề = tên màn hình bên trái; Home/Gestures/Notch: icon Settings bên phải; Cài đặt ứng dụng/Picker: Back bên trái |
+| UI-41 | Bottom bar có Home, Gestures, Notch theo thứ tự; ẩn khi ở Cài đặt ứng dụng / Action picker |
 
 ## 2. Highlight vùng notch trực tiếp (FR-U8)
 - Khi app đang mở (mọi màn hình, hướng dọc), vùng chạm hiện tại được tô trực tiếp trên màn hình tại đúng vị
   trí notch: nền `primary` alpha 35% + viền `primary`, bo tròn. Ở Shizuku mode và Accessibility mode như nhau.
-- Settings → nhóm Touch area: khi kéo slider (padding, vị trí, rộng, cao) hoặc bật/tắt custom area, highlight
+- Màn Notch: khi kéo slider vùng chạm (vị trí ngang/dọc, rộng, cao, padding), highlight
   cập nhật **ngay trong lúc kéo** theo giá trị nháp (`TouchArea.regionFor(draft)`), không cần lưu.
 - Bỏ nút / dialog "Preview touch area" và overlay preview qua accessibility.
 
@@ -32,7 +32,7 @@ Yêu cầu: FR-U1…FR-U11, FR-S5…FR-S8 · Module: `:app` · Package: `io.gith
 ### Home (FR-U1, FR-D4, FR-D7)
 ```
 ┌──────────────────────────────────┐
-│ ⚙  Home                          │  ← top bar tĩnh
+│ Home                           ⚙ │  ← top bar tĩnh
 │ ┌──────────────────────────────┐ │
 │ │ ● Notch gestures       [ ON ]│ │
 │ │   Status text (EngineStatus) │ │
@@ -46,7 +46,7 @@ Yêu cầu: FR-U1…FR-U11, FR-S5…FR-S8 · Module: `:app` · Package: `io.gith
 │ ✓/✗ Media control                │  (khi có gesture gán media)
 │ ✓/✗ Battery unrestricted         │  (khuyến nghị, cả 2 mode)
 ├──────────────────────────────────┤
-│  Home  |  Gestures               │
+│  Home  |  Gestures  |  Notch     │
 └──────────────────────────────────┘
 ```
 | ID | Tiêu chí |
@@ -70,7 +70,7 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
 - Cử chỉ giữ (Long press, `*_HOLD`) có nút bật/tắt **Lặp lại** (icon Repeat) ở cuối dòng; tắt được khi
   hành động là `None`.
 - Shizuku mode: Swipe down, Swipe down & hold bị vô hiệu (mờ, không bấm được) với nhãn "Không khả dụng ở chế độ Shizuku".
-- Top bar có nút **Reset gestures** (dialog xác nhận) → `withDefaultGestures()`.
+- Không có nút Reset gestures (FR-S9).
 
 | ID | Tiêu chí |
 |---|---|
@@ -78,7 +78,6 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
 | UI-13 | `GesturesUiState.groups` đúng 4 nhóm theo bảng trên, đúng thứ tự |
 | UI-14 | Mode SHIZUKU → dòng `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` có `enabled=false`; mode ACCESSIBILITY → mọi dòng `enabled=true` |
 | UI-15 | Chỉ dòng thuộc `HoldGestures` có `repeatable=true`; `setRepeat(g, on)` cập nhật `repeatOnHold` |
-| UI-16 | `requestResetGestures` → dialog; xác nhận → `withDefaultGestures()` (cài đặt khác giữ nguyên); hủy → không đổi |
 
 ### Action picker (FR-U9, FR-A11, FR-A12)
 Màn hình đầy đủ `ActionPickerDestination(gesture)`, tiêu đề = tên cử chỉ, có `PrimaryTabRow` 3 tab:
@@ -99,23 +98,40 @@ Mục đang chọn có radio được chọn. Chọn → lưu binding và quay l
 | UI-21 | Tab Shortcut dùng `groupShortcuts` (SH-1, SH-2); chọn → `LaunchShortcut(pkg, id, label, intentUri)` |
 | UI-22 | App và shortcut chỉ được tải lần đầu mở tab tương ứng (hoặc tab ban đầu) |
 
-### Settings (FR-U4, FR-U5, FR-S5…FR-S8)
+### Notch (FR-U12, FR-S9, FR-R5, FR-R6) — tab thứ 3
 Các section, theo thứ tự:
 1. **Độ nhạy**: Double-tap window, Long-press duration, Swipe distance, Repeat interval.
-2. **Vùng chạm**: Padding, switch Custom touch area → vị trí ngang (%), rộng (dp), cao (dp). Highlight trực tiếp (§2).
-3. **Phản hồi**: Haptic feedback.
-4. **Giao diện**: Theme (System / Light / Dark — segmented), AMOLED black (switch), Ngôn ngữ (System / English / Tiếng Việt — dialog chọn).
-5. **Hệ thống**: Start on boot.
-6. **Giới thiệu** (cuối cùng): phiên bản, license, mã nguồn, credit Shizuku.
+2. **Vị trí**: Vị trí ngang (%, 0–100), Vị trí dọc (dp, 0–100, tính từ cạnh trên).
+3. **Kích thước**: Rộng (dp, 8–400), Cao (dp, 8–100), Mở rộng vùng chạm / padding (dp, 0–48).
+4. **Phản hồi**: Haptic feedback (switch).
 
-- Mỗi mục có nút **reset riêng** (icon ↺) chỉ bật khi giá trị khác mặc định.
-- Top bar có nút **Reset settings** (dialog xác nhận) → `withDefaultPreferences()`: **không** đụng tới gestures.
+- Không có switch "Custom touch area": slider vị trí/kích thước **luôn hiển thị**. Giá trị hiển thị
+  `area = manualRegion ?: detectedRegion ?: ManualRegionDp()` (`detectedRegion` = vùng tự phát hiện, notch-region NR-12).
+  Kéo một slider → lưu `manualRegion = area.copy(<field> = giá trị mới)`.
+- Chỉ **slider** có nút reset (icon ↺), đặt **bên phải thanh slider**, chỉ bật khi khác mặc định. Switch không có reset.
+  Mặc định của slider vùng chạm = giá trị của `detectedRegion`; reset field cuối cùng khác mặc định → `manualRegion = null`
+  (quay về tự phát hiện).
+- Highlight trực tiếp (§2).
 
 | ID | Tiêu chí |
 |---|---|
-| UI-30 | `reset(item)` đặt đúng field đó về giá trị của `Settings()`; field khác giữ nguyên. `isDefault(item)` đúng khi bằng mặc định |
-| UI-31 | Reset tổng → `withDefaultPreferences()`; bindings và `repeatOnHold` giữ nguyên |
-| UI-32 | Setter theme / amoled / language / startOnBoot / repeatInterval lưu đúng field |
+| UI-30 | `NotchSetting` gồm đúng các slider: DOUBLE_TAP, LONG_PRESS, SWIPE_DISTANCE, REPEAT_INTERVAL, AREA_X, AREA_Y, AREA_WIDTH, AREA_HEIGHT, PADDING. `reset(item, s, auto)` đặt đúng field đó về mặc định (`Settings()` hoặc `auto` cho vùng chạm), field khác giữ nguyên; `isDefault(item, s, auto)` đúng khi bằng mặc định |
+| UI-31 | Reset slider vùng chạm khi mọi field khác đã bằng `auto` → `manualRegion = null`; khi `manualRegion = null` mọi slider vùng chạm `isDefault` |
+| UI-33 | `NotchSettingsUiState.area` = `manualRegion ?: detectedRegion ?: ManualRegionDp()`; `setArea(region)` lưu `manualRegion` (mọi slider, kể cả vị trí dọc) |
+| UI-34 | Setter độ nhạy / padding / haptics lưu đúng field (kẹp bởi repository) |
+
+### Cài đặt ứng dụng (FR-U12, FR-U14, FR-S6…FR-S8) — mở từ icon Settings bên phải top bar
+Các section, theo thứ tự:
+1. **Giao diện**: Theme (System / Light / Dark — **dialog chọn** như Ngôn ngữ), AMOLED black (switch),
+   Ngôn ngữ (System / English / Tiếng Việt — dialog chọn). Theme và Ngôn ngữ có **chevron** (›) ở cuối dòng.
+2. **Hệ thống**: Start on boot.
+3. **Giới thiệu** (cuối cùng): phiên bản, license, mã nguồn, credit Shizuku.
+
+- Không có nút reset nào (FR-S9).
+
+| ID | Tiêu chí |
+|---|---|
+| UI-32 | Setter theme / amoled / language / startOnBoot lưu đúng field |
 
 ### Giao diện & ngôn ngữ (FR-S6, FR-S7)
 | ID | Tiêu chí |

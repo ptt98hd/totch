@@ -22,6 +22,23 @@ class RegionTest {
     fun `manual region is converted from dp`() {
         val s = Settings(paddingDp = 0, manualRegion = ManualRegionDp(0.5f, widthDp = 100, heightDp = 30))
         assertEquals(Rect(440, 0, 640, 60), notchRegion(s, display))
+        val offset = s.copy(manualRegion = ManualRegionDp(0.5f, widthDp = 100, heightDp = 30, topDp = 10))
+        assertEquals(Rect(440, 20, 640, 80), notchRegion(offset, display))
+    }
+
+    @Test
+    fun `NR-12 detected cutout region in dp`() {
+        assertEquals(ManualRegionDp(0.5f, widthDp = 40, heightDp = 40, topDp = 0), detectedRegionDp(display))
+    }
+
+    @Test
+    fun `NR-13 detected default region in dp without cutout`() {
+        assertEquals(ManualRegionDp(0.5f, widthDp = 108, heightDp = 45, topDp = 0), detectedRegionDp(display.copy(cutoutTop = emptyList())))
+    }
+
+    @Test
+    fun `NR-14 no detected region when rotated`() {
+        assertNull(detectedRegionDp(display.copy(rotation = 1, widthPx = 2400, heightPx = 1080)))
     }
 
     @Test

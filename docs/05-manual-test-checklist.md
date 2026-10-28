@@ -94,8 +94,7 @@ Chuẩn bị: Vuốt phải & giữ = Tăng âm lượng, Vuốt trái & giữ =
 | MT-H3 | Vuốt phải nhanh rồi nhả ngay | Chạy hành động của "Vuốt sang phải" (không phải bản giữ) | [ ]/[ ] |
 | MT-H4 | Bật lặp lại cho Nhấn giữ = Giảm âm lượng, giữ 2 s | Âm lượng giảm liên tục tới khi nhả | [ ]/[ ] |
 | MT-H5 | Đang lặp, đặt thêm ngón thứ 2 | Dừng lặp ngay | [ ]/[ ] |
-| MT-H6 | Settings → Repeat interval 1000 ms, lặp lại MT-H2 | Tăng chậm ~1 nấc/giây | [ ]/[ ] |
-| MT-H7 | Gestures → Reset gestures → Đồng ý | Binding về mặc định, tắt mọi lặp lại; cài đặt khác giữ nguyên | [ ] |
+| MT-H6 | Notch → Repeat interval 1000 ms, lặp lại MT-H2 | Tăng chậm ~1 nấc/giây | [ ]/[ ] |
 
 ## 5. Media (lỗi 1.0.0: không hoạt động ở chế độ Trợ năng)
 
@@ -122,7 +121,9 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-R1 | Mở app (cả 2 chế độ) | Vùng chạm được tô màu trực tiếp trên notch ở mọi màn hình | [ ] |
 | MT-R2 | Xoay ngang khi đang mở app | Không còn highlight | [ ] |
 | MT-R3 | Kéo slider padding lên 48 dp (đang kéo, chưa nhả) | Highlight to ra theo ngón tay; cạnh trên vẫn sát mép | [ ] |
-| MT-R4 | Bật "Custom touch area", kéo vị trí ngang về 10% | Highlight dời sang trái ngay khi kéo; cử chỉ chỉ nhận ở vị trí mới | [ ] |
+| MT-R4 | Tab Notch: slider vị trí/kích thước hiện sẵn với giá trị của notch thật; kéo vị trí ngang về 10% | Highlight dời sang trái ngay khi kéo; cử chỉ chỉ nhận ở vị trí mới | [ ] |
+| MT-R4b | Tab Notch: kéo vị trí dọc lên 40 dp (cả 2 chế độ) | Highlight dời xuống theo; cử chỉ chỉ nhận ở vùng mới, chạm sát mép trên không còn nhận | [ ]/[ ] |
+| MT-R4c | Bấm ↺ ở mọi slider vị trí/kích thước đã đổi | Vùng quay về đúng notch tự phát hiện; mọi nút ↺ của vùng chạm mờ đi | [ ] |
 | MT-R5 | Máy không có notch (hoặc giả lập) | Vùng mặc định ở giữa cạnh trên, rộng ~20% | [ ] |
 | MT-R6 | Xoay ngang (app hỗ trợ xoay, vd. YouTube) | Status "Paused"; chạm vùng cũ không kích hoạt gì | [ ] |
 | MT-R7 | Xoay dọc lại | Hoạt động lại không cần mở app | [ ] |
@@ -131,8 +132,8 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-R10 | Swipe distance = 200 dp, vuốt ngắn | Vuốt ngắn không kích hoạt; vuốt dài thì có | [ ] |
 | MT-R11 | Bật haptics (cả 2 chế độ, kể cả khi "Phản hồi chạm" của hệ thống tắt) / tắt haptics | Bật: rung rõ mỗi lần hành động chạy (lỗi 1.0.x); tắt: không rung | [ ]/[ ] |
 | MT-R12 | Đổi cài đặt khi đang chạy | Có hiệu lực ngay, không cần tắt/bật | [ ] |
-| MT-R13 | Nút reset tổng ở top bar Settings → Hủy, rồi → Đồng ý | Hủy: không đổi gì; Đồng ý: cài đặt về mặc định, **giữ** công tắc, chế độ và toàn bộ gestures | [ ] |
-| MT-R15 | Đổi 1 mục (vd. Long-press) rồi bấm nút ↺ của mục đó | Chỉ mục đó về mặc định; nút ↺ mờ đi | [ ] |
+| MT-R13 | Top bar Gestures / Notch / Cài đặt | Không còn nút reset tổng nào; switch và lựa chọn không có nút ↺ | [ ] |
+| MT-R15 | Đổi 1 slider (vd. Long-press) rồi bấm nút ↺ bên phải slider đó | Chỉ mục đó về mặc định; nút ↺ mờ đi | [ ] |
 | MT-R14 | Force stop app trong Cài đặt hệ thống rồi mở lại | Cài đặt còn nguyên | [ ] |
 
 ## 7. Khởi động lại máy
@@ -160,7 +161,9 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-U5 | Bật "Themed icons" (Android 13+) | Icon hiển thị dạng đơn sắc theo theme | [ ] |
 | MT-U6 | Cỡ chữ hệ thống lớn nhất | Không vỡ layout; slider và nút dùng được | [ ] |
 | MT-U7 | Action picker → tab Ứng dụng: tìm "spo" / "SPO" | Kết quả giống nhau (không phân biệt hoa thường) | [ ] |
-| MT-U10 | Top bar | Cố định khi cuộn, hiện tên màn hình; Home/Gestures có icon Settings bên trái; Settings có nút Back | [ ] |
+| MT-U10 | Top bar | Cố định khi cuộn, tên màn hình bên trái; Home/Gestures/Notch có icon Settings bên phải; Cài đặt có nút Back | [ ] |
+| MT-U13 | Bottom bar | 3 mục Home, Gestures, Notch; ẩn ở Cài đặt và Action picker | [ ] |
+| MT-U14 | Cài đặt → Chủ đề / Ngôn ngữ | Dòng có chevron ›; bấm mở dialog chọn, chọn xong áp dụng ngay | [ ] |
 | MT-U11 | Action picker | 3 tab; mở đúng tab của hành động đang gán; tab Shortcut nhóm theo app, tìm kiếm được | [ ] |
 | MT-U12 | Icon mới ở launcher, đổi hình nền, bật Themed icons | Icon theo thiết kế mới, đổi màu theo hình nền; themed icon đơn sắc rõ | [ ] |
 | MT-U8 | Icon thông báo thường trực (Shizuku) | Icon đơn sắc rõ ràng, không phải khối trắng | [ ] |

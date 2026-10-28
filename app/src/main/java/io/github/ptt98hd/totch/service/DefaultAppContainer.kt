@@ -17,11 +17,13 @@ import io.github.ptt98hd.totch.action.PackageManagerInstalledApps
 import io.github.ptt98hd.totch.core.action.ActionDispatcher
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.settings.DetectionMode
+import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.data.DataStoreSettingsRepository
 import io.github.ptt98hd.totch.data.settingsDataStore
 import io.github.ptt98hd.totch.engine.GestureEngine
 import io.github.ptt98hd.totch.engine.PipelineError
+import io.github.ptt98hd.totch.engine.detectedRegionDp
 import io.github.ptt98hd.totch.engine.notchRegion
 import io.github.ptt98hd.totch.engine.resolveEngineStatus
 import io.github.ptt98hd.totch.locale.AppLocales
@@ -88,6 +90,8 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     override val touchArea: TouchArea = object : TouchArea {
         override val region: StateFlow<Rect?> = this@DefaultAppContainer.region
         override fun regionFor(settings: Settings): Rect? = notchRegion(settings, display.state.value)
+        override val detectedRegion: StateFlow<ManualRegionDp?> = display.state.map(::detectedRegionDp)
+            .stateIn(scope, SharingStarted.Eagerly, detectedRegionDp(display.state.value))
     }
 
     override val appShortcuts: AppShortcuts = PackageManagerAppShortcuts(app.packageManager)

@@ -53,7 +53,6 @@ import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.ui.common.ActionCatalog
 import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.TonalIcon
-import io.github.ptt98hd.totch.ui.common.TopBarNav
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.icon
 import io.github.ptt98hd.totch.ui.common.labelRes
@@ -102,7 +101,7 @@ private val PickerTab.labelRes: Int
 fun ActionPickerScreen(state: ActionPickerUiState, callbacks: PickerCallbacks, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier,
-        topBar = { TotchTopBar(stringResource(state.gesture.labelRes), TopBarNav.Back(callbacks.onBack)) },
+        topBar = { TotchTopBar(stringResource(state.gesture.labelRes), onBack = callbacks.onBack) },
     ) { padding ->
         Column(Modifier.padding(top = padding.calculateTopPadding()).fillMaxSize().imePadding()) {
             PrimaryTabRow(selectedTabIndex = state.tab.ordinal) {

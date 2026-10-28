@@ -11,21 +11,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.RepeatOn
-import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.WarningAmber
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -47,7 +43,6 @@ import io.github.ptt98hd.totch.ui.common.ActionCatalog
 import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.SectionHeader
 import io.github.ptt98hd.totch.ui.common.TonalIcon
-import io.github.ptt98hd.totch.ui.common.TopBarNav
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.actionDisplayName
 import io.github.ptt98hd.totch.ui.common.icon
@@ -64,20 +59,7 @@ fun GesturesRoute(container: AppContainer, onOpenSettings: () -> Unit, onPickAct
         onOpenSettings = onOpenSettings,
         onGestureClick = onPickAction,
         onRepeatChange = vm::setRepeat,
-        onRequestReset = vm::requestResetGestures,
     )
-    if (state.confirmReset) {
-        AlertDialog(
-            onDismissRequest = vm::cancelResetGestures,
-            icon = { Icon(Icons.Outlined.RestartAlt, contentDescription = null) },
-            title = { Text(stringResource(R.string.reset_gestures_title)) },
-            text = { Text(stringResource(R.string.reset_gestures_message)) },
-            confirmButton = {
-                TextButton(onClick = vm::confirmResetGestures) { Text(stringResource(R.string.reset_confirm)) }
-            },
-            dismissButton = { TextButton(onClick = vm::cancelResetGestures) { Text(stringResource(R.string.cancel)) } },
-        )
-    }
 }
 
 @get:StringRes
@@ -95,18 +77,11 @@ fun GesturesScreen(
     onOpenSettings: () -> Unit,
     onGestureClick: (Gesture) -> Unit,
     onRepeatChange: (Gesture, Boolean) -> Unit,
-    onRequestReset: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = {
-            TotchTopBar(stringResource(R.string.nav_gestures), TopBarNav.Settings(onOpenSettings)) {
-                IconButton(onClick = onRequestReset) {
-                    Icon(Icons.Outlined.RestartAlt, contentDescription = stringResource(R.string.reset_gestures_cd))
-                }
-            }
-        },
+        topBar = { TotchTopBar(stringResource(R.string.nav_gestures), onOpenSettings = onOpenSettings) },
     ) { padding ->
         LazyColumn(contentPadding = padding.withGutters(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(state.groups, key = { it.group }) { section ->
@@ -211,7 +186,6 @@ private fun GesturesScreenPreview() {
             onOpenSettings = {},
             onGestureClick = {},
             onRepeatChange = { _, _ -> },
-            onRequestReset = {},
         )
     }
 }

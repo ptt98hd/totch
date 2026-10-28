@@ -136,33 +136,9 @@ class SettingsTest {
         assertEquals(setOf(Gesture.SWIPE_LEFT_HOLD, Gesture.LONG_PRESS), shizuku.repeating)
     }
 
-    private val customized = Settings(
-        enabled = true,
-        mode = DetectionMode.SHIZUKU,
-        bindings = DefaultBindings + (Gesture.TAP to Action.Home),
-        repeatOnHold = setOf(Gesture.LONG_PRESS),
-        doubleTapMs = 200, longPressMs = 900, swipeMinDistanceDp = 100, paddingDp = 0,
-        manualRegion = ManualRegionDp(0.2f, 50, 20), haptics = false, repeatIntervalMs = 500,
-        theme = ThemeMode.DARK, amoledBlack = true, language = AppLanguage.VIETNAMESE, startOnBoot = false,
-    )
-
-    @Test fun `ST-14 withDefaultPreferences keeps switch, mode and gestures`() {
-        assertEquals(
-            Settings(
-                enabled = true,
-                mode = DetectionMode.SHIZUKU,
-                bindings = customized.bindings,
-                repeatOnHold = setOf(Gesture.LONG_PRESS),
-            ),
-            customized.withDefaultPreferences(),
-        )
-    }
-
-    @Test fun `ST-15 withDefaultGestures only resets gestures`() {
-        assertEquals(
-            customized.copy(bindings = DefaultBindings, repeatOnHold = emptySet()),
-            customized.withDefaultGestures(),
-        )
-        assertEquals(Gesture.entries.toSet(), DefaultBindings.keys)
+    @Test fun `ST-17 manual region top is clamped`() {
+        assertEquals(0, Settings(manualRegion = ManualRegionDp(topDp = -5)).sanitized().manualRegion?.topDp)
+        assertEquals(100, Settings(manualRegion = ManualRegionDp(topDp = 500)).sanitized().manualRegion?.topDp)
+        assertEquals(24, Settings(manualRegion = ManualRegionDp(topDp = 24)).sanitized().manualRegion?.topDp)
     }
 }

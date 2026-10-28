@@ -13,11 +13,9 @@ import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.HoldGestures
 import io.github.ptt98hd.totch.core.settings.actionFor
 import io.github.ptt98hd.totch.core.settings.isAvailableIn
-import io.github.ptt98hd.totch.core.settings.withDefaultGestures
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -49,17 +47,14 @@ data class GestureSection(val group: GestureGroup, val rows: List<GestureRow>)
 data class GesturesUiState(
     val groups: List<GestureSection> = emptyList(),
     val mode: DetectionMode = DetectionMode.ACCESSIBILITY,
-    val confirmReset: Boolean = false,
 )
 
 class GesturesViewModel(
     private val settingsRepository: SettingsRepository,
     private val installedApps: InstalledApps,
 ) : ViewModel() {
-    private val confirmReset = MutableStateFlow(false)
-
     val state: StateFlow<GesturesUiState> =
-        combine(settingsRepository.settings, confirmReset) { settings, confirm ->
+        settingsRepository.settings.map { settings ->
             GesturesUiState(
                 groups = GestureGroups.map { (group, gestures) ->
                     GestureSection(
@@ -83,7 +78,6 @@ class GesturesViewModel(
                     )
                 },
                 mode = settings.mode,
-                confirmReset = confirm,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GesturesUiState())
 
@@ -94,20 +88,6 @@ class GesturesViewModel(
                 it.copy(repeatOnHold = if (repeat) it.repeatOnHold + gesture else it.repeatOnHold - gesture)
             }
         }
-    }
-
-    fun requestResetGestures() {
-        confirmReset.value = true
-    }
-
-    fun cancelResetGestures() {
-        confirmReset.value = false
-    }
-
-    /** UI-16: bindings and repeat back to defaults; other settings untouched. */
-    fun confirmResetGestures() {
-        confirmReset.value = false
-        viewModelScope.launch { settingsRepository.update { it.withDefaultGestures() } }
     }
 
     companion object {

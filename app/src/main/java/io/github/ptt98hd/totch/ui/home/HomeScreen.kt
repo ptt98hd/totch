@@ -60,7 +60,6 @@ import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.SectionHeader
-import io.github.ptt98hd.totch.ui.common.TopBarNav
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.requestUnrestrictedBattery
 import io.github.ptt98hd.totch.ui.common.isShizukuInstalled
@@ -128,7 +127,7 @@ fun HomeScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { TotchTopBar(stringResource(R.string.nav_home), TopBarNav.Settings(onOpenSettings)) },
+        topBar = { TotchTopBar(stringResource(R.string.nav_home), onOpenSettings = onOpenSettings) },
     ) { padding ->
         LazyColumn(
             contentPadding = padding.withGutters(),

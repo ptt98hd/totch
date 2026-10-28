@@ -6,6 +6,7 @@ import io.github.ptt98hd.totch.core.region.Cutout
 import io.github.ptt98hd.totch.core.region.ManualRegion
 import io.github.ptt98hd.totch.core.region.NotchRegionResolver
 import io.github.ptt98hd.totch.core.settings.DetectionMode
+import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlin.math.roundToInt
 
@@ -44,9 +45,26 @@ fun notchRegion(settings: Settings, display: DisplaySnapshot): Rect? {
         screenWidthPx = display.widthPx,
         statusBarHeightPx = display.statusBarPx,
         cutout = Cutout(display.cutoutTop),
-        manual = settings.manualRegion?.let { ManualRegion(it.centerXFraction, px(it.widthDp), px(it.heightDp)) },
+        manual = settings.manualRegion?.let { ManualRegion(it.centerXFraction, px(it.widthDp), px(it.heightDp), px(it.topDp)) },
         paddingPx = px(settings.paddingDp),
         rotation = display.rotation,
+    )
+}
+
+/** The automatically detected region (cutout or default, no padding) in dp, or `null` when rotated (NR-12). */
+fun detectedRegionDp(display: DisplaySnapshot): ManualRegionDp? {
+    val rect = NotchRegionResolver.resolve(
+        screenWidthPx = display.widthPx,
+        statusBarHeightPx = display.statusBarPx,
+        cutout = Cutout(display.cutoutTop),
+        manual = null,
+        paddingPx = 0,
+        rotation = display.rotation,
+    ) ?: return null
+    return ManualRegionDp(
+        centerXFraction = (rect.left + rect.right) / 2f / display.widthPx,
+        widthDp = (rect.width / display.density).roundToInt(),
+        heightDp = (rect.height / display.density).roundToInt(),
     )
 }
 

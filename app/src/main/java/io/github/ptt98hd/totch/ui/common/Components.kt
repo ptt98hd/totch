@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -87,35 +86,33 @@ fun TonalIcon(
     }
 }
 
-/** Left slot of [TotchTopBar]: Settings on top-level screens, Back elsewhere (UI-40). */
-sealed interface TopBarNav {
-    val onClick: () -> Unit
-
-    data class Settings(override val onClick: () -> Unit) : TopBarNav
-    data class Back(override val onClick: () -> Unit) : TopBarNav
-}
-
-/** The static (pinned, never collapsing) top bar shared by every screen (UI-40). */
+/**
+ * The static (pinned, never collapsing) top bar shared by every screen (UI-40): the title on the left,
+ * Back on the left of sub-screens ([onBack]) and Settings on the right of top-level screens ([onOpenSettings]).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TotchTopBar(title: String, nav: TopBarNav, actions: @Composable RowScope.() -> Unit = {}) {
+fun TotchTopBar(title: String, onBack: (() -> Unit)? = null, onOpenSettings: (() -> Unit)? = null) {
     TopAppBar(
         title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         navigationIcon = {
-            IconButton(onClick = nav.onClick) {
-                when (nav) {
-                    is TopBarNav.Settings ->
-                        Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.nav_settings))
-                    is TopBarNav.Back ->
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.nav_back))
+            if (onBack != null) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.nav_back))
                 }
             }
         },
-        actions = actions,
+        actions = {
+            if (onOpenSettings != null) {
+                IconButton(onClick = onOpenSettings) {
+                    Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.nav_settings))
+                }
+            }
+        },
     )
 }
 
-/** Per-item reset (UI-30); enabled only when the value differs from its default. */
+/** Reset of a slider (UI-30); enabled only when the value differs from its default. */
 @Composable
 fun ResetButton(enabled: Boolean, onClick: () -> Unit) {
     IconButton(onClick = onClick, enabled = enabled) {
@@ -124,8 +121,9 @@ fun ResetButton(enabled: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * Slider with a title and a value label. The value is only saved through [onValueChangeFinished]
- * so the repository is not written on every drag frame; [onValueChange] reports the draft live.
+ * Slider with a title and a value label; [trailing] (the reset button) sits right of the slider. The value
+ * is only saved through [onValueChangeFinished] so the repository is not written on every drag frame;
+ * [onValueChange] reports the draft live.
  */
 @Composable
 fun SliderSetting(
@@ -141,24 +139,30 @@ fun SliderSetting(
 ) {
     var draft by remember(value) { mutableFloatStateOf(value) }
     Column(modifier.fillMaxWidth().padding(start = Gutter, end = if (trailing == null) Gutter else 4.dp, top = 4.dp, bottom = 4.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(end = if (trailing == null) 0.dp else 12.dp),
+        ) {
             Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             Text(
                 valueLabel(draft),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Slider(
+                value = draft,
+                onValueChange = {
+                    draft = ((it / step).roundToInt() * step).coerceIn(valueRange)
+                    onValueChange(draft)
+                },
+                onValueChangeFinished = { onValueChangeFinished(draft) },
+                valueRange = valueRange,
+                modifier = Modifier.weight(1f),
+            )
             trailing?.invoke()
         }
-        Slider(
-            value = draft,
-            onValueChange = {
-                draft = ((it / step).roundToInt() * step).coerceIn(valueRange)
-                onValueChange(draft)
-            },
-            onValueChangeFinished = { onValueChangeFinished(draft) },
-            valueRange = valueRange,
-            modifier = Modifier.padding(end = if (trailing == null) 0.dp else 12.dp),
-        )
     }
 }
