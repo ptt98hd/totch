@@ -50,7 +50,13 @@ class HomeViewModelTest {
             assertTrue(repo.current.enabled)
             val state = expectMostRecentItem()
             assertTrue(state.enabled)
-            assertEquals(listOf(RequirementItem(RequirementType.ACCESSIBILITY, satisfied = false)), state.requirements)
+            assertEquals(
+                listOf(
+                    RequirementItem(RequirementType.ACCESSIBILITY, satisfied = false),
+                    RequirementItem(RequirementType.BATTERY, satisfied = false),
+                ),
+                state.requirements,
+            )
         }
     }
 
@@ -92,6 +98,7 @@ class HomeViewModelTest {
                     RequirementItem(RequirementType.SHIZUKU_RUNNING, satisfied = true),
                     RequirementItem(RequirementType.SHIZUKU_PERMISSION, satisfied = false),
                     RequirementItem(RequirementType.NOTIFICATIONS, satisfied = true),
+                    RequirementItem(RequirementType.BATTERY, satisfied = false),
                 ),
                 expectMostRecentItem().requirements,
             )
@@ -103,7 +110,7 @@ class HomeViewModelTest {
         val repo = FakeSettingsRepository(Settings(mode = DetectionMode.SHIZUKU, bindings = noMedia))
         vm(repo, notifications = false).state.test {
             val reqs = expectMostRecentItem().requirements
-            assertEquals(2, reqs.size)
+            assertEquals(3, reqs.size)
             assertFalse(reqs.single { it.type == RequirementType.SHIZUKU_PERMISSION }.actionEnabled)
         }
     }
@@ -123,16 +130,6 @@ class HomeViewModelTest {
         vm.requestShizukuPermission()
         assertEquals(1, sys.refreshCalls)
         assertEquals(1, sys.permissionRequests)
-    }
-
-    @Test
-    fun `onboarding is shown only while no detection permission is granted`() = runTest {
-        val sys = FakeSystemStatus()
-        vm(sys = sys).state.test {
-            assertTrue(expectMostRecentItem().showOnboarding)
-            sys.requirements.value = Requirements(accessibilityEnabled = true)
-            assertFalse(expectMostRecentItem().showOnboarding)
-        }
     }
 
     @Test
@@ -160,6 +157,28 @@ class HomeViewModelTest {
         val repo = FakeSettingsRepository(Settings(bindings = noMedia + (Gesture.TAP to Action.VolumeUp)))
         vm(repo).state.test {
             assertTrue(expectMostRecentItem().requirements.none { it.type == RequirementType.MEDIA_ACCESS })
+        }
+    }
+
+    @Test
+    fun `UI-3 a media action on a gesture disabled in Shizuku mode does not show the card`() = runTest {
+        val repo = FakeSettingsRepository(
+            Settings(mode = DetectionMode.SHIZUKU, bindings = noMedia + (Gesture.SWIPE_DOWN to Action.MediaPlayPause)),
+        )
+        vm(repo).state.test {
+            assertTrue(expectMostRecentItem().requirements.none { it.type == RequirementType.MEDIA_ACCESS })
+        }
+    }
+
+    @Test
+    fun `UI-4 battery card is listed in both modes and follows the granted state`() = runTest {
+        DetectionMode.entries.forEach { mode ->
+            val sys = FakeSystemStatus(Requirements(batteryUnrestricted = false))
+            vm(FakeSettingsRepository(Settings(mode = mode, bindings = noMedia)), sys = sys).state.test {
+                assertFalse(expectMostRecentItem().requirements.single { it.type == RequirementType.BATTERY }.satisfied, "$mode")
+                sys.requirements.value = Requirements(batteryUnrestricted = true)
+                assertTrue(expectMostRecentItem().requirements.single { it.type == RequirementType.BATTERY }.satisfied, "$mode")
+            }
         }
     }
 }

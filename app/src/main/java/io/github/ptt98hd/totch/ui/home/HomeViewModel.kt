@@ -13,14 +13,16 @@ import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.SettingsRepository
 import io.github.ptt98hd.totch.SystemStatus
 import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DetectionMode
+import io.github.ptt98hd.totch.core.settings.effectiveAction
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class RequirementType { SHIZUKU_RUNNING, SHIZUKU_PERMISSION, ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS }
+enum class RequirementType { SHIZUKU_RUNNING, SHIZUKU_PERMISSION, ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS, BATTERY }
 
 /** A requirement card. [actionEnabled] is false when its button cannot do anything yet. */
 data class RequirementItem(val type: RequirementType, val satisfied: Boolean, val actionEnabled: Boolean = true)
@@ -45,7 +47,6 @@ data class HomeUiState(
     val mode: DetectionMode = DetectionMode.ACCESSIBILITY,
     val status: EngineStatus = EngineStatus.Disabled,
     val requirements: List<RequirementItem> = emptyList(),
-    val showOnboarding: Boolean = false,
 )
 
 private val mediaActions = setOf(Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious)
@@ -65,6 +66,7 @@ internal fun requirementsFor(
         }
     }
     if (mediaBound) add(RequirementItem(RequirementType.MEDIA_ACCESS, r.mediaAccessGranted)) // UI-3
+    add(RequirementItem(RequirementType.BATTERY, r.batteryUnrestricted)) // UI-4, recommended
 }
 
 class HomeViewModel(
@@ -86,9 +88,8 @@ class HomeViewModel(
                     settings.mode,
                     reqs,
                     notificationPermissionRequired,
-                    mediaBound = settings.bindings.values.any { it in mediaActions },
+                    mediaBound = Gesture.entries.any { settings.effectiveAction(it) in mediaActions },
                 ),
-                showOnboarding = !reqs.shizukuGranted && !reqs.accessibilityEnabled,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 

@@ -1,5 +1,6 @@
 package io.github.ptt98hd.totch.ui.common
 
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
@@ -34,9 +35,18 @@ fun Context.openMediaAccessSettings() {
     if (!safeStart(detail)) safeStart(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
 }
 
+/** FR-D7: system dialog to exempt Totch from battery optimization, else the full list. */
+@SuppressLint("BatteryLife") // F-Droid app; the exemption keeps the gesture service alive.
+fun Context.requestUnrestrictedBattery() {
+    val request = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))
+    if (!safeStart(request)) safeStart(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+}
+
 private fun Context.safeStart(intent: Intent): Boolean = try {
     startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     true
 } catch (_: ActivityNotFoundException) {
     false // Nothing sensible to open on this device.
+} catch (_: SecurityException) {
+    false
 }

@@ -37,7 +37,11 @@ class FakeSettingsRepository(initial: Settings = Settings()) : SettingsRepositor
 }
 
 class FakeInstalledApps(private val apps: List<AppInfo> = emptyList()) : InstalledApps {
-    override suspend fun launchableApps(): List<AppInfo> = apps
+    var loads = 0
+    override suspend fun launchableApps(): List<AppInfo> {
+        loads++
+        return apps
+    }
     override fun labelOf(packageName: String): String? = apps.firstOrNull { it.packageName == packageName }?.label
 }
 
