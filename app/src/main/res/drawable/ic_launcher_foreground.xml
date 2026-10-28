@@ -1,9 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Top edge of a phone with a pill-shaped notch and two tap ripples. Single color, so it doubles as the monochrome icon. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M30,40h48a6,6 0,0 1,6 6v28a6,6 0,0 1,-6 6h-48a6,6 0,0 1,-6 -6v-28a6,6 0,0 1,6 -6z" />
-    <path android:fillColor="#3F51B5"
-        android:pathData="M44,40h20v4a4,4 0,0 1,-4 4h-12a4,4 0,0 1,-4 -4z" />
+    <!-- Phone outline (top part) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M30,80V44a10,10 0,0 1,10 -10h28a10,10 0,0 1,10 10v36" />
+    <!-- Notch pill -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M49,38h10a3,3 0,0 1,0 6h-10a3,3 0,0 1,0 -6z" />
+    <!-- Tap ripples -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M62.19,49.74A10,10 0,0 1,45.81 49.74" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.7"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M67.93,53.75A17,17 0,0 1,40.07 53.75" />
 </vector>
