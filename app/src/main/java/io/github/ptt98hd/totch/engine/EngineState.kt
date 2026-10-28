@@ -1,11 +1,11 @@
 package io.github.ptt98hd.totch.engine
 
 import io.github.ptt98hd.totch.EngineStatus
+import io.github.ptt98hd.totch.HighlightArea
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.region.Cutout
 import io.github.ptt98hd.totch.core.region.ManualRegion
 import io.github.ptt98hd.totch.core.region.NotchRegionResolver
-import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlin.math.roundToInt
@@ -73,20 +73,24 @@ fun resolveEngineStatus(
     settings: Settings,
     shizuku: ShizukuState,
     pipeline: PipelineState,
-    accessibilityConnected: Boolean,
     rotation: Int,
     errorMessage: (PipelineError) -> String,
 ): EngineStatus = when {
-    !settings.enabled -> EngineStatus.Disabled
-    settings.mode == DetectionMode.SHIZUKU -> when {
-        !shizuku.running -> EngineStatus.WaitingShizuku
-        !shizuku.granted -> EngineStatus.ShizukuPermissionRequired
-        pipeline is PipelineState.Failed -> EngineStatus.Error(errorMessage(pipeline.error))
-        rotation != 0 -> EngineStatus.PausedRotation
-        pipeline == PipelineState.Running -> EngineStatus.Running
-        else -> EngineStatus.WaitingShizuku
+    !settings.enabled -> when (pipeline) {
+        PipelineState.Running, PipelineState.Connecting -> EngineStatus.Stopping // DM-30
+        else -> EngineStatus.Disabled
     }
-    !accessibilityConnected -> EngineStatus.AccessibilityRequired
+    !shizuku.running -> EngineStatus.WaitingShizuku
+    !shizuku.granted -> EngineStatus.ShizukuPermissionRequired
+    pipeline is PipelineState.Failed -> EngineStatus.Error(errorMessage(pipeline.error))
     rotation != 0 -> EngineStatus.PausedRotation
-    else -> EngineStatus.Running
+    pipeline == PipelineState.Running -> EngineStatus.Running
+    else -> EngineStatus.Starting // DM-30
+}
+
+/** [notchRegion] and the same region without padding, for the highlight (ui spec §2); null when inactive. */
+fun highlightArea(settings: Settings, display: DisplaySnapshot): HighlightArea? {
+    val touch = notchRegion(settings, display) ?: return null
+    val notch = notchRegion(settings.copy(paddingDp = 0), display) ?: touch
+    return HighlightArea(touch, notch)
 }

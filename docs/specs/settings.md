@@ -12,7 +12,7 @@ Yêu cầu: FR-S1…FR-S9, FR-G10…FR-G12, FR-R6 · Module: `:core` (model, cod
 
 @Serializable data class Settings(
     val enabled: Boolean = false,
-    val mode: DetectionMode = DetectionMode.ACCESSIBILITY,
+    // v1.4: bỏ `mode` (FR-D8); JSON cũ có "mode" vẫn đọc được (ST-23)
     val bindings: Map<Gesture, Action> = DefaultBindings,
     val doubleTapMs: Long = 300,
     val longPressMs: Long = 500,
@@ -36,14 +36,14 @@ const val TOUCH_SLOP_DP = 12
 fun Settings.toGestureConfig(density: Float): GestureConfig   // touchSlopPx = TOUCH_SLOP_DP × density; doubleTapEnabled = effectiveAction(DOUBLE_TAP) != None
 
 // v1.3 (FR-G12)
-fun Settings.isGestureOn(g: Gesture): Boolean             // g ∉ disabledGestures && actionFor(g) != None
+fun Settings.isGestureOn(g: Gesture): Boolean             // v1.4: effectiveAction(g) != None (cử chỉ không khả dụng luôn tắt)
 fun Settings.withGestureOn(g: Gesture, on: Boolean): Settings   // thêm/bớt g khỏi disabledGestures, bindings giữ nguyên
 fun Settings.withBinding(g: Gesture, action: Action): Settings  // gán action và bật g
 
 // v1.1
 val HoldGestures: Set<Gesture>          // LONG_PRESS, SWIPE_DOWN_HOLD, SWIPE_LEFT_HOLD, SWIPE_RIGHT_HOLD
-fun Gesture.isAvailableIn(mode: DetectionMode): Boolean   // false cho SWIPE_DOWN, SWIPE_DOWN_HOLD ở SHIZUKU (FR-G10)
-fun Settings.effectiveAction(g: Gesture): Action          // None nếu !g.isAvailableIn(mode) hoặc g ∈ disabledGestures, ngược lại actionFor(g)
+val Gesture.isAvailable: Boolean                          // v1.4: false cho SWIPE_DOWN, SWIPE_DOWN_HOLD (FR-G10)
+fun Settings.effectiveAction(g: Gesture): Action          // None nếu !g.isAvailable hoặc g ∈ disabledGestures, ngược lại actionFor(g)
 ```
 Gesture mới thêm ở v1.1 có binding mặc định `None`.
 
@@ -52,7 +52,7 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ID | Tiêu chí |
 |---|---|
 | ST-1 | `Settings()` mặc định khớp FR-S2 |
-| ST-2 | `sanitized()` kẹp: doubleTapMs 150–600, longPressMs 300–1500, swipeMinDistanceDp 16–200, paddingDp 0–48, manualRegion: fraction 0–1 (NaN → 0.5), widthDp 8–400, heightDp 8–100 |
+| ST-2 | `sanitized()` kẹp (v1.4): doubleTapMs 100–1000, longPressMs 100–1000, swipeMinDistanceDp 16–200, paddingDp 1–10, manualRegion: fraction 0–1 (NaN → 0.5), widthDp 8–400, heightDp 8–100 |
 | ST-3 | `sanitized()` bổ sung gesture còn thiếu trong `bindings` bằng `None` (đủ 6 key) |
 | ST-4 | `decode(encode(s)) == s` cho mọi settings hợp lệ, kể cả `LaunchApp("com.example")` |
 | ST-5 | `decode` của chuỗi rỗng/JSON hỏng/type lạ (kể cả `"type"` action không biết hoặc enum không biết) → `Settings()` mặc định cho **toàn bộ** cấu hình, không ném exception |
@@ -62,7 +62,7 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ST-9 | `Settings()` v1.1: `theme=SYSTEM`, `amoledBlack=false`, `language=SYSTEM`, `startOnBoot=true`; 3 gesture `*_HOLD` → `None` |
 | ST-10 | `sanitized()`: `bindings` đủ 9 key (v1.3: bỏ kẹp `repeatIntervalMs` / lọc `repeatOnHold`) |
 | ST-11 | JSON của v1.0 (6 binding, không có field mới) → giữ binding cũ, field mới = mặc định |
-| ST-12 | `effectiveAction`: mode SHIZUKU → `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` trả `None` dù đã gán; mode ACCESSIBILITY → action đã gán |
+| ST-12 | `effectiveAction`: `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` trả `None` dù đã gán (v1.4: luôn luôn) |
 | ST-13 | `toGestureConfig`: `holdSwipes` = các `*_HOLD` có `effectiveAction ≠ None`; `doubleTapEnabled` theo `effectiveAction` (gồm cả cử chỉ bị tắt, ST-19) |
 | ST-14 | ~~`withDefaultPreferences()`~~ — bỏ ở v1.2 (FR-S9: không còn reset tổng) |
 | ST-15 | ~~`withDefaultGestures()`~~ — bỏ ở v1.2 (FR-S9) |
@@ -70,7 +70,9 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ST-17 | `sanitized()` kẹp `manualRegion.topDp` 0–100; JSON v1.1 (không có `topDp`) → `topDp = 0` |
 | ST-18 | JSON v1.2 có `repeatOnHold`, `repeatIntervalMs` → đọc được, binding giữ nguyên, `disabledGestures = ∅` |
 | ST-19 | `disabledGestures` chứa g → `effectiveAction(g) = None`, `actionFor(g)` vẫn là action đã gán; `toGestureConfig` coi g như chưa gán (`doubleTapEnabled=false` khi tắt DOUBLE_TAP, `holdSwipes` bỏ g) |
-| ST-20 | `isGestureOn(g)` = `g ∉ disabledGestures && actionFor(g) ≠ None`; `withGestureOn(g, false)` rồi `withGestureOn(g, true)` → binding không đổi; `withBinding(g, a)` gán `a` và bỏ g khỏi `disabledGestures` |
+| ST-20 | `isGestureOn(g)` = `g.isAvailable && g ∉ disabledGestures && actionFor(g) ≠ None`; `withGestureOn(g, false)` rồi `withGestureOn(g, true)` → binding không đổi; `withBinding(g, a)` gán `a` và bỏ g khỏi `disabledGestures` |
+| ST-22 | `isGestureOn` = false cho `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` dù đã gán |
+| ST-23 | JSON có `"mode"` (SHIZUKU / ACCESSIBILITY) vẫn decode, key bị bỏ qua; `paddingDp` 48 cũ → kẹp về 10 |
 | ST-21 | `decode(encode(s)) == s` khi có `disabledGestures` và `Action.VolumePanel` |
 
 ## 3. `SettingsRepository` (`:app`)

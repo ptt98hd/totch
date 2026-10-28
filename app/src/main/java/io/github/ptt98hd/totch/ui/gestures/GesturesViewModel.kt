@@ -9,9 +9,8 @@ import io.github.ptt98hd.totch.InstalledApps
 import io.github.ptt98hd.totch.SettingsRepository
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
-import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.actionFor
-import io.github.ptt98hd.totch.core.settings.isAvailableIn
+import io.github.ptt98hd.totch.core.settings.isAvailable
 import io.github.ptt98hd.totch.core.settings.isGestureOn
 import io.github.ptt98hd.totch.core.settings.withGestureOn
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,7 +34,7 @@ val GestureGroups: List<Pair<GestureGroup, List<Gesture>>> = listOf(
 /**
  * One gesture row. [action] is the bound action, remembered while the gesture is switched off; [on] is the
  * state of its switch (UI-16). [appLabel] is set for LaunchApp/LaunchShortcut whose app is installed (UI-12);
- * [enabled] is false for gestures unavailable in the current mode (UI-14).
+ * [enabled] is false for gestures that can never run (UI-14); they are always off.
  */
 data class GestureRow(
     val gesture: Gesture,
@@ -49,7 +48,6 @@ data class GestureSection(val group: GestureGroup, val rows: List<GestureRow>)
 
 data class GesturesUiState(
     val groups: List<GestureSection> = emptyList(),
-    val mode: DetectionMode = DetectionMode.ACCESSIBILITY,
     /** Gesture whose action picker sheet is open (UI-17). */
     val picking: Gesture? = null,
 )
@@ -77,13 +75,12 @@ class GesturesViewModel(
                                 gesture = gesture,
                                 action = action,
                                 appLabel = pkg?.let(installedApps::labelOf),
-                                enabled = gesture.isAvailableIn(settings.mode),
+                                enabled = gesture.isAvailable,
                                 on = settings.isGestureOn(gesture),
                             )
                         },
                     )
                 },
-                mode = settings.mode,
                 picking = picking,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GesturesUiState())

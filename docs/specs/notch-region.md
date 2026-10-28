@@ -46,3 +46,9 @@ quy về dp: `centerXFraction = (left + right) / 2 / widthPx`, `widthDp = round(
 | NR-12 | cutout `(500,0,580,80)`, màn 1080, density 2 | `ManualRegionDp(centerXFraction = 540/1080 = 0.5, widthDp = 40, heightDp = 40, topDp = 0)` |
 | NR-13 | không cutout, màn 1080, status bar 90, density 2 | `ManualRegionDp(0.5, widthDp = 108, heightDp = 45, topDp = 0)` |
 | NR-14 | rotation ≠ 0 | `null` |
+
+## Padding & highlight (v1.4 — FR-R7)
+`paddingDp` 1–10: phần dư ra quanh vùng notch (rộng × cao) để dễ chạm trúng. Về lý thuyết notch là vùng rộng × cao; thực tế
+engine nhận chạm trong toàn bộ vùng có padding (`notchRegion`). Highlight dùng `highlightArea(settings, display)` =
+`HighlightArea(touch = notchRegion(settings), notch = notchRegion(settings.copy(paddingDp = 0)))` để vẽ riêng phần padding
+(viền nét đứt) và phần notch (nền đậm, viền liền). `TouchArea.area` / `areaFor(draft)` thay cho `region` / `regionFor`.

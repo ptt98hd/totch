@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import io.github.ptt98hd.totch.TotchApp
-import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -15,15 +14,13 @@ enum class BootAction { START_SERVICE, DISABLE, NONE }
 fun bootAction(settings: Settings): BootAction = when {
     !settings.enabled -> BootAction.NONE
     !settings.startOnBoot -> BootAction.DISABLE
-    settings.mode == DetectionMode.SHIZUKU -> BootAction.START_SERVICE
-    else -> BootAction.NONE
+    else -> BootAction.START_SERVICE
 }
 
 /**
- * DM-20: restarts the Shizuku-mode service after boot (it waits for Shizuku if needed). Done here,
- * while the BOOT_COMPLETED background-start exemption applies. DM-21: the system rebinds the
- * accessibility service by itself. DM-22: with "start on boot" off, gestures stay off until the
- * user turns them on again.
+ * DM-20: restarts the gesture service after boot (it waits for Shizuku if needed). Done here, while the
+ * BOOT_COMPLETED background-start exemption applies. DM-22: with "start on boot" off, gestures stay off
+ * until the user turns them on again.
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {

@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), **v1.3 đang làm** (§10) · Cập nhật: 2026-10-28
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), **v1.4** (§11) · Cập nhật: 2026-10-28
 
 ## 1. Tầm nhìn
 
@@ -24,7 +24,7 @@ App là **native Android (Kotlin + Jetpack Compose, Material 3 / Material You)**
 | Thuật ngữ | Định nghĩa |
 |---|---|
 | Notch region | Hình chữ nhật trên màn hình nơi nhận cử chỉ, mặc định = bounding rect của display cutout ở cạnh trên, mở rộng thêm `padding` |
-| Detection mode | Cơ chế nhận chạm: `SHIZUKU` (đọc `getevent`) hoặc `ACCESSIBILITY` (overlay) |
+| Detection mode | ~~Cơ chế nhận chạm: `SHIZUKU` hoặc `ACCESSIBILITY`~~ — v1.4: chỉ còn Shizuku (`getevent`), FR-D8 |
 | Gesture | Một trong 9 cử chỉ: TAP, DOUBLE_TAP, LONG_PRESS, SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT và (v1.1) SWIPE_DOWN_HOLD, SWIPE_LEFT_HOLD, SWIPE_RIGHT_HOLD |
 | Action | Hành động được gán cho một gesture |
 | Binding | Cặp (Gesture → Action) |
@@ -177,3 +177,18 @@ tham chiếu ID tương ứng.
 | FR-U16 | Chọn hành động trong **bottom sheet** (không còn là màn riêng); dùng **segmented button** thay tab: System / Applications / Shortcuts; tab System có ô tìm kiếm; bỏ mục "Không làm gì" | [ui §3](specs/ui.md) |
 | FR-U17 | Đổi tên màn Notch thành **Preferences**; thứ tự section: Phản hồi → Độ nhạy → Vị trí → Kích thước; slider có nấc (bước tròn) | [ui §3](specs/ui.md) |
 | FR-A13 | Hành động **Mở bảng âm lượng** (hiện thanh âm lượng hệ thống, không đổi mức âm) | [actions](specs/actions.md) |
+
+## 11. Phiên bản 1.4 — chỉ Shizuku, giao diện mới
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-D8 | **Bỏ chế độ Accessibility**: Shizuku là yêu cầu bắt buộc (đọc `getevent`), thiếu Shizuku thì app không hoạt động. Accessibility chỉ còn là quyền tùy chọn để thực thi hành động (không overlay). Thay FR-D3, phần "chọn chế độ" của FR-U1 | [detection-modes](specs/detection-modes.md) |
+| FR-D9 | Các quyền tùy chọn (Trợ năng, Thông báo, Điều khiển media, Pin không giới hạn) bật/tắt bằng switch ở Home; cấp/thu hồi **qua Shizuku** khi được, không được thì mở trang hệ thống tương ứng | [detection-modes §6](specs/detection-modes.md) |
+| FR-G13 | Cử chỉ không khả dụng (Vuốt xuống, Vuốt xuống & giữ — FR-G10) luôn hiển thị switch **tắt**, mờ đi; cử chỉ đang tắt cũng mờ | [settings](specs/settings.md), [ui §3](specs/ui.md) |
+| FR-U19 | Bottom bar 4 tab: Home, Gestures, **Notch** (đổi tên từ Preferences, icon notch), **Settings** (cài đặt ứng dụng, chuyển từ top bar xuống). Top bar chỉ còn tiêu đề. Thay FR-U12/FR-U13 phần điều hướng | [ui §1](specs/ui.md) |
+| FR-U20 | Action picker: vẫn là sheet nhưng **không kéo để ẩn**, có nút đóng bên phải tên cử chỉ; không che top/bottom bar (vẫn bấm được); bỏ tìm kiếm hành động; mỗi nhóm là card bo góc, các dòng ngăn bằng đường kẻ; tab Shortcut là danh sách app mở rộng được (mặc định thu gọn), icon shortcut là mũi tên xuống-rồi-sang-phải | [ui §3](specs/ui.md) |
+| FR-U21 | Home: thẻ **Totch** (icon bật / tắt / đang bật-tắt, mô tả ngắn "Gestures are …"); bỏ chọn chế độ; section **Requirement** (Shizuku) rồi **Permissions** (icon quyền, tên, trạng thái cấp, switch) | [ui §3](specs/ui.md) |
+| FR-U18 | Slider: nút − / + chỉnh từng đơn vị, kéo bắt theo nấc nhưng không vẽ vạch; Double tap & Long press 100–1000 ms (nấc 50, nút ±10); các slider còn lại nấc 5, nút ±1; nhãn ngắn: Double tap, Long press, Swipe, Horizontal, Vertical, Width, Height, Padding. Thay bảng nấc của FR-U17 | [ui §3](specs/ui.md) |
+| FR-R7 | Padding 1–10 dp (vùng nhận chạm dư ra quanh notch rộng × cao); highlight vẽ cả phần padding (viền nét đứt) | [notch-region](specs/notch-region.md), [ui §2](specs/ui.md) |
+| FR-U22 | Hiệu ứng chuyển trang (trượt ngang + mờ dần theo hướng tab), sheet trượt lên/xuống | [ui §1](specs/ui.md) |
+| FR-S4 | (cập nhật) `doubleTapMs` 100–1000, `longPressMs` 100–1000, `paddingDp` 1–10 | [settings](specs/settings.md) |

@@ -107,11 +107,21 @@ class ActionPickerViewModelTest {
     }
 
     @Test
-    fun `UI-24 system query is kept in state`() = runTest {
+    fun `UI-25 shortcut apps start collapsed and expand one by one`() = runTest {
         val vm = vm(FakeSettingsRepository())
         vm.state.test {
-            vm.setSystemQuery("vol")
-            assertEquals("vol", expectMostRecentItem().systemQuery)
+            vm.selectTab(PickerTab.SHORTCUTS)
+            val loaded = expectMostRecentItem()
+            val group = loaded.shortcutGroups.first()
+            assertTrue(loaded.expanded.isEmpty())
+            assertFalse(loaded.isExpanded(group.packageName))
+            vm.toggleExpanded(group.packageName)
+            assertTrue(expectMostRecentItem().isExpanded(group.packageName))
+            vm.toggleExpanded(group.packageName)
+            assertFalse(expectMostRecentItem().isExpanded(group.packageName))
+            // While searching, every matching app is shown expanded.
+            vm.setShortcutQuery("tab")
+            assertTrue(expectMostRecentItem().isExpanded(group.packageName))
         }
     }
 

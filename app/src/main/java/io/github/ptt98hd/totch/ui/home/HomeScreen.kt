@@ -4,10 +4,19 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,25 +26,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccessibilityNew
+import androidx.compose.material.icons.outlined.BatteryFull
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material3.Card
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +50,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -58,22 +64,25 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.EngineStatus
+import io.github.ptt98hd.totch.Permission
 import io.github.ptt98hd.totch.R
-import io.github.ptt98hd.totch.core.settings.DetectionMode
-import io.github.ptt98hd.totch.ui.common.Gutter
+import io.github.ptt98hd.totch.ui.common.GroupCard
+import io.github.ptt98hd.totch.ui.common.IconBox
 import io.github.ptt98hd.totch.ui.common.SectionHeader
+import io.github.ptt98hd.totch.ui.common.ToggleListItem
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
-import io.github.ptt98hd.totch.ui.common.requestUnrestrictedBattery
 import io.github.ptt98hd.totch.ui.common.isShizukuInstalled
 import io.github.ptt98hd.totch.ui.common.openAccessibilitySettings
-import io.github.ptt98hd.totch.ui.common.openMediaAccessSettings
 import io.github.ptt98hd.totch.ui.common.openAppNotificationSettings
+import io.github.ptt98hd.totch.ui.common.openBatteryOptimizationSettings
+import io.github.ptt98hd.totch.ui.common.requestUnrestrictedBattery
+import io.github.ptt98hd.totch.ui.common.openMediaAccessSettings
 import io.github.ptt98hd.totch.ui.common.openShizuku
 import io.github.ptt98hd.totch.ui.common.withGutters
 import io.github.ptt98hd.totch.ui.theme.TotchTheme
 
 @Composable
-fun HomeRoute(container: AppContainer, onOpenSettings: () -> Unit) {
+fun HomeRoute(container: AppContainer) {
     val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(container))
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -91,45 +100,52 @@ fun HomeRoute(container: AppContainer, onOpenSettings: () -> Unit) {
         vm.refresh()
     }
 
+    // UI-52: used when Shizuku could not switch the permission.
+    val openSystemPage: (Permission) -> Unit = { permission ->
+        when (permission) {
+            Permission.ACCESSIBILITY -> context.openAccessibilitySettings()
+            Permission.MEDIA_ACCESS -> context.openMediaAccessSettings()
+            Permission.BATTERY ->
+                if (state.permissions.any { it.permission == Permission.BATTERY && it.granted }) {
+                    context.openBatteryOptimizationSettings()
+                } else {
+                    context.requestUnrestrictedBattery()
+                }
+            Permission.NOTIFICATIONS ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationAsked &&
+                    state.permissions.none { it.permission == Permission.NOTIFICATIONS && it.granted }
+                ) {
+                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    // Already denied once (the dialog may not show again), or revoking.
+                    context.openAppNotificationSettings()
+                }
+        }
+    }
+
     HomeScreen(
         state = state,
         shizukuInstalled = shizukuInstalled,
         onEnabledChange = vm::setEnabled,
-        onModeChange = vm::setMode,
-        onOpenSettings = onOpenSettings,
-        onRequirementAction = { type ->
-            when (type) {
-                RequirementType.SHIZUKU_RUNNING -> context.openShizuku()
-                RequirementType.SHIZUKU_PERMISSION -> vm.requestShizukuPermission()
-                RequirementType.ACCESSIBILITY -> context.openAccessibilitySettings()
-                RequirementType.MEDIA_ACCESS -> context.openMediaAccessSettings()
-                RequirementType.BATTERY -> context.requestUnrestrictedBattery()
-                RequirementType.NOTIFICATIONS ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationAsked) {
-                        notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    } else {
-                        // Already denied once: the system may not show the dialog again.
-                        context.openAppNotificationSettings()
-                    }
-            }
+        onShizukuClick = {
+            if (state.shizuku == ShizukuStatus.PERMISSION_REQUIRED) vm.requestShizukuPermission() else context.openShizuku()
         },
+        onPermissionChange = { permission, granted -> vm.setPermission(permission, granted, openSystemPage) },
     )
 }
-
 
 @Composable
 fun HomeScreen(
     state: HomeUiState,
     shizukuInstalled: Boolean,
     onEnabledChange: (Boolean) -> Unit,
-    onModeChange: (DetectionMode) -> Unit,
-    onOpenSettings: () -> Unit,
-    onRequirementAction: (RequirementType) -> Unit,
+    onShizukuClick: () -> Unit,
+    onPermissionChange: (Permission, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { TotchTopBar(stringResource(R.string.nav_home), onOpenSettings = onOpenSettings) },
+        topBar = { TotchTopBar(stringResource(R.string.nav_home)) },
     ) { padding ->
         LazyColumn(
             contentPadding = padding.withGutters(),
@@ -138,10 +154,22 @@ fun HomeScreen(
             item(key = "master") {
                 MasterSwitchCard(enabled = state.enabled, status = state.status, onEnabledChange = onEnabledChange)
             }
-            item(key = "mode") { ModeSelector(mode = state.mode, onModeChange = onModeChange) }
-            if (state.requirements.isNotEmpty()) {
-                item(key = "requirements") {
-                    RequirementsCard(state.requirements, shizukuInstalled, onRequirementAction)
+            item(key = "requirement") {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionHeader(stringResource(R.string.requirement_title))
+                    GroupCard {
+                        ShizukuRow(state.shizuku, shizukuInstalled, onShizukuClick)
+                    }
+                }
+            }
+            if (state.permissions.isNotEmpty()) {
+                item(key = "permissions") {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SectionHeader(stringResource(R.string.permissions_title))
+                        GroupCard(items = state.permissions) { item ->
+                            PermissionRow(item, onPermissionChange)
+                        }
+                    }
                 }
             }
         }
@@ -151,18 +179,19 @@ fun HomeScreen(
 @Composable
 private fun MasterSwitchCard(enabled: Boolean, status: EngineStatus, onEnabledChange: (Boolean) -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val running = status == EngineStatus.Running
+    val icon = masterIcon(status)
+    val problem = enabled && icon == MasterIcon.OFF && status !is EngineStatus.PausedRotation
     val container by animateColorAsState(
         when {
-            status is EngineStatus.Error -> colors.errorContainer
-            running -> colors.primaryContainer
+            problem -> colors.errorContainer
+            icon == MasterIcon.ON -> colors.primaryContainer
             else -> colors.surfaceContainerHigh
         },
         label = "masterContainer",
     )
     val content = when {
-        status is EngineStatus.Error -> colors.onErrorContainer
-        running -> colors.onPrimaryContainer
+        problem -> colors.onErrorContainer
+        icon == MasterIcon.ON -> colors.onPrimaryContainer
         else -> colors.onSurface
     }
     val text = statusText(status)
@@ -181,9 +210,9 @@ private fun MasterSwitchCard(enabled: Boolean, status: EngineStatus, onEnabledCh
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            MasterIconBox(masterIcon(status))
+            MasterIconBox(icon, problem)
             Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.master_title), style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(4.dp))
                 Text(statusString, style = MaterialTheme.typography.bodyMedium)
             }
@@ -192,122 +221,84 @@ private fun MasterSwitchCard(enabled: Boolean, status: EngineStatus, onEnabledCh
     }
 }
 
-/** FR-U15: ✓ / ✗ inside a rounded box on the left of the master card. */
+/** UI-42: on (✓), off (✗) or a spinning sync icon while turning on / off, inside a rounded box. */
 @Composable
-private fun MasterIconBox(icon: MasterIcon) {
+private fun MasterIconBox(icon: MasterIcon, problem: Boolean) {
     val colors = MaterialTheme.colorScheme
-    val (box, tint) = when (icon) {
-        MasterIcon.CHECK -> colors.primary to colors.onPrimary
-        MasterIcon.ERROR -> colors.error to colors.onError
-        MasterIcon.OFF -> colors.surfaceVariant to colors.onSurfaceVariant
+    val (box, tint) = when {
+        icon == MasterIcon.ON -> colors.primary to colors.onPrimary
+        icon == MasterIcon.PENDING -> colors.tertiary to colors.onTertiary
+        problem -> colors.error to colors.onError
+        else -> colors.surfaceVariant to colors.onSurfaceVariant
     }
     val background by animateColorAsState(box, label = "masterIconBox")
-    Box(
-        Modifier.size(48.dp).background(background, RoundedCornerShape(14.dp)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            if (icon == MasterIcon.CHECK) Icons.Outlined.Check else Icons.Outlined.Close,
-            contentDescription = null,
-            tint = tint,
-            modifier = Modifier.size(28.dp),
-        )
-    }
-}
-
-@Composable
-private fun ModeSelector(mode: DetectionMode, onModeChange: (DetectionMode) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SectionHeader(stringResource(R.string.mode_title))
-        val modes = listOf(DetectionMode.ACCESSIBILITY, DetectionMode.SHIZUKU)
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            modes.forEachIndexed { index, item ->
-                SegmentedButton(
-                    selected = mode == item,
-                    onClick = { onModeChange(item) },
-                    shape = SegmentedButtonDefaults.itemShape(index, modes.size),
-                    label = {
-                        Text(
-                            stringResource(
-                                if (item == DetectionMode.ACCESSIBILITY) R.string.mode_accessibility else R.string.mode_shizuku,
-                            ),
-                        )
-                    },
-                )
+    IconBox(container = background) {
+        AnimatedContent(
+            targetState = icon,
+            transitionSpec = { (fadeIn() + scaleIn(initialScale = 0.6f)) togetherWith fadeOut() },
+            label = "masterIcon",
+        ) { target ->
+            when (target) {
+                MasterIcon.ON -> Icon(Icons.Outlined.Check, null, tint = tint, modifier = Modifier.size(28.dp))
+                MasterIcon.OFF -> Icon(Icons.Outlined.Close, null, tint = tint, modifier = Modifier.size(28.dp))
+                MasterIcon.PENDING -> {
+                    val rotation by rememberInfiniteTransition(label = "pending").animateFloat(
+                        initialValue = 0f,
+                        targetValue = -360f,
+                        animationSpec = infiniteRepeatable(tween(1_000, easing = LinearEasing), RepeatMode.Restart),
+                        label = "pendingRotation",
+                    )
+                    Icon(Icons.Outlined.Sync, null, tint = tint, modifier = Modifier.size(28.dp).rotate(rotation))
+                }
             }
         }
     }
 }
 
-private data class RequirementStrings(val title: Int, val ok: Int, val missing: Int)
-
-private fun RequirementType.strings() = when (this) {
-    RequirementType.SHIZUKU_RUNNING -> RequirementStrings(
-        R.string.req_shizuku_running_title, R.string.req_shizuku_running_ok, R.string.req_shizuku_running_missing,
-    )
-    RequirementType.SHIZUKU_PERMISSION -> RequirementStrings(
-        R.string.req_shizuku_permission_title, R.string.req_shizuku_permission_ok, R.string.req_shizuku_permission_missing,
-    )
-    RequirementType.ACCESSIBILITY -> RequirementStrings(
-        R.string.req_accessibility_title, R.string.req_accessibility_ok, R.string.req_accessibility_missing,
-    )
-    RequirementType.NOTIFICATIONS -> RequirementStrings(
-        R.string.req_notifications_title, R.string.req_notifications_ok, R.string.req_notifications_missing,
-    )
-    RequirementType.MEDIA_ACCESS -> RequirementStrings(
-        R.string.req_media_title, R.string.req_media_ok, R.string.req_media_missing,
-    )
-    RequirementType.BATTERY -> RequirementStrings(
-        R.string.req_battery_title, R.string.req_battery_ok, R.string.req_battery_missing,
-    )
-}
-
+/** UI-50: Shizuku is the only requirement; the switch shows whether it is ready and leads to the next step. */
 @Composable
-private fun RequirementsCard(
-    items: List<RequirementItem>,
-    shizukuInstalled: Boolean,
-    onAction: (RequirementType) -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SectionHeader(stringResource(R.string.requirements_title))
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
-            items.forEachIndexed { index, item ->
-                if (index > 0) HorizontalDivider(Modifier.padding(horizontal = Gutter))
-                RequirementRow(item, shizukuInstalled, onAction)
-            }
-        }
+private fun ShizukuRow(status: ShizukuStatus, installed: Boolean, onClick: () -> Unit) {
+    val description = when {
+        status == ShizukuStatus.READY -> R.string.shizuku_ready
+        status == ShizukuStatus.PERMISSION_REQUIRED -> R.string.shizuku_permission_required
+        installed -> R.string.shizuku_not_running
+        else -> R.string.shizuku_not_installed
     }
+    ToggleListItem(
+        icon = Icons.Outlined.Terminal,
+        title = stringResource(R.string.shizuku_title),
+        description = stringResource(description),
+        checked = status == ShizukuStatus.READY,
+        onCheckedChange = { onClick() },
+        error = status != ShizukuStatus.READY,
+    )
 }
 
+private val Permission.icon: ImageVector
+    get() = when (this) {
+        Permission.ACCESSIBILITY -> Icons.Outlined.AccessibilityNew
+        Permission.NOTIFICATIONS -> Icons.Outlined.Notifications
+        Permission.MEDIA_ACCESS -> Icons.Outlined.MusicNote
+        Permission.BATTERY -> Icons.Outlined.BatteryFull
+    }
+
+private val Permission.titleRes: Int
+    get() = when (this) {
+        Permission.ACCESSIBILITY -> R.string.permission_accessibility
+        Permission.NOTIFICATIONS -> R.string.permission_notifications
+        Permission.MEDIA_ACCESS -> R.string.permission_media
+        Permission.BATTERY -> R.string.permission_battery
+    }
+
+/** UI-51: permission icon, name, granted state and a switch. */
 @Composable
-private fun RequirementRow(item: RequirementItem, shizukuInstalled: Boolean, onAction: (RequirementType) -> Unit) {
-    val strings = item.type.strings()
-    val stateDescription = stringResource(if (item.satisfied) R.string.state_done else R.string.state_missing)
-    ListItem(
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        leadingContent = {
-            Icon(
-                imageVector = if (item.satisfied) Icons.Outlined.CheckCircle else Icons.Outlined.ErrorOutline,
-                contentDescription = stateDescription,
-                tint = if (item.satisfied) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-            )
-        },
-        headlineContent = { Text(stringResource(strings.title)) },
-        supportingContent = { Text(stringResource(if (item.satisfied) strings.ok else strings.missing)) },
-        trailingContent = if (item.satisfied) null else {
-            {
-                val label = when (item.type) {
-                    RequirementType.SHIZUKU_RUNNING ->
-                        if (shizukuInstalled) R.string.action_open else R.string.action_install
-                    RequirementType.SHIZUKU_PERMISSION, RequirementType.NOTIFICATIONS -> R.string.action_grant
-                    RequirementType.ACCESSIBILITY, RequirementType.MEDIA_ACCESS -> R.string.action_open_settings
-                    RequirementType.BATTERY -> R.string.action_allow
-                }
-                FilledTonalButton(onClick = { onAction(item.type) }, enabled = item.actionEnabled) {
-                    Text(stringResource(label))
-                }
-            }
-        },
+private fun PermissionRow(item: PermissionItem, onChange: (Permission, Boolean) -> Unit) {
+    ToggleListItem(
+        icon = item.permission.icon,
+        title = stringResource(item.permission.titleRes),
+        description = stringResource(if (item.granted) R.string.permission_granted else R.string.permission_not_granted),
+        checked = item.granted,
+        onCheckedChange = { onChange(item.permission, it) },
     )
 }
 
@@ -319,40 +310,19 @@ private fun HomeScreenPreview() {
             state = HomeUiState(
                 loading = false,
                 enabled = true,
-                mode = DetectionMode.SHIZUKU,
                 status = EngineStatus.Running,
-                requirements = listOf(
-                    RequirementItem(RequirementType.SHIZUKU_RUNNING, true),
-                    RequirementItem(RequirementType.SHIZUKU_PERMISSION, false),
-                    RequirementItem(RequirementType.NOTIFICATIONS, false),
+                shizuku = ShizukuStatus.READY,
+                permissions = listOf(
+                    PermissionItem(Permission.ACCESSIBILITY, true),
+                    PermissionItem(Permission.NOTIFICATIONS, false),
+                    PermissionItem(Permission.MEDIA_ACCESS, false),
+                    PermissionItem(Permission.BATTERY, true),
                 ),
             ),
             shizukuInstalled = true,
             onEnabledChange = {},
-            onModeChange = {},
-            onOpenSettings = {},
-            onRequirementAction = {},
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HomeScreenAccessibilityPreview() {
-    TotchTheme {
-        HomeScreen(
-            state = HomeUiState(
-                loading = false,
-                requirements = listOf(
-                    RequirementItem(RequirementType.ACCESSIBILITY, false),
-                    RequirementItem(RequirementType.BATTERY, false),
-                ),
-            ),
-            shizukuInstalled = false,
-            onEnabledChange = {},
-            onModeChange = {},
-            onOpenSettings = {},
-            onRequirementAction = {},
+            onShizukuClick = {},
+            onPermissionChange = { _, _ -> },
         )
     }
 }

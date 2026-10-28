@@ -2,10 +2,8 @@ package io.github.ptt98hd.totch.ui.home
 
 import app.cash.turbine.test
 import io.github.ptt98hd.totch.EngineStatus
+import io.github.ptt98hd.totch.Permission
 import io.github.ptt98hd.totch.Requirements
-import io.github.ptt98hd.totch.core.model.Action
-import io.github.ptt98hd.totch.core.model.Gesture
-import io.github.ptt98hd.totch.core.settings.DetectionMode
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
 import io.github.ptt98hd.totch.ui.FakeSystemStatus
@@ -21,14 +19,12 @@ import kotlin.test.assertTrue
 class HomeViewModelTest {
     @get:Rule val main = MainDispatcherRule()
 
-    /** Bindings without media actions, so the optional media card (UI-3) stays hidden. */
-    private val noMedia = Gesture.entries.associateWith { Action.None }
-
     private val allStatuses = listOf(
         EngineStatus.Disabled,
         EngineStatus.WaitingShizuku,
         EngineStatus.ShizukuPermissionRequired,
-        EngineStatus.AccessibilityRequired,
+        EngineStatus.Starting,
+        EngineStatus.Stopping,
         EngineStatus.Error("boom"),
         EngineStatus.Running,
         EngineStatus.PausedRotation,
@@ -42,28 +38,22 @@ class HomeViewModelTest {
     ) = HomeViewModel(repo, engine, sys, notificationPermissionRequired = notifications)
 
     @Test
-    fun `UI-1 enabling while requirements are missing still saves enabled=true and shows requirement cards`() = runTest {
-        val repo = FakeSettingsRepository(Settings(enabled = false, mode = DetectionMode.ACCESSIBILITY, bindings = noMedia))
+    fun `UI-1 enabling while Shizuku is missing still saves enabled=true`() = runTest {
+        val repo = FakeSettingsRepository(Settings(enabled = false))
         val vm = vm(repo)
         vm.state.test {
             vm.setEnabled(true)
             assertTrue(repo.current.enabled)
             val state = expectMostRecentItem()
             assertTrue(state.enabled)
-            assertEquals(
-                listOf(
-                    RequirementItem(RequirementType.ACCESSIBILITY, satisfied = false),
-                    RequirementItem(RequirementType.BATTERY, satisfied = false),
-                ),
-                state.requirements,
-            )
+            assertEquals(ShizukuStatus.NOT_RUNNING, state.shizuku)
         }
     }
 
     @Test
-    fun `UI-1 the switch can be turned off while permissions are missing`() = runTest {
+    fun `UI-1 the switch can be turned off while Shizuku is missing`() = runTest {
         val repo = FakeSettingsRepository(Settings(enabled = true))
-        vm(repo, MutableStateFlow(EngineStatus.AccessibilityRequired)).setEnabled(false)
+        vm(repo, MutableStateFlow(EngineStatus.WaitingShizuku)).setEnabled(false)
         assertFalse(repo.current.enabled)
     }
 
@@ -89,37 +79,59 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `FR-D4 Shizuku mode lists Shizuku running, permission and notification requirements`() = runTest {
-        val repo = FakeSettingsRepository(Settings(mode = DetectionMode.SHIZUKU, bindings = noMedia))
-        val sys = FakeSystemStatus(Requirements(shizukuRunning = true, shizukuGranted = false, notificationsGranted = true))
-        vm(repo, sys = sys).state.test {
+    fun `UI-50 Shizuku requirement follows running and granted`() = runTest {
+        val sys = FakeSystemStatus(Requirements(shizukuRunning = false))
+        vm(sys = sys).state.test {
+            assertEquals(ShizukuStatus.NOT_RUNNING, expectMostRecentItem().shizuku)
+            sys.requirements.value = Requirements(shizukuRunning = true, shizukuGranted = false)
+            assertEquals(ShizukuStatus.PERMISSION_REQUIRED, expectMostRecentItem().shizuku)
+            sys.requirements.value = Requirements(shizukuRunning = true, shizukuGranted = true)
+            assertEquals(ShizukuStatus.READY, expectMostRecentItem().shizuku)
+        }
+    }
+
+    @Test
+    fun `UI-51 permissions are listed in order with their granted state`() = runTest {
+        val sys = FakeSystemStatus(
+            Requirements(accessibilityEnabled = true, notificationsGranted = false, mediaAccessGranted = true, batteryUnrestricted = false),
+        )
+        vm(sys = sys).state.test {
             assertEquals(
                 listOf(
-                    RequirementItem(RequirementType.SHIZUKU_RUNNING, satisfied = true),
-                    RequirementItem(RequirementType.SHIZUKU_PERMISSION, satisfied = false),
-                    RequirementItem(RequirementType.NOTIFICATIONS, satisfied = true),
-                    RequirementItem(RequirementType.BATTERY, satisfied = false),
+                    PermissionItem(Permission.ACCESSIBILITY, granted = true),
+                    PermissionItem(Permission.NOTIFICATIONS, granted = false),
+                    PermissionItem(Permission.MEDIA_ACCESS, granted = true),
+                    PermissionItem(Permission.BATTERY, granted = false),
                 ),
-                expectMostRecentItem().requirements,
+                expectMostRecentItem().permissions,
             )
+            sys.requirements.value = Requirements(batteryUnrestricted = true)
+            assertTrue(expectMostRecentItem().permissions.single { it.permission == Permission.BATTERY }.granted)
         }
     }
 
     @Test
-    fun `FR-D4 Shizuku permission cannot be requested while Shizuku is not running`() = runTest {
-        val repo = FakeSettingsRepository(Settings(mode = DetectionMode.SHIZUKU, bindings = noMedia))
-        vm(repo, notifications = false).state.test {
-            val reqs = expectMostRecentItem().requirements
-            assertEquals(3, reqs.size)
-            assertFalse(reqs.single { it.type == RequirementType.SHIZUKU_PERMISSION }.actionEnabled)
+    fun `UI-51 notifications are not listed before Android 13`() = runTest {
+        vm(notifications = false).state.test {
+            assertTrue(expectMostRecentItem().permissions.none { it.permission == Permission.NOTIFICATIONS })
         }
     }
 
     @Test
-    fun `FR-U1 changing mode persists it`() = runTest {
-        val repo = FakeSettingsRepository()
-        vm(repo).setMode(DetectionMode.SHIZUKU)
-        assertEquals(DetectionMode.SHIZUKU, repo.current.mode)
+    fun `UI-52 switching a permission goes through Shizuku first, then falls back to system settings`() = runTest {
+        val sys = FakeSystemStatus()
+        val vm = vm(sys = sys)
+        val fallbacks = mutableListOf<Permission>()
+
+        sys.shizukuResult = true
+        vm.setPermission(Permission.BATTERY, true, fallbacks::add)
+        assertEquals(listOf(Permission.BATTERY to true), sys.permissionCalls)
+        assertTrue(fallbacks.isEmpty())
+
+        sys.shizukuResult = false
+        vm.setPermission(Permission.ACCESSIBILITY, false, fallbacks::add)
+        assertEquals(Permission.ACCESSIBILITY to false, sys.permissionCalls.last())
+        assertEquals(listOf(Permission.ACCESSIBILITY), fallbacks)
     }
 
     @Test
@@ -133,61 +145,11 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `UI-3 media control card is shown in both modes when a media action is bound`() = runTest {
-        DetectionMode.entries.forEach { mode ->
-            val bindings = noMedia + (Gesture.SWIPE_RIGHT to Action.MediaNext)
-            val repo = FakeSettingsRepository(Settings(mode = mode, bindings = bindings))
-            vm(repo, sys = FakeSystemStatus(Requirements(mediaAccessGranted = false))).state.test {
-                val media = expectMostRecentItem().requirements.single { it.type == RequirementType.MEDIA_ACCESS }
-                assertFalse(media.satisfied, "$mode")
-            }
-        }
-    }
-
-    @Test
-    fun `UI-3 media control card reflects the granted state`() = runTest {
-        val repo = FakeSettingsRepository(Settings(bindings = noMedia + (Gesture.TAP to Action.MediaPlayPause)))
-        vm(repo, sys = FakeSystemStatus(Requirements(mediaAccessGranted = true))).state.test {
-            assertTrue(expectMostRecentItem().requirements.single { it.type == RequirementType.MEDIA_ACCESS }.satisfied)
-        }
-    }
-
-    @Test
-    fun `UI-3 media control card is hidden when no media action is bound`() = runTest {
-        val repo = FakeSettingsRepository(Settings(bindings = noMedia + (Gesture.TAP to Action.VolumeUp)))
-        vm(repo).state.test {
-            assertTrue(expectMostRecentItem().requirements.none { it.type == RequirementType.MEDIA_ACCESS })
-        }
-    }
-
-    @Test
-    fun `UI-3 a media action on a gesture disabled in Shizuku mode does not show the card`() = runTest {
-        val repo = FakeSettingsRepository(
-            Settings(mode = DetectionMode.SHIZUKU, bindings = noMedia + (Gesture.SWIPE_DOWN to Action.MediaPlayPause)),
-        )
-        vm(repo).state.test {
-            assertTrue(expectMostRecentItem().requirements.none { it.type == RequirementType.MEDIA_ACCESS })
-        }
-    }
-
-    @Test
-    fun `UI-4 battery card is listed in both modes and follows the granted state`() = runTest {
-        DetectionMode.entries.forEach { mode ->
-            val sys = FakeSystemStatus(Requirements(batteryUnrestricted = false))
-            vm(FakeSettingsRepository(Settings(mode = mode, bindings = noMedia)), sys = sys).state.test {
-                assertFalse(expectMostRecentItem().requirements.single { it.type == RequirementType.BATTERY }.satisfied, "$mode")
-                sys.requirements.value = Requirements(batteryUnrestricted = true)
-                assertTrue(expectMostRecentItem().requirements.single { it.type == RequirementType.BATTERY }.satisfied, "$mode")
-            }
-        }
-    }
-
-    @Test
-    fun `UI-42 master icon shows check only while running`() {
+    fun `UI-42 master icon is on, off or pending`() {
         allStatuses.forEach { status ->
             val expected = when (status) {
-                EngineStatus.Running -> MasterIcon.CHECK
-                is EngineStatus.Error -> MasterIcon.ERROR
+                EngineStatus.Running -> MasterIcon.ON
+                EngineStatus.Starting, EngineStatus.Stopping -> MasterIcon.PENDING
                 else -> MasterIcon.OFF
             }
             assertEquals(expected, masterIcon(status), "$status")

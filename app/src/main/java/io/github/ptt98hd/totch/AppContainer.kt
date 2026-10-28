@@ -29,11 +29,17 @@ sealed interface EngineStatus {
     data object Disabled : EngineStatus
     data object WaitingShizuku : EngineStatus
     data object ShizukuPermissionRequired : EngineStatus
-    data object AccessibilityRequired : EngineStatus
+    /** Shizuku is ready and the touch pipeline is connecting. */
+    data object Starting : EngineStatus
+    /** Switched off while the touch pipeline is still shutting down. */
+    data object Stopping : EngineStatus
     data class Error(val message: String) : EngineStatus
     data object Running : EngineStatus
     data object PausedRotation : EngineStatus
 }
+
+/** Optional permissions shown on Home; each can be switched through Shizuku (detection-modes §6). */
+enum class Permission { ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS, BATTERY }
 
 data class Requirements(
     val shizukuRunning: Boolean = false,
@@ -51,6 +57,11 @@ interface SystemStatus {
     /** Re-reads states that have no change callback (accessibility, notifications). Call on resume. */
     fun refresh()
     fun requestShizukuPermission()
+    /**
+     * Grants or revokes [permission] through Shizuku. Returns false when it could not (Shizuku not ready, command
+     * failed, or not possible that way); the caller then opens the matching system page.
+     */
+    suspend fun setPermission(permission: Permission, granted: Boolean): Boolean
 }
 
 data class AppInfo(val packageName: String, val label: String)
@@ -77,12 +88,15 @@ interface AppShortcuts {
     suspend fun shortcuts(): List<ShortcutEntry>
 }
 
+/** The highlighted touch area in screen pixels: [notch] (width × height) inside [touch] (notch + padding). */
+data class HighlightArea(val touch: Rect, val notch: Rect)
+
 /** Notch touch area for the in-app highlight (ui spec §2). */
 interface TouchArea {
-    /** Region in screen pixels for the saved settings, or null when inactive (landscape). */
-    val region: StateFlow<Rect?>
-    /** Region the given (possibly unsaved draft) settings would produce on the current display. */
-    fun regionFor(settings: Settings): Rect?
+    /** Area for the saved settings, or null when inactive (landscape). */
+    val area: StateFlow<HighlightArea?>
+    /** Area the given (possibly unsaved draft) settings would produce on the current display. */
+    fun areaFor(settings: Settings): HighlightArea?
     /** The automatically detected region in dp, shown while no manual region is set (FR-R5); null when rotated. */
     val detectedRegion: StateFlow<ManualRegionDp?>
 }

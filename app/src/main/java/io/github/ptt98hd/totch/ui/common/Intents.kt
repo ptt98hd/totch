@@ -42,6 +42,9 @@ fun Context.requestUnrestrictedBattery() {
     if (!safeStart(request)) safeStart(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
 }
 
+/** List of apps and their battery optimization, where the exemption can be removed. */
+fun Context.openBatteryOptimizationSettings() = safeStart(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+
 private fun Context.safeStart(intent: Intent): Boolean = try {
     startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     true

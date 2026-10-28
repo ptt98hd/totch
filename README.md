@@ -14,26 +14,25 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers, no `INTERNET` perm
   - System: Back, Home, Recents, Lock screen, Screenshot, Notification shade, Quick Settings, Assistant
   - Flashlight toggle; media Play/Pause, Next, Previous; Volume up/down; show the volume panel
   - Launch any installed app, or one of its static app shortcuts
-- Adjustable sensitivity, manual notch region shown live on screen, haptic feedback, start on boot.
+- Adjustable sensitivity, manual notch size, position and padding shown live on screen, haptic feedback, start on boot.
 - Material 3 with dynamic color; light / dark / AMOLED black theme; English and Vietnamese (or follow the system).
 - Automatically disabled in landscape.
 
-## Detection modes
+## How it works
 
-| | Shizuku mode | Accessibility mode |
-|---|---|---|
-| How | Reads raw touch events (`getevent`) with shell privileges via [Shizuku](https://shizuku.rikka.app/) | Places a small accessibility overlay exactly over the notch |
-| Consumes touches | **No** — the system still receives them, so swipe-down gestures are disabled in this mode (they would also pull the notification shade) | **Yes**, but only inside the notch area |
-| Needs | Shizuku running and permission granted; persistent notification (foreground service) | Accessibility service enabled |
+Totch reads raw touch events (`getevent`) with shell privileges through [Shizuku](https://shizuku.rikka.app/), in a foreground service with a persistent notification. **Shizuku is required**: without it Totch does nothing. Touches are not consumed (the system still receives them), so the swipe-down gestures are unavailable: they would also pull the notification shade.
 
-The Accessibility service is used **only** to draw the touch area over the notch and to perform global actions (Back, Home, lock screen, ...). It does not read screen content.
+Every other permission is optional and can be switched on or off from the Home screen; Totch grants it through Shizuku when it can, otherwise it opens the matching system page:
 
-Optional **notification access** is recommended when media actions are bound: Totch uses it only to find the active media session and send play/pause/skip commands (more reliable than media key events). It never reads notifications.
+- **Accessibility** — only to perform global actions (Back, Home, lock screen, ...) and open apps from the background. It does not read screen content and draws nothing.
+- **Notifications** (Android 13+) — for the foreground service notification.
+- **Media control** (notification access) — only to find the active media session and send play/pause/skip commands (more reliable than media key events). It never reads notifications.
+- **Unrestricted battery** — keeps the gesture service from being killed.
 
 ## Requirements
 
 - Android 12 (API 31) or newer, phone with a top display cutout
-- Either [Shizuku](https://github.com/RikkaApps/Shizuku) or the Totch Accessibility service enabled
+- [Shizuku](https://github.com/RikkaApps/Shizuku) running, with permission granted to Totch
 
 ## Building
 

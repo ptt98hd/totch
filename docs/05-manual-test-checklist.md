@@ -8,7 +8,7 @@
 
 | Mục | Giá trị |
 |---|---|
-| Phiên bản app | 1.1.0 (10100) |
+| Phiên bản app | 1.4.0 (10400) |
 | Máy / ROM / Android | |
 | Kiểu notch (giọt nước / đục lỗ giữa / đục lỗ góc / không có) | |
 | Phiên bản Shizuku | |
@@ -23,7 +23,7 @@
 | MT-I3 | Chuyển qua lại 2 chế độ bằng segmented button | Danh sách thẻ yêu cầu đổi theo chế độ; lựa chọn được lưu sau khi đóng/mở app | [ ] |
 | MT-I4 | Cập nhật đè từ 1.0.x lên 1.1.0 | Cài đặt và binding cũ được giữ nguyên; 3 cử chỉ "vuốt và giữ" mới = "Không làm gì" | [ ] |
 
-## 2. Chế độ Trợ năng (Accessibility)
+## 2. Chế độ Trợ năng (Accessibility) — ~~bỏ ở v1.4~~ (xem §10)
 
 | ID | Kịch bản | Kỳ vọng | KQ |
 |---|---|---|---|
@@ -181,6 +181,26 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-P2 | Để máy qua đêm với app bật (mỗi chế độ 1 đêm) | Totch không nằm trong top tiêu thụ pin; sáng ra vẫn hoạt động | [ ] |
 | MT-P3 | Dùng bình thường 1 ngày | Không có crash, không có toast lỗi lạ | [ ] |
 | MT-P4 | Gỡ cài đặt Shizuku khi đang ở chế độ Shizuku | Không crash; status "Waiting for Shizuku" | [ ] |
+
+## 10. v1.4 — chỉ Shizuku, Home / picker / slider mới
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-V1 | Cập nhật đè từ 1.3 đang ở Accessibility mode | App mở bình thường; không còn chọn chế độ; binding giữ nguyên; padding cũ > 10 về 10 | [ ] |
+| MT-V2 | Home: bật Totch khi Shizuku chưa chạy | Thẻ Totch icon ✗ nền đỏ, "Gestures are waiting for Shizuku"; dòng Shizuku "Not running", chạm → mở app Shizuku | [ ] |
+| MT-V3 | Khởi động Shizuku, cấp quyền | Dòng Shizuku "Running, permission granted"; thẻ Totch hiện icon xoay "turning on…" rồi ✓ "Gestures are on" | [ ] |
+| MT-V4 | Tắt Totch | Icon xoay "turning off…" rồi ✗ "Gestures are off"; thông báo foreground biến mất | [ ] |
+| MT-V5 | Permissions: bật/tắt Trợ năng, Media control, Pin khi Shizuku sẵn sàng | Switch đổi ngay, không mở trang hệ thống; kiểm tra lại trong Cài đặt hệ thống đúng trạng thái | [ ] |
+| MT-V6 | Permissions: bật Notifications (13+) khi Shizuku sẵn sàng / tắt Notifications | Bật: cấp ngay; Tắt: mở trang thông báo của app | [ ] |
+| MT-V7 | Permissions khi Shizuku chưa sẵn sàng | Bật/tắt mở trang hệ thống tương ứng | [ ] |
+| MT-V8 | Gestures: Swipe down / Swipe down & hold | Mờ, switch tắt + không bấm được, nhãn "Unavailable…" | [ ] |
+| MT-V9 | Gestures: tắt một cử chỉ | Dòng mờ đi (icon, tên, mô tả) | [ ] |
+| MT-V10 | Mở picker | Sheet trượt lên giữa top bar và bottom bar; kéo xuống không đóng; nút ✕ và Back đóng; bấm tab ở bottom bar khi sheet mở vẫn chuyển tab | [ ] |
+| MT-V11 | Picker tab System | Không có ô tìm kiếm; 2 card System / Media bo góc, dòng ngăn bằng đường kẻ, có radio | [ ] |
+| MT-V12 | Picker tab Shortcuts | Danh sách app đều thu gọn; chạm app → shortcut hiện ngay bên dưới (icon mũi tên xuống-rồi-sang-phải); tìm kiếm → app khớp tự mở rộng | [ ] |
+| MT-V13 | Tab Notch: nút − / + của Double tap | Đổi đúng 10 ms; kéo slider nhảy theo nấc 50, không có chấm vạch; thang 100–1000 | [ ] |
+| MT-V14 | Tab Notch: Width / Padding | − / + đổi 1 dp; padding 1–10; highlight vẽ notch đậm + viền nét đứt phần padding, cập nhật ngay | [ ] |
+| MT-V15 | Bottom bar | 4 tab Home, Gestures, Notch (icon notch), Settings; top bar không có nút; chuyển tab có hiệu ứng trượt theo hướng | [ ] |
 
 ## Lịch sử kết quả
 

@@ -63,11 +63,11 @@ class MainActivity : ComponentActivity() {
             }
             TotchTheme(themeMode = settings.theme, amoledBlack = settings.amoledBlack) {
                 val highlight = remember { NotchHighlightState() }
-                val region by container.touchArea.region.collectAsStateWithLifecycle()
+                val area by container.touchArea.area.collectAsStateWithLifecycle()
                 CompositionLocalProvider(LocalNotchHighlight provides highlight) {
                     Box(Modifier.fillMaxSize()) {
                         TotchNavHost(container)
-                        NotchHighlightOverlay(region, highlight) // FR-U8, drawn above every screen
+                        NotchHighlightOverlay(area, highlight) // FR-U8, drawn above every screen
                     }
                 }
             }

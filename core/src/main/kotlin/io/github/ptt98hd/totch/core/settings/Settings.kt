@@ -6,8 +6,6 @@ import io.github.ptt98hd.totch.core.model.Gesture
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-enum class DetectionMode { SHIZUKU, ACCESSIBILITY }
-
 @Serializable
 enum class ThemeMode {
     @SerialName("system") SYSTEM,
@@ -51,9 +49,9 @@ val HoldGestures: Set<Gesture> =
 
 private val SwipeHoldGestures = HoldGestures - Gesture.LONG_PRESS
 
-/** Shizuku mode cannot block touches, so swiping down always pulls the shade (FR-G10, R2). */
-fun Gesture.isAvailableIn(mode: DetectionMode): Boolean =
-    !(mode == DetectionMode.SHIZUKU && (this == Gesture.SWIPE_DOWN || this == Gesture.SWIPE_DOWN_HOLD))
+/** Touches cannot be blocked (input is read through Shizuku), so swiping down always pulls the shade (FR-G10, R2). */
+val Gesture.isAvailable: Boolean
+    get() = this != Gesture.SWIPE_DOWN && this != Gesture.SWIPE_DOWN_HOLD
 
 /** Touch slop used by [toGestureConfig], in dp. */
 const val TOUCH_SLOP_DP: Int = 12
@@ -61,7 +59,6 @@ const val TOUCH_SLOP_DP: Int = 12
 @Serializable
 data class Settings(
     val enabled: Boolean = false,
-    val mode: DetectionMode = DetectionMode.ACCESSIBILITY,
     val bindings: Map<Gesture, Action> = DefaultBindings,
     val doubleTapMs: Long = 300,
     val longPressMs: Long = 500,
@@ -79,10 +76,10 @@ data class Settings(
     /** Clamps values to FR-S4 limits and ensures every [Gesture] has a binding. */
     fun sanitized(): Settings = copy(
         bindings = Gesture.entries.associateWith { bindings[it] ?: Action.None },
-        doubleTapMs = doubleTapMs.coerceIn(150, 600),
-        longPressMs = longPressMs.coerceIn(300, 1500),
+        doubleTapMs = doubleTapMs.coerceIn(100, 1000),
+        longPressMs = longPressMs.coerceIn(100, 1000),
         swipeMinDistanceDp = swipeMinDistanceDp.coerceIn(16, 200),
-        paddingDp = paddingDp.coerceIn(0, 48),
+        paddingDp = paddingDp.coerceIn(1, 10),
         manualRegion = manualRegion?.run {
             ManualRegionDp(
                 centerXFraction = if (centerXFraction.isNaN()) 0.5f else centerXFraction.coerceIn(0f, 1f),
@@ -96,12 +93,12 @@ data class Settings(
 
 fun Settings.actionFor(g: Gesture): Action = bindings[g] ?: Action.None
 
-/** The action that actually runs for [g] in the current mode (ST-12, ST-19). */
+/** The action that actually runs for [g] (ST-12, ST-19). */
 fun Settings.effectiveAction(g: Gesture): Action =
-    if (g.isAvailableIn(mode) && g !in disabledGestures) actionFor(g) else Action.None
+    if (g.isAvailable && g !in disabledGestures) actionFor(g) else Action.None
 
-/** State of the gesture's switch: on and bound to an action (ST-20). */
-fun Settings.isGestureOn(g: Gesture): Boolean = g !in disabledGestures && actionFor(g) != Action.None
+/** State of the gesture's switch: available, on and bound to an action (ST-20, ST-22). */
+fun Settings.isGestureOn(g: Gesture): Boolean = effectiveAction(g) != Action.None
 
 fun Settings.withGestureOn(g: Gesture, on: Boolean): Settings =
     copy(disabledGestures = if (on) disabledGestures - g else disabledGestures + g)

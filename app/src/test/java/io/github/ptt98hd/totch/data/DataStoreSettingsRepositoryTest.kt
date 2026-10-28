@@ -38,8 +38,8 @@ class DataStoreSettingsRepositoryTest {
         repo.update { it.copy(enabled = true, doubleTapMs = 10, paddingDp = 1000) }
         val stored = repo.settings.first()
         assertEquals(true, stored.enabled)
-        assertEquals(150, stored.doubleTapMs)
-        assertEquals(48, stored.paddingDp)
+        assertEquals(100, stored.doubleTapMs)
+        assertEquals(10, stored.paddingDp)
         assertEquals(stored, stored.sanitized())
     }
 
