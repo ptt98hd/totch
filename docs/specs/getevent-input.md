@@ -1,6 +1,6 @@
 # Spec: Đọc input thô qua `getevent` (Shizuku mode)
 
-Yêu cầu: FR-D1, FR-D2 · Module: `:core` · Package: `io.github.ow3n.totch.core.input`
+Yêu cầu: FR-D1, FR-D2 · Module: `:core` · Package: `io.github.ptt98hd.totch.core.input`
 
 ## 1. Tìm thiết bị cảm ứng — `GeteventDeviceParser`
 

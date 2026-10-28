@@ -1,6 +1,6 @@
 # Spec: Vùng notch (`NotchRegionResolver`)
 
-Yêu cầu: FR-R1…FR-R4 · Module: `:core` · Package: `io.github.ow3n.totch.core.region`
+Yêu cầu: FR-R1…FR-R4 · Module: `:core` · Package: `io.github.ptt98hd.totch.core.region`
 
 `resolve(screenWidthPx, statusBarHeightPx, cutout, manual, paddingPx, rotation): Rect?`
 

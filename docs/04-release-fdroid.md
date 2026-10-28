@@ -31,22 +31,22 @@
 
 ## 4. Gửi app lên F-Droid (lần đầu)
 
-1. **Đẩy mã lên GitHub** `https://github.com/ow3n/totch` (xác nhận lại owner; nếu khác, sửa URL trong `README.md` và `metadata/io.github.ow3n.totch.yml`). Đảm bảo có `LICENSE`, tag `v1.0.0` trỏ đúng commit có `versionCode = 1`.
+1. **Đẩy mã lên GitHub** `https://github.com/ptt98hd/totch` (xác nhận lại owner; nếu khác, sửa URL trong `README.md` và `metadata/io.github.ptt98hd.totch.yml`). Đảm bảo có `LICENSE`, tag `v1.0.0` trỏ đúng commit có `versionCode = 1`.
 2. **Fork** https://gitlab.com/fdroid/fdroiddata (cần tài khoản GitLab).
-3. Tạo nhánh mới, chép `metadata/io.github.ow3n.totch.yml` từ repo này vào `metadata/` của fork.
+3. Tạo nhánh mới, chép `metadata/io.github.ptt98hd.totch.yml` từ repo này vào `metadata/` của fork.
 4. **Kiểm tra cục bộ** (khuyến nghị) bằng Docker image fdroidserver, đứng trong thư mục fdroiddata:
    ```sh
    docker run --rm -v "$PWD":/repo registry.gitlab.com/fdroid/fdroidserver:buildserver \
-     lint io.github.ow3n.totch
+     lint io.github.ptt98hd.totch
    docker run --rm -v "$PWD":/repo registry.gitlab.com/fdroid/fdroidserver:buildserver \
-     build -v -l io.github.ow3n.totch
+     build -v -l io.github.ptt98hd.totch
    docker run --rm -v "$PWD":/repo registry.gitlab.com/fdroid/fdroidserver:buildserver \
-     rewritemeta io.github.ow3n.totch   # chuẩn hóa định dạng YAML
+     rewritemeta io.github.ptt98hd.totch   # chuẩn hóa định dạng YAML
    ```
-   (Hoặc cài `fdroidserver` qua pip và chạy `fdroid lint` / `fdroid build -v -l io.github.ow3n.totch`.)
+   (Hoặc cài `fdroidserver` qua pip và chạy `fdroid lint` / `fdroid build -v -l io.github.ptt98hd.totch`.)
    Xem hướng dẫn mới nhất tại https://gitlab.com/fdroid/fdroiddata/-/blob/master/CONTRIBUTING.md.
 5. Commit (`New app: Totch`), push, mở **Merge Request** vào `fdroid/fdroiddata`, chọn template *App inclusion* và điền checklist. CI của fdroiddata sẽ chạy lint + build; sửa theo phản hồi của reviewer.
-6. Sau khi merge, app thường xuất hiện trên F-Droid sau 1–7 ngày. Lúc đó thay badge placeholder trong `README.md` (đường dẫn đã đúng `f-droid.org/packages/io.github.ow3n.totch/`).
+6. Sau khi merge, app thường xuất hiện trên F-Droid sau 1–7 ngày. Lúc đó thay badge placeholder trong `README.md` (đường dẫn đã đúng `f-droid.org/packages/io.github.ptt98hd.totch/`).
 
 ### Lưu ý khi review
 

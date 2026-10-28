@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "io.github.ow3n.totch"
+    namespace = "io.github.ptt98hd.totch"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "io.github.ow3n.totch"
+        applicationId = "io.github.ptt98hd.totch"
         minSdk = 31
         targetSdk = 36
         versionCode = 10000

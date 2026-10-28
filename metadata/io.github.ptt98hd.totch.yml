@@ -1,0 +1,26 @@
+AntiFeatures: []
+Categories:
+  - System
+License: GPL-3.0-or-later
+AuthorName: ptt98hd
+SourceCode: https://github.com/ptt98hd/totch
+IssueTracker: https://github.com/ptt98hd/totch/issues
+Changelog: https://github.com/ptt98hd/totch/releases
+
+AutoName: Totch
+
+RepoType: git
+Repo: https://github.com/ptt98hd/totch.git
+
+Builds:
+  - versionName: 1.0.0
+    versionCode: 10000
+    commit: v1.0.0
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 1.0.0
+CurrentVersionCode: 10000

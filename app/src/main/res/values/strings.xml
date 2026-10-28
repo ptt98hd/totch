@@ -128,7 +128,7 @@
     <string name="about_license_title">License</string>
     <string name="about_license" translatable="false">GPL-3.0-or-later</string>
     <string name="about_source_title">Source code</string>
-    <string name="about_source_url" translatable="false">https://github.com/ow3n/totch</string>
+    <string name="about_source_url" translatable="false">https://github.com/ptt98hd/totch</string>
     <string name="about_credits_title">Credits</string>
     <string name="about_shizuku_credit">Shizuku by RikkaApps, for privileged input access</string>
     <string name="about_shizuku_url" translatable="false">https://shizuku.rikka.app/</string>

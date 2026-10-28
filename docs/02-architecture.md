@@ -34,7 +34,7 @@ Nguyên tắc:
 ```
 totch/
 ├── core/                         # Kotlin JVM library — KHÔNG import android.*
-│   └── src/main/kotlin/io/github/ow3n/totch/core/
+│   └── src/main/kotlin/io/github/ptt98hd/totch/core/
 │       ├── model/                # TouchEvent, Gesture, Action, Rect, Settings, Bindings
 │       ├── gesture/              # GestureRecognizer, GestureConfig
 │       ├── input/                # GeteventParser, InputDeviceInfo, CoordinateMapper
@@ -42,7 +42,7 @@ totch/
 │       ├── action/               # ActionDispatcher, ActionExecutor, ShellCommands
 │       └── settings/             # SettingsCodec (JSON), validation/clamp
 ├── app/                          # Android application
-│   └── src/main/java/io/github/ow3n/totch/
+│   └── src/main/java/io/github/ptt98hd/totch/
 │       ├── TotchApp.kt
 │       ├── data/                 # SettingsRepository (DataStore)
 │       ├── engine/               # GestureEngine: nối TouchSource → recognizer → dispatcher
@@ -57,7 +57,7 @@ totch/
 ## 3. Hợp đồng API của `:core` (nguồn chân lý cho test)
 
 ```kotlin
-package io.github.ow3n.totch.core.model
+package io.github.ptt98hd.totch.core.model
 
 data class Rect(val left: Int, val top: Int, val right: Int, val bottom: Int) {
     val width: Int get() = right - left
@@ -92,7 +92,7 @@ enum class Gesture { TAP, DOUBLE_TAP, LONG_PRESS, SWIPE_DOWN, SWIPE_LEFT, SWIPE_
 ```
 
 ```kotlin
-package io.github.ow3n.totch.core.gesture
+package io.github.ptt98hd.totch.core.gesture
 
 data class GestureConfig(
     val doubleTapMs: Long = 300, val longPressMs: Long = 500,
@@ -110,7 +110,7 @@ class GestureRecognizer(config: GestureConfig, private val region: () -> Rect?) 
 ```
 
 ```kotlin
-package io.github.ow3n.totch.core.input
+package io.github.ptt98hd.totch.core.input
 
 data class AbsRange(val min: Int, val max: Int)
 data class InputDeviceInfo(val path: String, val name: String, val x: AbsRange, val y: AbsRange, val direct: Boolean)
@@ -128,7 +128,7 @@ class CoordinateMapper(device: InputDeviceInfo, screenWidthPx: Int, screenHeight
 ```
 
 ```kotlin
-package io.github.ow3n.totch.core.region
+package io.github.ptt98hd.totch.core.region
 
 data class Cutout(val boundingRectsTop: List<Rect>)  // rects ở cạnh trên do Android cung cấp
 data class ManualRegion(val centerXFraction: Float, val widthPx: Int, val heightPx: Int)
@@ -140,7 +140,7 @@ object NotchRegionResolver {
 ```
 
 ```kotlin
-package io.github.ow3n.totch.core.action
+package io.github.ptt98hd.totch.core.action
 
 enum class Capability { SHIZUKU, ACCESSIBILITY, LOCAL }
 
@@ -164,7 +164,7 @@ object ShellCommands { fun of(action: Action): String?                          
 ```
 
 ```kotlin
-package io.github.ow3n.totch.core.settings
+package io.github.ptt98hd.totch.core.settings
 
 enum class DetectionMode { SHIZUKU, ACCESSIBILITY }
 

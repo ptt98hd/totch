@@ -1,6 +1,6 @@
 # Spec: Nhận diện cử chỉ (`GestureRecognizer`)
 
-Yêu cầu: FR-G1…FR-G7, FR-S3 · Module: `:core` · Package: `io.github.ow3n.totch.core.gesture`
+Yêu cầu: FR-G1…FR-G7, FR-S3 · Module: `:core` · Package: `io.github.ptt98hd.totch.core.gesture`
 
 ## 1. Đầu vào / đầu ra
 - Đầu vào: chuỗi `TouchEvent` (tọa độ pixel màn hình, `timeMs` đơn điệu tăng) và lời gọi `onTick(nowMs)`.

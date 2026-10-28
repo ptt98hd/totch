@@ -1,6 +1,6 @@
 # Spec: Giao diện (Material 3)
 
-Yêu cầu: FR-U1…FR-U6 · Module: `:app` · Package: `io.github.ow3n.totch.ui`
+Yêu cầu: FR-U1…FR-U6 · Module: `:app` · Package: `io.github.ptt98hd.totch.ui`
 
 ## 1. Nguyên tắc
 - Jetpack Compose + Material 3, `dynamicLightColorScheme/dynamicDarkColorScheme`, edge-to-edge.
