@@ -257,3 +257,13 @@ tham chiếu ID tương ứng.
 | FR-U40 | **Buy me a coffee** (prototype): nút ly cà phê ở **bên phải** top bar mọi màn hình, dòng *Buy me a coffee* ở Home (section **Ủng hộ**, cuối) và Settings (section **Ủng hộ**, trước Giới thiệu); bấm → hộp thoại ủng hộ → mở trang ủng hộ trong trình duyệt | [ui §1, §3](specs/ui.md) |
 | FR-U41 | Nút **Kiểm tra cập nhật** ở top bar (bên trái nút cà phê, có chấm báo khi đã biết có bản mới): mở hộp thoại cập nhật — đang kiểm tra → bản mới nhất / có bản mới (ghi chú) → tải (tiến độ) → cài (qua Shizuku nếu sẵn sàng, không thì trình cài đặt hệ thống) / lỗi (thử lại) | [update §8](specs/update.md), [ui §1](specs/ui.md) |
 | FR-U42 | Home: section **Requirement** đổi tên thành **Nâng cao** (Advanced) và chuyển xuống **dưới** Permissions; dòng Shizuku ghi rõ là tùy chọn. Thay phần thứ tự của FR-U21 | [ui §3](specs/ui.md) |
+
+## 18. Phiên bản 1.8
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-S2 (sửa) | **Mọi cử chỉ** mặc định **chưa đặt** (`None`): lần đầu mở app, mọi cử chỉ đều tắt. Cấu hình đã lưu của người dùng cũ giữ nguyên | [settings](specs/settings.md) |
+| FR-S10 | `longPressMs` mặc định **300 ms** (thay 500 ms). Giá trị đã lưu giữ nguyên | [settings](specs/settings.md) |
+| FR-U43 | Picker: tab **System** có lựa chọn **Not set** / **Chưa đặt** ở đầu danh sách (trên các nhóm); chọn → binding `None`, cử chỉ tắt. Dòng cử chỉ chưa gán hiển thị "Not set" / "Chưa đặt" | [ui §3](specs/ui.md) |
+| FR-U44 | Hành động và cử chỉ **không khả dụng thì bị vô hiệu** (mờ, không chọn / bật được), kèm lý do một dòng: hành động hệ thống / mở app, shortcut, activity cần Trợ năng hoặc Shizuku; hành động chỉ chạy qua Shizuku cần Shizuku; chế độ âm thanh cần quyền Không làm phiền. Cử chỉ: không có Trợ năng lẫn Shizuku → mọi cử chỉ bị vô hiệu; vuốt xuống thiếu Trợ năng như FR-G14; cử chỉ có hành động đã gán không khả dụng → switch tắt + vô hiệu, mô tả "<hành động> · <lý do>" màu lỗi, vẫn chạm được để đổi hành động. Thay FR-A20 (gợi ý "Cần Shizuku" nay đi kèm vô hiệu) | [ui §3](specs/ui.md) |
+| FR-U45 | Home: mô tả trạng thái ở thẻ Totch ngắn gọn, luôn **một dòng** (cắt bằng "…") | [ui §3](specs/ui.md) |

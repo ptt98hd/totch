@@ -1,7 +1,5 @@
 package io.github.ptt98hd.totch.ui.picker
 
-import io.github.ptt98hd.totch.core.action.ActionRequirements
-import io.github.ptt98hd.totch.core.action.Capability
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
@@ -22,7 +20,9 @@ import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.settings.actionFor
 import io.github.ptt98hd.totch.core.settings.withBinding
-import io.github.ptt98hd.totch.ui.common.ActionCatalog
+import io.github.ptt98hd.totch.ui.common.Capabilities
+import io.github.ptt98hd.totch.ui.common.Need
+import io.github.ptt98hd.totch.ui.common.capabilities
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -118,9 +118,8 @@ data class ActionPickerUiState(
     val tab: PickerTab = PickerTab.SYSTEM,
     /** Search of the System tab, applied with [filterCatalog] where the labels are known (UI-24, UI-29). */
     val systemQuery: String = "",
-    val dndAccessGranted: Boolean = true,
-    /** Shizuku is running and granted (UI-29b). */
-    val shizukuReady: Boolean = true,
+    /** What can run right now (UI-62); every action is available by default. */
+    val capabilities: Capabilities = Capabilities(),
     val appQuery: String = "",
     val apps: List<AppInfo> = emptyList(),
     val appsLoading: Boolean = true,
@@ -140,12 +139,8 @@ data class ActionPickerUiState(
     /** True once an action was chosen and saved; the screen should navigate back. */
     val finished: Boolean = false,
 ) {
-    /** UI-29: sound mode actions show a hint while Do Not Disturb access is missing. */
-    fun needsDndAccess(action: Action): Boolean = !dndAccessGranted && action in ActionCatalog.needsDndAccess
-
-    /** AR-10: actions only Shizuku can run show a hint while it is not ready (FR-A20). */
-    fun needsShizuku(action: Action): Boolean =
-        !shizukuReady && ActionRequirements.of(action) == setOf(Capability.SHIZUKU)
+    /** UI-29, UI-29b, UI-62: why [action] cannot run (its row is disabled with this reason), null when it can. */
+    fun need(action: Action): Need? = capabilities.need(action)
 
     /** UI-25: while searching, every matching app is shown expanded. */
     fun isExpanded(packageName: String): Boolean = shortcutQuery.isNotBlank() || packageName in expanded
@@ -194,8 +189,7 @@ class ActionPickerViewModel(
                 current = current,
                 tab = l.tab ?: initialTab(current),
                 systemQuery = l.systemQuery,
-                dndAccessGranted = r.dndAccessGranted,
-                shizukuReady = r.shizukuRunning && r.shizukuGranted,
+                capabilities = r.capabilities(),
                 appQuery = l.appQuery,
                 apps = l.apps?.filterApps(l.appQuery).orEmpty(),
                 appsLoading = l.apps == null,
@@ -276,8 +270,9 @@ class ActionPickerViewModel(
 
     fun setTileQuery(value: String) = local.update { it.copy(tileQuery = value) }
 
-    /** UI-10: saves the binding, switches the gesture on and finishes. */
+    /** UI-10: saves the binding, switches the gesture on and finishes; UI-62: unavailable actions are ignored. UI-63: None clears it. */
     fun select(action: Action) {
+        if (state.value.need(action) != null) return
         viewModelScope.launch {
             settingsRepository.update { it.withBinding(gesture, action) }
             local.update { it.copy(finished = true) }

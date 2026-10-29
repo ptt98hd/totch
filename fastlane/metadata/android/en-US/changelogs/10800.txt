@@ -1,0 +1,4 @@
+* Every gesture now starts as "Not set" (off); the action picker has a "Not set" choice to clear a gesture.
+* Long press defaults to 300 ms.
+* Gestures and actions that cannot run (missing Accessibility, Shizuku or Do Not Disturb access) are greyed out with the reason.
+* Home: the Totch status stays on one line.

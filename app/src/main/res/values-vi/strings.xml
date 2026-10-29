@@ -14,12 +14,12 @@
     <!-- Home -->
     <string name="master_switch_cd">Bật hoặc tắt cử chỉ trên notch</string>
     <string name="status_disabled">Cử chỉ đang tắt</string>
-    <string name="status_needs_access">Bật Trợ năng hoặc Shizuku</string>
-    <string name="status_error">Cử chỉ đã dừng: %1$s</string>
+    <string name="status_needs_access">Cần Trợ năng hoặc Shizuku</string>
+    <string name="status_error">Đã dừng: %1$s</string>
     <string name="status_running">Cử chỉ đang bật</string>
     <string name="status_paused_rotation">Cử chỉ tạm dừng khi xoay ngang</string>
-    <string name="status_starting">Cử chỉ đang được bật…</string>
-    <string name="status_stopping">Cử chỉ đang được tắt…</string>
+    <string name="status_starting">Đang bật…</string>
+    <string name="status_stopping">Đang tắt…</string>
     <string name="advanced_title">Nâng cao</string>
     <string name="permissions_title">Quyền</string>
     <string name="shizuku_title">Shizuku</string>
@@ -56,7 +56,7 @@
     <string name="group_swipe_hold">Vuốt và giữ</string>
     <string name="gesture_switch_cd">Bật hoặc tắt %1$s</string>
     <string name="gesture_unavailable">Cần quyền Trợ năng (bật ở Trang chủ)</string>
-    <string name="action_none">Không làm gì</string>
+    <string name="action_none">Chưa đặt</string>
     <string name="action_back">Quay lại</string>
     <string name="action_home">Màn hình chính</string>
     <string name="action_recents">Ứng dụng gần đây</string>
@@ -94,6 +94,7 @@
     <string name="action_airplane">Bật/tắt chế độ máy bay</string>
     <string name="action_location">Bật/tắt vị trí</string>
     <string name="action_needs_dnd">Cần quyền Không làm phiền</string>
+    <string name="needs_access">Cần Trợ năng hoặc Shizuku</string>
     <string name="action_needs_shizuku">Cần Shizuku</string>
     <string name="tile_needs_shizuku">%1$s · Cần Shizuku</string>
     <string name="app_not_installed">Chưa cài đặt</string>

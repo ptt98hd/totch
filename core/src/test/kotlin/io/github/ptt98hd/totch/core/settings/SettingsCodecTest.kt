@@ -94,7 +94,15 @@ class SettingsCodecTest {
         assertEquals(Action.Home, s.bindings[Gesture.TAP])
         assertEquals(Action.None, s.bindings[Gesture.SWIPE_RIGHT_HOLD])
         assertEquals(
-            Settings().copy(enabled = true, bindings = DefaultBindings + (Gesture.TAP to Action.Home)),
+            Settings().copy(
+                enabled = true,
+                longPressMs = 500,
+                bindings = DefaultBindings + mapOf(
+                    Gesture.TAP to Action.Home, Gesture.DOUBLE_TAP to Action.LockScreen, Gesture.LONG_PRESS to Action.ToggleTorch,
+                    Gesture.SWIPE_DOWN to Action.Notifications, Gesture.SWIPE_LEFT to Action.MediaPrevious,
+                    Gesture.SWIPE_RIGHT to Action.MediaNext,
+                ),
+            ),
             s,
         )
     }

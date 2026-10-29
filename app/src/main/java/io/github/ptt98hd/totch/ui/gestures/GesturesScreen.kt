@@ -43,7 +43,6 @@ import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
-import io.github.ptt98hd.totch.core.settings.DefaultBindings
 import io.github.ptt98hd.totch.core.settings.isAvailable
 import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.SectionHeader
@@ -149,17 +148,21 @@ fun GesturesScreen(
     }
 }
 
-/** UI-16: a gesture row with its switch; switched-off and unavailable gestures are dimmed (UI-14). */
+/**
+ * UI-16: a gesture row with its switch; switched-off and unavailable gestures are dimmed (UI-14). FR-U43: unbound
+ * gestures read "Not set"; FR-U44: a gesture or action that cannot run shows why, and its switch is disabled.
+ */
 @Composable
 private fun GestureListItem(row: GestureRow, onClick: () -> Unit, onSwitchChange: (Boolean) -> Unit) {
-    val bound = row.action != Action.None
-    val actionName = if (bound) actionDisplayName(row.action, row.appLabel) else null
+    val actionName = if (row.action != Action.None) actionDisplayName(row.action, row.appLabel) else stringResource(R.string.action_none)
     val packageAction = row.action is Action.LaunchApp || row.action is Action.LaunchShortcut ||
         row.action is Action.LaunchActivity || row.action is Action.ClickTile
     val notInstalled = packageAction && row.appLabel == null
+    val need = row.need
+    val actionBlocked = row.enabled && need != null
     val supporting = when {
-        !row.enabled -> stringResource(R.string.gesture_unavailable)
-        actionName == null -> null
+        !row.enabled -> stringResource(need?.labelRes ?: R.string.gesture_unavailable)
+        need != null -> "$actionName · ${stringResource(need.labelRes)}"
         notInstalled -> "$actionName · ${stringResource(R.string.app_not_installed)}"
         else -> actionName
     }
@@ -167,16 +170,16 @@ private fun GestureListItem(row: GestureRow, onClick: () -> Unit, onSwitchChange
     val contentAlpha by animateFloatAsState(if (row.on) 1f else 0.5f, label = "gestureAlpha")
     TotchListItem(
         headline = stringResource(row.gesture.labelRes),
-        modifier = Modifier.clickable(enabled = row.enabled && row.on, onClick = onClick),
+        modifier = Modifier.clickable(enabled = row.canPick, onClick = onClick),
         supporting = supporting,
-        supportingColor = if (notInstalled && row.on) colors.error else colors.onSurfaceVariant,
+        supportingColor = if (actionBlocked || (notInstalled && row.on)) colors.error else colors.onSurfaceVariant,
         leading = { TonalIcon(row.gesture.icon) },
         trailing = {
             val switchDescription = stringResource(R.string.gesture_switch_cd, stringResource(row.gesture.labelRes))
             Switch(
                 checked = row.on,
                 onCheckedChange = onSwitchChange,
-                enabled = row.enabled,
+                enabled = row.enabled && need == null,
                 modifier = Modifier.semantics { contentDescription = switchDescription },
             )
         },
@@ -194,7 +197,12 @@ private fun GesturesScreenPreview() {
                     GestureSection(
                         group,
                         gestures.map { g ->
-                            val action = if (g == Gesture.TAP) Action.LaunchApp("org.example.camera") else DefaultBindings.getValue(g)
+                            val action = when (g) {
+                                Gesture.TAP -> Action.LaunchApp("org.example.camera")
+                                Gesture.DOUBLE_TAP -> Action.LockScreen
+                                Gesture.SWIPE_RIGHT -> Action.MediaNext
+                                else -> Action.None
+                            }
                             GestureRow(
                                 g, action, appLabel = if (g == Gesture.TAP) "Camera" else null,
                                 enabled = g.isAvailable(false), on = g.isAvailable(false) && action != Action.None && g != Gesture.SWIPE_LEFT,

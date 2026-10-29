@@ -14,12 +14,12 @@
     <!-- Home -->
     <string name="master_switch_cd">Turn notch gestures on or off</string>
     <string name="status_disabled">Gestures are off</string>
-    <string name="status_needs_access">Turn on Accessibility or Shizuku</string>
-    <string name="status_error">Gestures stopped: %1$s</string>
+    <string name="status_needs_access">Needs Accessibility or Shizuku</string>
+    <string name="status_error">Stopped: %1$s</string>
     <string name="status_running">Gestures are on</string>
-    <string name="status_paused_rotation">Gestures are paused in landscape</string>
-    <string name="status_starting">Gestures are turning on…</string>
-    <string name="status_stopping">Gestures are turning off…</string>
+    <string name="status_paused_rotation">Paused in landscape</string>
+    <string name="status_starting">Turning on…</string>
+    <string name="status_stopping">Turning off…</string>
     <string name="advanced_title">Advanced</string>
     <string name="permissions_title">Permissions</string>
     <string name="shizuku_title">Shizuku</string>
@@ -56,7 +56,7 @@
     <string name="group_swipe_hold">Swipe &amp; hold</string>
     <string name="gesture_switch_cd">%1$s on or off</string>
     <string name="gesture_unavailable">Requires Accessibility (turn it on in Home)</string>
-    <string name="action_none">Do nothing</string>
+    <string name="action_none">Not set</string>
     <string name="action_back">Back</string>
     <string name="action_home">Home</string>
     <string name="action_recents">Recent apps</string>
@@ -94,6 +94,7 @@
     <string name="action_airplane">Toggle airplane mode</string>
     <string name="action_location">Toggle location</string>
     <string name="action_needs_dnd">Requires Do Not Disturb access</string>
+    <string name="needs_access">Requires Accessibility or Shizuku</string>
     <string name="action_needs_shizuku">Requires Shizuku</string>
     <string name="tile_needs_shizuku">%1$s · Requires Shizuku</string>
     <string name="app_not_installed">Not installed</string>

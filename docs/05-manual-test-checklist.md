@@ -295,10 +295,15 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-P3 | Ô tìm kiếm các tab picker | Cao 44 dp, bo tròn; gõ → lọc; nút ✕ xóa; Enter ẩn bàn phím | [ ] |
 | MT-U40 | Lướt Home, Gestures, picker (mọi tab), Settings; đặt cỡ chữ hệ thống lớn | Các dòng cao bằng nhau (dòng có / không có mô tả); không mô tả nào xuống dòng 2 (cắt "…") | [ ] |
 | MT-U41 | Top bar mọi màn hình | Bên phải: nút cập nhật rồi nút ly cà phê | [ ] |
-| MT-U42 | Bấm nút cập nhật: đang mới nhất / tắt mạng / có bản mới | "Bạn đang dùng bản mới nhất (1.7.0)" / "Không cập nhật được" + Thử lại / ghi chú + "Cài qua Shizuku…" hoặc "Android sẽ hỏi…" → Cập nhật → thanh tiến độ trong hộp thoại → cài | [ ] |
+| MT-U42 | Bấm nút cập nhật: đang mới nhất / tắt mạng / có bản mới | "Bạn đang dùng bản mới nhất (1.8.0)" / "Không cập nhật được" + Thử lại / ghi chú + "Cài qua Shizuku…" hoặc "Android sẽ hỏi…" → Cập nhật → thanh tiến độ trong hộp thoại → cài | [ ] |
 | MT-U43 | Có bản mới (đã kiểm tra), đóng hộp thoại | Nút cập nhật có chấm báo | [ ] |
 | MT-D10 | Nút ly cà phê, Home › Ủng hộ, Settings › Ủng hộ | Cùng hộp thoại "Mời mình ly cà phê"; "Mời cà phê" mở trình duyệt tới trang ủng hộ | [ ] |
 | MT-H10 | Home | Thứ tự: thẻ Totch, Quyền, Nâng cao (Shizuku, mô tả "· tùy chọn" khi chưa chạy, không tô đỏ), Ủng hộ | [ ] |
+| MT-S30 | (1.8) Cài mới (xóa dữ liệu) rồi mở Gestures; tab Notch | Mọi cử chỉ tắt, mô tả "Chưa đặt"; Nhấn giữ = 300 ms. Cập nhật đè từ 1.7 → giữ nguyên cử chỉ và thời gian đã lưu | [ ] |
+| MT-P10 | (1.8) Picker › System của cử chỉ đang bật › "Chưa đặt" | Dòng "Chưa đặt" ở đầu, trên các nhóm; chọn → sheet đóng, cử chỉ tắt, mô tả "Chưa đặt"; tìm "wifi" → dòng này ẩn | [ ] |
+| MT-P11 | (1.8) Tắt Trợ năng và Shizuku | Gestures: mọi dòng mờ, switch disabled, "Cần Trợ năng hoặc Shizuku" | [ ] |
+| MT-P12 | (1.8) Chỉ Trợ năng (không Shizuku, chưa cấp Không làm phiền): picker mọi tab; cử chỉ đã gán Wi-Fi | Kết nối / Màn hình / Tiles mờ, không chọn được, "Cần Shizuku"; Đổ chuông… mờ, "Cần quyền Không làm phiền"; Ứng dụng / Shortcut / Activity chọn được. Cử chỉ Wi-Fi: switch tắt + disabled, "Wi-Fi · Cần Shizuku" màu đỏ, chạm dòng vẫn mở picker | [ ] |
+| MT-H11 | (1.8) Home, tiếng Việt và tiếng Anh, cỡ chữ lớn: tắt hết quyền / xoay ngang / bật-tắt | Mô tả thẻ Totch luôn một dòng ("Cần Trợ năng hoặc Shizuku", "Tạm dừng khi xoay ngang", "Đang bật…") | [ ] |
 
 ## Lịch sử kết quả
 

@@ -40,18 +40,8 @@ data class ManualRegionDp(
     val topDp: Int = 0,
 )
 
-/** Default bindings per FR-S2; gestures added in v1.1 default to None. */
-val DefaultBindings: Map<Gesture, Action> = mapOf(
-    Gesture.TAP to Action.None,
-    Gesture.DOUBLE_TAP to Action.LockScreen,
-    Gesture.LONG_PRESS to Action.ToggleTorch,
-    Gesture.SWIPE_DOWN to Action.Notifications,
-    Gesture.SWIPE_LEFT to Action.MediaPrevious,
-    Gesture.SWIPE_RIGHT to Action.MediaNext,
-    Gesture.SWIPE_DOWN_HOLD to Action.None,
-    Gesture.SWIPE_LEFT_HOLD to Action.None,
-    Gesture.SWIPE_RIGHT_HOLD to Action.None,
-)
+/** Default bindings per FR-S2 (v1.8): every gesture starts not set, so all are off on first launch. */
+val DefaultBindings: Map<Gesture, Action> = Gesture.entries.associateWith { Action.None }
 
 /** Gestures that keep the finger down after recognition; they fire once (FR-G11). */
 val HoldGestures: Set<Gesture> =
@@ -75,7 +65,7 @@ data class Settings(
     val enabled: Boolean = false,
     val bindings: Map<Gesture, Action> = DefaultBindings,
     val doubleTapMs: Long = 300,
-    val longPressMs: Long = 500,
+    val longPressMs: Long = 300,
     val swipeMinDistanceDp: Int = 40,
     val paddingDp: Int = 8,
     val manualRegion: ManualRegionDp? = null,

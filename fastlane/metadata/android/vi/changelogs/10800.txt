@@ -1,0 +1,4 @@
+* Mọi cử chỉ giờ mặc định "Chưa đặt" (tắt); bảng chọn hành động có mục "Chưa đặt" để bỏ hành động.
+* Nhấn giữ mặc định 300 ms.
+* Cử chỉ và hành động không chạy được (thiếu Trợ năng, Shizuku hoặc quyền Không làm phiền) bị làm mờ kèm lý do.
+* Trang chủ: trạng thái Totch luôn trên một dòng.
