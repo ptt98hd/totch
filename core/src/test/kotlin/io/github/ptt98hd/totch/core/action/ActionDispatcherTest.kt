@@ -99,4 +99,13 @@ class ActionDispatcherTest {
             ActionRequirements.of(Action.LaunchActivity("com.a", "com.a.Main", "Main")),
         )
     }
+
+    @Test fun `AD-10 quick settings tiles run on shizuku only`() = runTest {
+        val tile = Action.ClickTile("com.a", "com.a.Tile", "Tile")
+        assertEquals(setOf(Capability.SHIZUKU), ActionRequirements.of(tile))
+        assertEquals(setOf(Capability.SHIZUKU), ActionRequirements.of(Action.OneHandedMode)) // AD-11
+        val a11y = FakeExecutor(Capability.ACCESSIBILITY)
+        assertEquals(DispatchResult.Failed("unavailable"), ActionDispatcher(listOf(a11y)).dispatch(tile))
+        assertTrue(a11y.executed.isEmpty())
+    }
 }

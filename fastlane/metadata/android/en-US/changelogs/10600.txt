@@ -1,0 +1,4 @@
+* New action: tap an app's Quick Settings tile (Tiles tab in the action picker, needs the tile in Quick Settings).
+* New action: one-handed mode (needs its shortcut in system settings).
+* Self-update: Settings › About › Check for updates downloads the signed APK from GitHub Releases (only when you tap it).
+* Settings: one-line descriptions for the System options; dividers between Notch sliders.

@@ -85,6 +85,7 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ST-24 | (v1.5) `canBlockTouches=true`: `effectiveAction(SWIPE_DOWN, true)` = action đã gán, `isGestureOn(SWIPE_DOWN_HOLD, true)` đúng khi đã gán và không tắt; `toGestureConfig(d, true).holdSwipes` chứa `SWIPE_DOWN_HOLD` khi đã gán. Mặc định (`false`) giữ nguyên ST-12, ST-22 |
 | ST-25 | `Settings().landscapeGestures == false`; JSON v1.4 (không có key) → `false`; `decode(encode(s)) == s` với `landscapeGestures=true` và `LaunchActivity` |
 | ST-26 | `needsTouchBlocking`: false khi `!enabled`, hoặc cả 2 cử chỉ vuốt xuống chưa gán / bị tắt; true khi `enabled` và `SWIPE_DOWN` (hoặc `SWIPE_DOWN_HOLD`) đã gán và bật (DM-15) |
+| ST-27 | (v1.6) `decode(encode(s)) == s` với `ClickTile(pkg, service, label)` và `OneHandedMode` (`"one_handed"`); JSON `{"type":"click_tile",…}` |
 
 ## 3. `SettingsRepository` (`:app`)
 - DataStore Preferences, key `settings_json`.

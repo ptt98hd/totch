@@ -22,7 +22,7 @@ class ShizukuExecutor(
 
     override fun supports(action: Action): Boolean =
         action is Action.LaunchApp || action is Action.LaunchShortcut || action is Action.LaunchActivity ||
-            ShellCommands.of(action) != null
+            action is Action.ClickTile || ShellCommands.of(action) != null
 
     override suspend fun execute(action: Action): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
@@ -30,6 +30,7 @@ class ShizukuExecutor(
                 is Action.LaunchApp -> launchCommand(action.packageName)
                 is Action.LaunchShortcut -> ShellCommands.startIntent(action.intentUri)
                 is Action.LaunchActivity -> ShellCommands.startActivity(action.packageName, action.activityName)
+                is Action.ClickTile -> ShellCommands.clickTile(action.packageName, action.serviceName)
                 else -> ShellCommands.of(action)
             } ?: error("unsupported")
             val service = service.value ?: error("unavailable")

@@ -119,7 +119,7 @@ tham chiếu ID tương ứng.
 | NFR-1 | minSdk 31 (Android 12), targetSdk 36, compileSdk 37 |
 | NFR-2 | Độ trễ từ lúc nhả tay đến lúc thực thi hành động ≤ 100 ms (không tính chờ double-tap) |
 | NFR-3 | CPU khi rảnh ≈ 0: không polling; chỉ xử lý khi có sự kiện input |
-| NFR-4 | Không có quyền INTERNET, không thư viện độc quyền (yêu cầu F-Droid), không tracking |
+| NFR-4 | Không thư viện độc quyền (yêu cầu F-Droid), không tracking. v1.6: có quyền INTERNET **chỉ** cho FR-U27 — mạng chỉ dùng khi người dùng bấm kiểm tra / cập nhật, chỉ tới GitHub (`api.github.com`, `github.com` và CDN tải file của GitHub) — [update §2](specs/update.md) |
 | NFR-5 | Build tái lập (reproducible) bằng Gradle wrapper, JDK 21 (bytecode Java 17) |
 | NFR-6 | Logic lõi (nhận cử chỉ, parse getevent, vùng notch, bindings) là Kotlin thuần, phủ unit test ≥ 90% dòng |
 | NFR-7 | Ngôn ngữ: English (mặc định), Tiếng Việt |
@@ -204,3 +204,13 @@ tham chiếu ID tương ứng.
 | FR-U23 | Màn **Settings**: section **System** lên đầu gồm Haptic feedback (chuyển từ tab Notch), Nhận cử chỉ khi xoay ngang, Khởi động cùng máy; mọi dòng có icon; các dòng trong section ngăn bằng đường kẻ ngang. Tab Notch bỏ section Phản hồi | [ui §3](specs/ui.md) |
 | FR-U24 | Settings: System xếp Start on boot → Haptic feedback → Gestures in landscape; đổi "AMOLED black" thành "Amoled black" và thêm mô tả ngắn (1 dòng); mô tả trong About ngắn gọn (1 dòng), icon cuối dòng mở link là chevron (›) | [ui §3](specs/ui.md) |
 | FR-U25 | Action picker: sheet chạm sát mép dưới top bar; các mục (System, Apps, Shortcuts, Activities, sau này thêm Intents, Settings…) là **hàng chip cuộn ngang** có icon thay cho segmented button — thêm mục không làm hẹp nhãn | [ui §3](specs/ui.md) |
+
+## 13. Phiên bản 1.6
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-U26 | Settings: mỗi dòng của section **System** có mô tả ngắn **một dòng** (không xuống dòng) | [ui §3](specs/ui.md) |
+| FR-A15 | Hành động **Bấm ô Cài đặt nhanh**: chạm một ô (tile) Quick Settings của app (`TileService`) qua Shizuku (`cmd statusbar click-tile`); tab **Tiles** trong picker liệt kê các ô. Chỉ ô đã được thêm vào bảng Cài đặt nhanh mới phản hồi; ô hệ thống dựng sẵn (Wi-Fi, Bluetooth…) không phải `TileService` nên không có | [actions §9](specs/actions.md), [ui §3](specs/ui.md) |
+| FR-U27 | **Tự cập nhật** không cần backend: Settings › About có dòng **Check for updates** → đọc GitHub Release mới nhất, có bản mới → hộp thoại ghi chú phát hành → tải APK đã ký, kiểm SHA-256, cài bằng `PackageInstaller` (hệ thống hỏi xác nhận). Không tự kiểm tra ngầm | [update](specs/update.md), [ui §3](specs/ui.md) |
+| FR-A16 | Hành động **Chế độ một tay** (bật/tắt One-handed mode của Android) qua Shizuku. Android chỉ nhận lệnh khi người dùng đã gán **phím tắt Chế độ một tay** (nút Trợ năng hoặc giữ phím âm lượng); chưa gán → hành động báo lỗi | [actions §10](specs/actions.md) |
+| FR-U28 | Màn **Notch**: các slider trong mỗi section ngăn cách bằng đường kẻ ngang (như Settings, FR-U23) | [ui §3](specs/ui.md) |

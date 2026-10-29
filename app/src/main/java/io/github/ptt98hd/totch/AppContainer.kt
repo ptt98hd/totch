@@ -3,6 +3,7 @@ package io.github.ptt98hd.totch
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
+import io.github.ptt98hd.totch.core.update.Release
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -17,6 +18,8 @@ interface AppContainer {
     val installedApps: InstalledApps
     val appShortcuts: AppShortcuts
     val appActivities: AppActivities
+    val quickSettingsTiles: QuickSettingsTiles
+    val appUpdater: AppUpdater
     val touchArea: TouchArea
 }
 
@@ -100,6 +103,27 @@ data class ActivityEntry(
 interface AppActivities {
     /** Exported activities without a required permission, of launchable apps; unordered. */
     suspend fun activities(): List<ActivityEntry>
+}
+
+/** A Quick Settings tile (`TileService`) of another app (actions spec §9); [name] is the service class name. */
+data class TileEntry(
+    val packageName: String,
+    val appLabel: String,
+    val name: String,
+    val label: String,
+)
+
+interface QuickSettingsTiles {
+    /** Exported tile services guarded by `BIND_QUICK_SETTINGS_TILE`, except Totch's own; unordered. */
+    suspend fun tiles(): List<TileEntry>
+}
+
+/** Self-update from GitHub Releases (update spec §4). */
+interface AppUpdater {
+    /** Latest usable release; throws on network failure, null when there is none (UP-3). */
+    suspend fun latestRelease(): Release?
+    /** Downloads, verifies (UP-8) and hands the APK to the system installer; progress 0..1; false on any failure. */
+    suspend fun downloadAndInstall(release: Release, onProgress: (Float) -> Unit): Boolean
 }
 
 /** The highlighted touch area in screen pixels: [notch] (width × height) inside [touch] (notch + padding). */

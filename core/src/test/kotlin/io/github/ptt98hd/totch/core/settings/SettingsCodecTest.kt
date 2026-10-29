@@ -153,4 +153,15 @@ class SettingsCodecTest {
         val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
         assertEquals("launch_activity", json.getValue("bindings").jsonObject.getValue("TAP").jsonObject.getValue("type").jsonPrimitive.content)
     }
+
+    @Test fun `ST-27 quick settings tiles round trip`() {
+        val s = Settings(
+            bindings = DefaultBindings + (Gesture.TAP to Action.ClickTile("com.a", "com.a.qs.Tile", "Tile")) +
+                (Gesture.LONG_PRESS to Action.OneHandedMode),
+        )
+        assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
+        val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
+        assertEquals("click_tile", json.getValue("bindings").jsonObject.getValue("TAP").jsonObject.getValue("type").jsonPrimitive.content)
+        assertEquals("one_handed", json.getValue("bindings").jsonObject.getValue("LONG_PRESS").jsonObject.getValue("type").jsonPrimitive.content)
+    }
 }

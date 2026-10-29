@@ -36,7 +36,9 @@
     <string name="platform_action_volume_panel">Volume panel</string>
     <string name="platform_action_launch_app">Open app</string>
     <string name="platform_action_assistant">Assistant</string>
+    <string name="platform_action_one_handed">One-handed mode</string>
     <string name="platform_action_shortcut">Open shortcut</string>
     <string name="platform_action_activity">Open activity</string>
+    <string name="platform_action_tile">Tap Quick Settings tile</string>
     <string name="media_listener_label">Totch media control</string>
 </resources>

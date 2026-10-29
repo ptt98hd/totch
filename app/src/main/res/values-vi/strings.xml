@@ -72,9 +72,12 @@
     <string name="action_open_app">Mở ứng dụng…</string>
     <string name="action_launch_app">Mở %1$s</string>
     <string name="action_assistant">Gọi trợ lý</string>
+    <string name="action_one_handed">Chế độ một tay</string>
+    <string name="action_one_handed_hint">Cần bật phím tắt Chế độ một tay</string>
     <string name="action_open_shortcut">Mở shortcut…</string>
     <string name="action_launch_shortcut">%1$s: %2$s</string>
     <string name="action_open_activity">Mở activity…</string>
+    <string name="action_click_tile">Bấm ô Cài đặt nhanh…</string>
     <string name="app_not_installed">Chưa cài đặt</string>
     <string name="group_system">Hệ thống</string>
     <string name="group_media">Media</string>
@@ -88,6 +91,11 @@
     <string name="tab_apps">Ứng dụng</string>
     <string name="tab_shortcuts">Shortcut</string>
     <string name="tab_activities">Activity</string>
+    <string name="tab_tiles">Ô nhanh</string>
+    <string name="tile_search">Tìm ô cài đặt nhanh</string>
+    <string name="tile_empty">Không có ô nào khớp “%1$s”</string>
+    <string name="tile_none">Không tìm thấy ô Cài đặt nhanh nào</string>
+    <string name="tile_hint">Chỉ ô đã thêm vào Cài đặt nhanh mới phản hồi</string>
     <string name="activity_search">Tìm activity</string>
     <string name="activity_empty">Không có activity nào khớp “%1$s”</string>
     <string name="activity_none">Không tìm thấy activity nào</string>
@@ -130,10 +138,25 @@
     <string name="section_system">Hệ thống</string>
     <string name="setting_start_on_boot">Khởi động cùng máy</string>
     <string name="setting_landscape">Nhận cử chỉ khi xoay ngang</string>
+    <string name="setting_start_on_boot_summary">Bật cử chỉ sau khi khởi động lại</string>
+    <string name="setting_haptics_summary">Rung khi thực hiện cử chỉ</string>
+    <string name="setting_landscape_summary">Vẫn nhận chạm ở notch khi xoay</string>
     <string name="section_about">Giới thiệu</string>
 
     <!-- About (last section of Settings) -->
     <string name="about_version">Phiên bản %1$s</string>
+    <string name="update_title">Kiểm tra cập nhật</string>
+    <string name="update_idle">Tải bản mới nhất từ GitHub</string>
+    <string name="update_checking">Đang kiểm tra…</string>
+    <string name="update_up_to_date">Bạn đang dùng bản mới nhất</string>
+    <string name="update_available">Đã có bản %1$s</string>
+    <string name="update_downloading">Đang tải… %1$d%%</string>
+    <string name="update_installing">Xác nhận để cài đặt</string>
+    <string name="update_failed">Không cập nhật được, chạm để thử lại</string>
+    <string name="update_dialog_title">Totch %1$s</string>
+    <string name="update_action">Cập nhật</string>
+    <string name="update_later">Để sau</string>
+    <string name="update_install_failed">Cập nhật thất bại</string>
     <string name="about_license_title">Giấy phép</string>
     <string name="about_source_title">Mã nguồn</string>
     <string name="about_credits_title">Ghi công</string>

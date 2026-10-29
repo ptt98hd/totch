@@ -1,6 +1,6 @@
 # Spec: Giao diện (Material 3)
 
-Yêu cầu: FR-U1…FR-U23, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S6…FR-S9, FR-R5…FR-R7, FR-D9 · Module: `:app` · Package: `io.github.ptt98hd.totch.ui`
+Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S6…FR-S9, FR-R5…FR-R7, FR-D9 · Module: `:app` · Package: `io.github.ptt98hd.totch.ui`
 
 ## 1. Nguyên tắc
 - Jetpack Compose + Material 3, `dynamicLightColorScheme/dynamicDarkColorScheme`, edge-to-edge.
@@ -116,10 +116,11 @@ mục mới như Intents, Settings… mà nhãn không bị hẹp lại). Nội 
 
 | Mục | Nội dung |
 |---|---|
-| System | Nhóm System (Back, Home, Recents, Lock, Screenshot, Notifications, Quick settings, Assistant, Torch) và Media (Play/pause, Previous, Next, Volume up/down, Volume panel). **Không** có ô tìm kiếm (v1.4), không có "Không làm gì" |
+| System | Nhóm System (Back, Home, Recents, Lock, Screenshot, Notifications, Quick settings, Assistant, One-handed mode — v1.6, dòng phụ "Needs the One-handed mode shortcut", Torch) và Media (Play/pause, Previous, Next, Volume up/down, Volume panel). **Không** có ô tìm kiếm (v1.4), không có "Không làm gì" |
 | Applications | Ô tìm kiếm + danh sách app (icon, tên, radio) |
 | Shortcuts | Ô tìm kiếm + danh sách **app** như tab Applications; chạm app → mở rộng/thu gọn, shortcut của app hiện ngay bên dưới (thụt vào, icon `SubdirectoryArrowRight`, nhãn, radio). Mặc định thu gọn tất cả; khi đang tìm kiếm, mọi app khớp đều mở rộng |
 | Activities | (v1.5, FR-A14) Giống hệt Shortcuts nhưng dòng con là activity: icon activity, nhãn + dòng phụ tên lớp rút gọn, radio. Trạng thái mở rộng riêng (`expandedActivities`) |
+| Tiles | (v1.6, FR-A15) Ô tìm kiếm + gợi ý một dòng "Chỉ ô đã thêm vào Cài đặt nhanh mới phản hồi" + danh sách phẳng các ô (icon app, nhãn ô + dòng phụ tên app, radio), một card (UI-26) |
 
 Mỗi nhóm (System, Media, danh sách app, danh sách app + shortcut) hiển thị như nhóm cử chỉ: **một card bo góc**, các
 dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọn → lưu binding, **bật** cử chỉ (`withBinding`) và
@@ -129,13 +130,14 @@ dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọ
 |---|---|
 | UI-10 | Chọn hành động (bất kỳ tab) → `SettingsRepository.update` với binding mới và g bị bỏ khỏi `disabledGestures`, `finished=true` |
 | UI-11 | Tab Ứng dụng lọc không phân biệt hoa thường theo tên/package, sắp xếp theo tên |
-| UI-20 | Tab ban đầu = tab chứa hành động hiện tại (LaunchApp → Applications, LaunchShortcut → Shortcuts, LaunchActivity → Activities, còn lại → System) |
+| UI-20 | Tab ban đầu = tab chứa hành động hiện tại (LaunchApp → Applications, LaunchShortcut → Shortcuts, LaunchActivity → Activities, ClickTile → Tiles, còn lại → System) |
 | UI-21 | Tab Shortcut dùng `groupShortcuts` (SH-1, SH-2); chọn → `LaunchShortcut(pkg, id, label, intentUri)` |
 | UI-22 | App và shortcut chỉ được tải lần đầu mở tab tương ứng (hoặc tab ban đầu) |
 | UI-23 | `ActionCatalog.groups` không chứa `None`; nhóm Media có `VolumePanel` sau `VolumeDown` |
 | ~~UI-24~~ | Bỏ ở v1.4: không còn tìm kiếm hành động |
 | UI-25 | `expanded` ban đầu rỗng; `toggleExpanded(pkg)` thêm/bớt pkg; `isExpanded(pkg)` = đang tìm kiếm (query không rỗng) hoặc pkg ∈ `expanded` |
 | UI-27 | (v1.5) Tab Activities dùng `groupActivities` (AC-1, AC-2), tải lần đầu mở tab (như UI-22); `toggleActivityApp(pkg)`/`isActivityAppExpanded(pkg)` như UI-25; chọn → `LaunchActivity(pkg, activity, label)` |
+| UI-28 | (v1.6) Tab Tiles dùng `filterTiles` (QT-1), tải lần đầu mở tab (như UI-22); chọn → `ClickTile(pkg, service, label)` |
 | UI-26 | Mỗi nhóm là một card bo góc (`Modifier.groupItem(index, count)`: bo góc trên ở dòng đầu, góc dưới ở dòng cuối, đường kẻ trên mỗi dòng trừ dòng đầu) |
 
 ### Notch (FR-U12, FR-U17, FR-U18, FR-S9, FR-R5…FR-R7) — tab thứ 3
@@ -144,6 +146,8 @@ chuyển sang Settings, bỏ section Phản hồi):
 1. **Độ nhạy**: Double tap, Long press, Swipe.
 2. **Vị trí**: Horizontal (%), Vertical (dp, tính từ cạnh trên).
 3. **Kích thước**: Width (dp), Height (dp), Padding (dp).
+
+v1.6 (FR-U28): các slider trong một section ngăn bằng `RowDivider` (thụt lề hai bên như Settings).
 
 Mỗi slider (FR-U18): hàng 1 là nhãn ngắn + giá trị; hàng 2 là nút **−**, thanh slider, nút **+**, nút reset. Kéo
 slider bắt vào nấc (bội số của bước, UI-35) nhưng **không vẽ vạch**; nút − / + đổi đúng một đơn vị (UI-36), lưu ngay,
@@ -184,10 +188,18 @@ Giá trị đã lưu lệch nấc (vd. vùng tự phát hiện rộng 87 dp) v�
 Các section, theo thứ tự (v1.5):
 1. **Hệ thống**: Start on boot (icon nguồn), Haptic feedback (icon rung), Gestures in landscape (icon xoay màn hình —
    FR-R8) — đều là switch (thứ tự FR-U24).
+   v1.6 (FR-U26): mỗi dòng có mô tả ngắn một dòng:
+
+   | Dòng | en | vi |
+   |---|---|---|
+   | Start on boot | Turn gestures on after restart | Bật cử chỉ sau khi khởi động lại |
+   | Haptic feedback | Vibrate when a gesture runs | Rung khi thực hiện cử chỉ |
+   | Gestures in landscape | Keep the notch active when rotated | Vẫn nhận chạm ở notch khi xoay |
 2. **Giao diện**: Theme (icon bảng màu; System / Light / Dark — **dialog chọn** như Ngôn ngữ), Amoled black (icon độ
    tương phản, switch, mô tả "Pure black dark theme"), Ngôn ngữ (icon ngôn ngữ; System / English / Tiếng Việt — dialog
    chọn). Theme và Ngôn ngữ có **chevron** (›) ở cuối dòng.
-3. **Giới thiệu** (cuối cùng): phiên bản, license, mã nguồn (`github.com/ptt98hd/totch`), credit ("Shizuku by
+3. **Giới thiệu** (cuối cùng): phiên bản, **Check for updates** (v1.6, FR-U27 — icon cập nhật hệ thống, mô tả theo
+   trạng thái, xem [update](update.md)), license, mã nguồn (`github.com/ptt98hd/totch`), credit ("Shizuku by
    RikkaApps"). Dòng mở link có **chevron** (›) ở cuối.
 
 - Mọi mô tả (dòng phụ) chỉ một dòng (`maxLines = 1`, cắt bằng "…" nếu vẫn quá dài).
@@ -199,6 +211,7 @@ Các section, theo thứ tự (v1.5):
 | ID | Tiêu chí |
 |---|---|
 | UI-32 | Setter theme / amoled / language / startOnBoot / haptics / landscapeGestures lưu đúng field |
+| UI-37 | (v1.6) Dòng Check for updates hiển thị mô tả theo `UpdateState` (UP-6); bấm khi `Available` → hộp thoại tên bản + ghi chú phát hành, nút **Update** / **Later** |
 
 ### Giao diện & ngôn ngữ (FR-S6, FR-S7)
 | ID | Tiêu chí |

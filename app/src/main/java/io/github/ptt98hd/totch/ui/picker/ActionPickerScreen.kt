@@ -73,6 +73,7 @@ import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.AppInfo
 import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.ShortcutEntry
+import io.github.ptt98hd.totch.TileEntry
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.ui.common.ActionCatalog
@@ -119,6 +120,8 @@ fun ActionPickerSheet(container: AppContainer, gesture: Gesture, onDismiss: () -
             onSelectActivity = vm::selectActivity,
             onActivityQuery = vm::setActivityQuery,
             onToggleActivityApp = vm::toggleActivityApp,
+            onSelectTile = vm::selectTile,
+            onTileQuery = vm::setTileQuery,
         ),
     )
 }
@@ -135,6 +138,8 @@ data class PickerCallbacks(
     val onSelectActivity: (ActivityEntry) -> Unit = {},
     val onActivityQuery: (String) -> Unit = {},
     val onToggleActivityApp: (String) -> Unit = {},
+    val onSelectTile: (TileEntry) -> Unit = {},
+    val onTileQuery: (String) -> Unit = {},
 )
 
 private val PickerTab.icon: ImageVector
@@ -143,6 +148,7 @@ private val PickerTab.icon: ImageVector
         PickerTab.APPS -> Icons.Outlined.Apps
         PickerTab.SHORTCUTS -> ShortcutIcon
         PickerTab.ACTIVITIES -> ActivityIcon
+        PickerTab.TILES -> TileIcon
     }
 
 /** FR-U25: the sections as a horizontally scrolling chip row, so new sections never squeeze the labels. */
@@ -179,6 +185,7 @@ private val PickerTab.labelRes: Int
         PickerTab.APPS -> R.string.tab_apps
         PickerTab.SHORTCUTS -> R.string.tab_shortcuts
         PickerTab.ACTIVITIES -> R.string.tab_activities
+        PickerTab.TILES -> R.string.tab_tiles
     }
 
 /** A row of the Shortcuts or Activities tab: an app (expandable) or one of its shortcuts / activities. */
@@ -198,7 +205,7 @@ private sealed interface ExpandableRow {
     }
 }
 
-/** FR-U9, FR-U20, FR-U25, FR-A14: action chooser with chip sections (System / Apps / Shortcuts / Activities). */
+/** FR-U9, FR-U20, FR-U25, FR-A14, FR-A15: action chooser with chip sections (System / Apps / Shortcuts / Activities / Tiles). */
 @Composable
 fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxSize().imePadding()) {
@@ -262,6 +269,19 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                             stringResource(R.string.activity_empty, state.activityQuery.trim())
                         },
                     ) { activitiesTab(state, callbacks) }
+                    PickerTab.TILES -> SearchableList(
+                        query = state.tileQuery,
+                        onQuery = callbacks.onTileQuery,
+                        placeholder = stringResource(R.string.tile_search),
+                        loading = state.tilesLoading,
+                        empty = state.tiles.isEmpty(),
+                        emptyText = if (state.tileQuery.isBlank()) {
+                            stringResource(R.string.tile_none)
+                        } else {
+                            stringResource(R.string.tile_empty, state.tileQuery.trim())
+                        },
+                        hint = stringResource(R.string.tile_hint),
+                    ) { tilesTab(state, callbacks.onSelectTile) }
                 }
             }
         }
@@ -282,6 +302,7 @@ private fun LazyListScope.systemTab(state: ActionPickerUiState, onSelect: (Actio
                 onClick = { onSelect(action) },
                 leading = { TonalIcon(action.icon) },
                 title = stringResource(action.labelRes),
+                supporting = if (action == Action.OneHandedMode) stringResource(R.string.action_one_handed_hint) else null,
                 modifier = Modifier.groupItem(index, group.actions.size),
             )
         }
@@ -348,6 +369,21 @@ private fun LazyListScope.activitiesTab(state: ActionPickerUiState, callbacks: P
     }
 }
 
+/** UI-28: one card of tiles; each shows its app below the tile label. */
+private fun LazyListScope.tilesTab(state: ActionPickerUiState, onSelectTile: (TileEntry) -> Unit) {
+    val current = state.current as? Action.ClickTile
+    itemsIndexed(state.tiles, key = { _, tile -> "${tile.packageName}/${tile.name}" }) { index, tile ->
+        Choice(
+            selected = current?.packageName == tile.packageName && current.serviceName == tile.name,
+            onClick = { onSelectTile(tile) },
+            leading = { AppIcon(tile.packageName) },
+            title = tile.label,
+            supporting = tile.appLabel,
+            modifier = Modifier.groupItem(index, state.tiles.size),
+        )
+    }
+}
+
 /** UI-26: [rows] as one rounded card; [content] gets the row's background modifier. */
 private fun LazyListScope.expandableRows(
     rows: List<ExpandableRow>,
@@ -360,6 +396,7 @@ private fun LazyListScope.expandableRows(
 
 private val ShortcutIcon = Action.LaunchShortcut("", "", "", "").icon
 private val ActivityIcon = Action.LaunchActivity("", "", "").icon
+private val TileIcon = Action.ClickTile("", "", "").icon
 
 @Composable
 private fun AppHeader(row: ExpandableRow.App, modifier: Modifier, onClick: () -> Unit) {
@@ -404,6 +441,7 @@ private fun SearchableList(
     loading: Boolean,
     empty: Boolean,
     emptyText: String,
+    hint: String? = null,
     content: LazyListScope.() -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
@@ -431,6 +469,16 @@ private fun SearchableList(
         windowInsets = WindowInsets(0),
         modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(bottom = 12.dp),
     ) {}
+    if (hint != null) {
+        Text(
+            hint,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = Gutter).padding(bottom = 12.dp),
+        )
+    }
     when {
         loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         empty -> Box(Modifier.fillMaxSize().padding(Gutter), contentAlignment = Alignment.Center) {

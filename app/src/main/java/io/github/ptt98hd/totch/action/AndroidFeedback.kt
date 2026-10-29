@@ -55,6 +55,7 @@ class AndroidFeedback(private val context: Context, private val apps: InstalledA
             is Action.LaunchApp -> apps.labelOf(action.packageName) ?: action.packageName
             is Action.LaunchShortcut -> action.label
             is Action.LaunchActivity -> action.label
+            is Action.ClickTile -> action.label
             else -> context.getString(labelOf(action))
         }
         main.post { Toast.makeText(context, context.getString(R.string.platform_action_failed, name), Toast.LENGTH_SHORT).show() }
@@ -79,8 +80,10 @@ class AndroidFeedback(private val context: Context, private val apps: InstalledA
         Action.VolumePanel -> R.string.platform_action_volume_panel
         is Action.LaunchApp -> R.string.platform_action_launch_app
         Action.Assistant -> R.string.platform_action_assistant
+        Action.OneHandedMode -> R.string.platform_action_one_handed
         is Action.LaunchShortcut -> R.string.platform_action_shortcut
         is Action.LaunchActivity -> R.string.platform_action_activity
+        is Action.ClickTile -> R.string.platform_action_tile
     }
 
     private companion object {
