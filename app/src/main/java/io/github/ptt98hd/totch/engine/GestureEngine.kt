@@ -19,8 +19,8 @@ import kotlin.math.abs
 
 /** User-visible feedback after a dispatch (FR-A9, FR-A10). */
 interface EngineFeedback {
-    /** Action performed and haptics are enabled. */
-    fun onPerformed()
+    /** A gesture with an action was recognized and haptics are enabled; called before dispatch (HF-4). */
+    fun onRecognized()
     fun onFailed(action: Action, reason: String)
 }
 
@@ -65,11 +65,8 @@ class GestureEngine(
     init {
         scope.launch {
             for (action in actions) {
-                when (val r = dispatch(action)) {
-                    DispatchResult.Ok -> if (settings.haptics) feedback.onPerformed()
-                    is DispatchResult.Failed -> feedback.onFailed(action, r.reason)
-                    DispatchResult.Skipped -> Unit
-                }
+                val r = dispatch(action)
+                if (r is DispatchResult.Failed) feedback.onFailed(action, r.reason)
             }
         }
     }
@@ -117,7 +114,10 @@ class GestureEngine(
     private fun emit(gestures: List<Gesture>) {
         for (g in gestures) {
             val action = settings.effectiveAction(g, canBlockTouches)
-            if (action != Action.None) actions.trySend(action)
+            if (action == Action.None) continue
+            // EN-13: vibrate now; the action may be slow or still queued behind another one.
+            if (settings.haptics) feedback.onRecognized()
+            actions.trySend(action)
         }
     }
 

@@ -8,6 +8,7 @@ import io.github.ptt98hd.totch.core.model.TouchAction
 import io.github.ptt98hd.totch.core.model.TouchEvent
 import io.github.ptt98hd.totch.core.settings.DefaultBindings
 import io.github.ptt98hd.totch.core.settings.Settings
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -25,7 +26,7 @@ class GestureEngineTest {
     private val failures = mutableListOf<Action>()
 
     private val feedback = object : EngineFeedback {
-        override fun onPerformed() { haptics++ }
+        override fun onRecognized() { haptics++ }
         override fun onFailed(action: Action, reason: String) { failures += action }
     }
 
@@ -130,14 +131,14 @@ class GestureEngineTest {
     }
 
     @Test
-    fun `EN-6 failed dispatch reports failure and does not vibrate`() = runTest {
+    fun `EN-6 failed dispatch reports failure after vibrating`() = runTest {
         result = DispatchResult.Failed("unavailable")
         val e = engine()
         e.onTouch(down(0))
         advanceTimeBy(500)
         runCurrent()
         assertEquals(listOf<Action>(Action.ToggleTorch), failures)
-        assertEquals(0, haptics)
+        assertEquals(1, haptics)
     }
 
     @Test
@@ -231,5 +232,34 @@ class GestureEngineTest {
         advanceTimeBy(1000)
         runCurrent()
         assertEquals(1, dispatched.size)
+    }
+
+    @Test
+    fun `EN-13 vibrates on recognition without waiting for a slow dispatch`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val e = GestureEngine(
+            scope = backgroundScope,
+            clock = { testScheduler.currentTime },
+            density = 2f,
+            dispatch = { dispatched += it; gate.await(); DispatchResult.Ok },
+            feedback = feedback,
+        ).apply {
+            updateSettings(Settings(enabled = true).bind(Gesture.TAP to Action.Home, Gesture.DOUBLE_TAP to Action.None))
+            region = this@GestureEngineTest.region
+        }
+        e.onTouch(down(0))
+        e.onTouch(up(50))
+        runCurrent()
+        assertEquals(listOf<Action>(Action.Home), dispatched)
+        assertEquals(1, haptics, "vibrates while the action is still running")
+        e.onTouch(down(100))
+        e.onTouch(up(150))
+        runCurrent()
+        assertEquals(1, dispatched.size, "second action waits in the queue")
+        assertEquals(2, haptics, "queued gesture vibrates immediately too")
+        gate.complete(Unit)
+        runCurrent()
+        assertEquals(2, dispatched.size)
+        assertEquals(2, haptics)
     }
 }

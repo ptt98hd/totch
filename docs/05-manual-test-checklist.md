@@ -207,7 +207,7 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 
 ## 11. v1.5 — activities, chặn chạm bằng Trợ năng, xoay ngang
 
-| ID | Bước | Kỳ vọng | Kết quả |
+| ID | Kịch bản | Kỳ vọng | KQ |
 |---|---|---|---|
 | MT-A1 | Bật Trợ năng, gán Swipe down → Thông báo, vuốt xuống tại notch | Dòng Swipe down bấm được; vuốt xuống tại notch **không** kéo thanh thông báo của hệ thống mà chạy hành động đúng 1 lần; vuốt xuống ngoài notch vẫn kéo thanh thông báo | [ ] |
 | MT-A2 | Tắt Trợ năng | Swipe down / Swipe down & hold mờ lại, nhãn "Requires Accessibility"; vuốt xuống ở notch kéo thanh thông báo như cũ | [ ] |
@@ -249,6 +249,16 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-P1 | Home › Install updates: bật (Shizuku sẵn sàng) | Granted; Cài đặt › Cài ứng dụng không rõ nguồn gốc của Totch = cho phép | [ ] |
 | MT-P2 | Tắt Install updates | Hộp thoại xác nhận; đồng ý → Totch đóng rồi tự mở lại, "Not granted" | [ ] |
 | MT-SP1 | Mở app từ launcher (cold start), sáng và tối | Splash hiện icon app, mờ dần khi vào Home, không có khung trống | [ ] |
+
+## 14. v1.6.2 — rung tức thì, icon lỗ đen
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-H1 | Gán hành động chậm qua Shizuku (Screenshot, Chế độ một tay, bấm ô Cài đặt nhanh) rồi thực hiện cử chỉ | Rung ngay lúc nhấc ngón / đủ thời gian giữ, không chờ hành động xong | [ ] |
+| MT-H2 | Gán hành động chắc chắn lỗi (ví dụ app đã gỡ) | Vẫn rung, rồi toast "Không thể thực hiện" | [ ] |
+| MT-I1 | Icon ở launcher, splash, Cài đặt › Ứng dụng | Hình lỗ đen trên nền tím than, không bị cắt ở mọi hình mask | [ ] |
+| MT-I2 | Bật Themed icons (Android 13+) | Lỗ đen đơn sắc theo theme, rõ nét | [ ] |
+| MT-I3 | Icon thông báo thường trực / thông báo cập nhật | Hình lỗ đen đơn sắc, không phải khối trắng | [ ] |
 
 ## Lịch sử kết quả
 

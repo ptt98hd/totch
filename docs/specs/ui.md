@@ -227,10 +227,11 @@ Các section, theo thứ tự (v1.5):
 | LG-2 | Android 13+: áp dụng bằng `LocaleManager.setApplicationLocales` (có `locales_config.xml` → hiện trong cài đặt ngôn ngữ app của hệ thống); Android 12: bọc `Context` trong `attachBaseContext` của Activity/Application + `recreate()` |
 | LG-3 | Android 13+: nếu người dùng đổi ngôn ngữ app trong cài đặt hệ thống, lần mở app sau `language` trong Settings được đồng bộ theo hệ thống |
 
-### Icon (FR-U11)
-Adaptive icon theo ảnh tham khảo: màn hình điện thoại bo góc, notch dạng viên thuốc, các dải sóng toả xuống
-từ notch, vòng chạm và bàn tay chỉ. Màu Monet (`system_accent*`) → đổi theo hình nền; có layer `monochrome`
-cho themed icon Android 13+. Icon thông báo giữ dạng đơn sắc.
+### Icon (v1.6.2 — FR-U32, thay FR-U11)
+Adaptive icon **lỗ đen**: nền `#17153F` (không gian) với vài ngôi sao `#FFB54D`; foreground là chân trời sự kiện
+`#05040F` với vòng sáng thấu kính hấp dẫn và đĩa bồi tụ `#FFB54D` cắt ngang, nghiêng −10°, nằm trong vùng an toàn
+66 dp. Màu cố định (không còn Monet). Layer `monochrome` (vòng sáng + đĩa) cho themed icon Android 13+. Icon thông
+báo `ic_stat_totch` là cùng hình đơn sắc; `fastlane/.../images/icon.png` là bản 512×512. Nguồn SVG ở `scripts/icon/`.
 
 ### Splash screen (v1.6.1 — FR-U31)
 Splash mặc định của Android 12+ (launcher icon trên nền cửa sổ, không có icon động riêng). `MainActivity` giữ splash
