@@ -68,11 +68,12 @@ internal fun permissionsFor(r: Requirements, notificationPermissionRequired: Boo
     if (notificationPermissionRequired) add(PermissionItem(Permission.NOTIFICATIONS, r.notificationsGranted))
     add(PermissionItem(Permission.MEDIA_ACCESS, r.mediaAccessGranted))
     add(PermissionItem(Permission.BATTERY, r.batteryUnrestricted))
+    add(PermissionItem(Permission.INSTALL_UPDATES, r.installUpdatesAllowed))
 }
 
-/** UI-53: revoking notifications restarts Totch (FR-D10), so it is confirmed first. */
+/** UI-53: revoking notifications or update installs restarts Totch (FR-D10, FR-D11), so it is confirmed first. */
 fun needsConfirmation(permission: Permission, granted: Boolean): Boolean =
-    permission == Permission.NOTIFICATIONS && !granted
+    !granted && (permission == Permission.NOTIFICATIONS || permission == Permission.INSTALL_UPDATES)
 
 class HomeViewModel(
     private val settingsRepository: SettingsRepository,

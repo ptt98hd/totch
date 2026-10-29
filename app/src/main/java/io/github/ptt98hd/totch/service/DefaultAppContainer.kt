@@ -19,6 +19,9 @@ import io.github.ptt98hd.totch.action.PackageManagerAppShortcuts
 import io.github.ptt98hd.totch.action.PackageManagerInstalledApps
 import io.github.ptt98hd.totch.action.PackageManagerQuickSettingsTiles
 import io.github.ptt98hd.totch.update.GitHubAppUpdater
+import io.github.ptt98hd.totch.update.UpdateController
+import io.github.ptt98hd.totch.update.UpdateScheduler
+import io.github.ptt98hd.totch.BuildConfig
 import io.github.ptt98hd.totch.QuickSettingsTiles
 import io.github.ptt98hd.totch.AppUpdater
 import io.github.ptt98hd.totch.core.action.ActionDispatcher
@@ -78,7 +81,17 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     val pipeline: ShizukuTouchPipeline = ShizukuTouchPipeline(app, shizuku, display.state, onTouch = { engine.onTouch(it) }, onReset = { engine.reset() })
 
     private val dispatcher = ActionDispatcher(
-        listOf(localExecutor, AccessibilityExecutor(accessibility), ShizukuExecutor(pipeline.service, app.packageManager)),
+        listOf(
+            localExecutor,
+            AccessibilityExecutor(accessibility),
+            ShizukuExecutor(
+                pipeline.service,
+                app.packageManager,
+                display = { display.state.value },
+                oneHandedMethod = { settings.value.oneHandedMethod },
+                rememberOneHandedMethod = { method -> settingsRepository.update { it.copy(oneHandedMethod = method) } },
+            ),
+        ),
     )
 
     val engine: GestureEngine = GestureEngine(
@@ -111,6 +124,7 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     override val appActivities: AppActivities = PackageManagerAppActivities(app.packageManager)
     override val quickSettingsTiles: QuickSettingsTiles = PackageManagerQuickSettingsTiles(app.packageManager, app.packageName)
     override val appUpdater: AppUpdater = GitHubAppUpdater(app)
+    override val updates = UpdateController(appUpdater, BuildConfig.VERSION_NAME, scope)
 
     init {
         scope.launch { combine(settings, display.state) { s, d -> s to d.density }.collect { (s, d) -> engine.updateSettings(s, d) } }
@@ -118,6 +132,7 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
         scope.launch { accessibility.service.map { it != null }.distinctUntilChanged().collect { engine.canBlockTouches = it } }
         scope.launch { localExecutor.warmUp() }
         scope.launch { syncLanguage() }
+        scope.launch { settingsRepository.settings.map { it.updateInterval }.distinctUntilChanged().collect { UpdateScheduler.apply(app, it) } } // UP-11
         // Repository flow (not the defaulted StateFlow) so a sticky restart is never stopped by a placeholder value.
         scope.launch {
             settingsRepository.settings

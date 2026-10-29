@@ -93,7 +93,10 @@ class HomeViewModelTest {
     @Test
     fun `UI-51 permissions are listed in order with their granted state`() = runTest {
         val sys = FakeSystemStatus(
-            Requirements(accessibilityEnabled = true, notificationsGranted = false, mediaAccessGranted = true, batteryUnrestricted = false),
+            Requirements(
+                accessibilityEnabled = true, notificationsGranted = false, mediaAccessGranted = true,
+                batteryUnrestricted = false, installUpdatesAllowed = true,
+            ),
         )
         vm(sys = sys).state.test {
             assertEquals(
@@ -102,6 +105,7 @@ class HomeViewModelTest {
                     PermissionItem(Permission.NOTIFICATIONS, granted = false),
                     PermissionItem(Permission.MEDIA_ACCESS, granted = true),
                     PermissionItem(Permission.BATTERY, granted = false),
+                    PermissionItem(Permission.INSTALL_UPDATES, granted = true),
                 ),
                 expectMostRecentItem().permissions,
             )
@@ -157,8 +161,10 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `UI-53 only switching notifications off asks for confirmation`() {
+    fun `UI-53 only switching notifications or install updates off asks for confirmation`() {
         assertTrue(needsConfirmation(Permission.NOTIFICATIONS, granted = false))
+        assertTrue(needsConfirmation(Permission.INSTALL_UPDATES, granted = false))
+        assertFalse(needsConfirmation(Permission.INSTALL_UPDATES, granted = true))
         assertFalse(needsConfirmation(Permission.NOTIFICATIONS, granted = true))
         assertFalse(needsConfirmation(Permission.ACCESSIBILITY, granted = false))
         assertFalse(needsConfirmation(Permission.BATTERY, granted = false))

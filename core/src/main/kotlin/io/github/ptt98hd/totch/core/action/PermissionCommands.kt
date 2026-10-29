@@ -43,9 +43,20 @@ object PermissionCommands {
      * PC-5: revoking a runtime permission kills the app, so the revoke runs detached in its own session (it outlives
      * the Shizuku user service) after a short delay, then reopens [activity]. `null` for unsafe names.
      */
-    fun revokeNotificationsAndRestart(packageName: String, activity: String): String? {
+    fun revokeNotificationsAndRestart(packageName: String, activity: String): String? =
+        detachedThenRestart(packageName, activity, "pm revoke $packageName android.permission.POST_NOTIFICATIONS")
+
+    /** PC-6: "Install unknown apps" for the self-update (FR-D11). */
+    fun allowInstallPackages(packageName: String): String =
+        "appops set ${quote(packageName)} REQUEST_INSTALL_PACKAGES allow"
+
+    /** PC-7: denying the app-op also kills the app, so it is detached like [revokeNotificationsAndRestart]. */
+    fun denyInstallPackagesAndRestart(packageName: String, activity: String): String? =
+        detachedThenRestart(packageName, activity, "appops set $packageName REQUEST_INSTALL_PACKAGES deny")
+
+    private fun detachedThenRestart(packageName: String, activity: String, command: String): String? {
         if (!PACKAGE.matches(packageName) || !CLASS.matches(activity)) return null
-        val script = "sleep 1; pm revoke $packageName android.permission.POST_NOTIFICATIONS; am start -n $packageName/$activity"
+        val script = "sleep 1; $command; am start -n $packageName/$activity"
         return "setsid sh -c ${quote(script)} </dev/null >/dev/null 2>&1 &"
     }
 

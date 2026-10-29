@@ -2,11 +2,15 @@ package io.github.ptt98hd.totch.ui.settings
 
 import io.github.ptt98hd.totch.core.settings.AppLanguage
 import io.github.ptt98hd.totch.core.settings.ThemeMode
+import io.github.ptt98hd.totch.core.settings.UpdateInterval
 import io.github.ptt98hd.totch.core.update.Release
 import io.github.ptt98hd.totch.core.update.SemVer
 import io.github.ptt98hd.totch.ui.FakeAppUpdater
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
 import io.github.ptt98hd.totch.ui.MainDispatcherRule
+import io.github.ptt98hd.totch.update.UpdateController
+import io.github.ptt98hd.totch.update.UpdateState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import java.io.IOException
@@ -23,7 +27,7 @@ class AppSettingsViewModelTest {
     private val release = Release(SemVer(1, 6, 0), "* Notes", "https://github.com/ptt98hd/totch/releases/download/v1.6.0/totch-1.6.0.apk", 10, null)
 
     private fun vm(repo: FakeSettingsRepository = FakeSettingsRepository(), version: String = "1.5.0") =
-        AppSettingsViewModel(repo, updater, version)
+        AppSettingsViewModel(repo, UpdateController(updater, version, CoroutineScope(main.dispatcher)))
 
     @Test
     fun `UI-32 appearance, language and boot setters persist`() = runTest {
@@ -43,6 +47,16 @@ class AppSettingsViewModelTest {
             assertEquals(AppLanguage.ENGLISH, language)
             assertFalse(startOnBoot)
         }
+    }
+
+    @Test
+    fun `UP-13 update settings persist`() = runTest {
+        val repo = FakeSettingsRepository()
+        val vm = vm(repo)
+        vm.setUpdateOnLaunch(true)
+        vm.setUpdateInterval(UpdateInterval.MONTHLY)
+        assertTrue(repo.current.updateOnLaunch)
+        assertEquals(UpdateInterval.MONTHLY, repo.current.updateInterval)
     }
 
     @Test

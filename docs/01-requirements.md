@@ -119,7 +119,7 @@ tham chiếu ID tương ứng.
 | NFR-1 | minSdk 31 (Android 12), targetSdk 36, compileSdk 37 |
 | NFR-2 | Độ trễ từ lúc nhả tay đến lúc thực thi hành động ≤ 100 ms (không tính chờ double-tap) |
 | NFR-3 | CPU khi rảnh ≈ 0: không polling; chỉ xử lý khi có sự kiện input |
-| NFR-4 | Không thư viện độc quyền (yêu cầu F-Droid), không tracking. v1.6: có quyền INTERNET **chỉ** cho FR-U27 — mạng chỉ dùng khi người dùng bấm kiểm tra / cập nhật, chỉ tới GitHub (`api.github.com`, `github.com` và CDN tải file của GitHub) — [update §2](specs/update.md) |
+| NFR-4 | Không thư viện độc quyền (yêu cầu F-Droid), không tracking. v1.6: có quyền INTERNET **chỉ** cho FR-U27 — mạng chỉ dùng khi người dùng bấm kiểm tra / cập nhật, chỉ tới GitHub (`api.github.com`, `github.com` và CDN tải file của GitHub). v1.6.1: thêm kiểm tra khi mở app / định kỳ do người dùng **tự bật** (mặc định tắt, FR-U29) — [update §2](specs/update.md) |
 | NFR-5 | Build tái lập (reproducible) bằng Gradle wrapper, JDK 21 (bytecode Java 17) |
 | NFR-6 | Logic lõi (nhận cử chỉ, parse getevent, vùng notch, bindings) là Kotlin thuần, phủ unit test ≥ 90% dòng |
 | NFR-7 | Ngôn ngữ: English (mặc định), Tiếng Việt |
@@ -214,3 +214,13 @@ tham chiếu ID tương ứng.
 | FR-U27 | **Tự cập nhật** không cần backend: Settings › About có dòng **Check for updates** → đọc GitHub Release mới nhất, có bản mới → hộp thoại ghi chú phát hành → tải APK đã ký, kiểm SHA-256, cài bằng `PackageInstaller` (hệ thống hỏi xác nhận). Không tự kiểm tra ngầm | [update](specs/update.md), [ui §3](specs/ui.md) |
 | FR-A16 | Hành động **Chế độ một tay** (bật/tắt One-handed mode của Android) qua Shizuku. Android chỉ nhận lệnh khi người dùng đã gán **phím tắt Chế độ một tay** (nút Trợ năng hoặc giữ phím âm lượng); chưa gán → hành động báo lỗi | [actions §10](specs/actions.md) |
 | FR-U28 | Màn **Notch**: các slider trong mỗi section ngăn cách bằng đường kẻ ngang (như Settings, FR-U23) | [ui §3](specs/ui.md) |
+
+## 14. Phiên bản 1.6.1
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-A15 (sửa) | Bấm ô Cài đặt nhanh **không cần** thêm ô vào bảng: ô chưa có thì tạm thêm, bấm, rồi gỡ (`cmd statusbar add-tile` / `click-tile` / `remove-tile` qua Shizuku); ô đã có bấm như cũ | [actions §9](specs/actions.md) |
+| FR-A16 (sửa) | Chế độ một tay chạy được **không cần** người dùng gán phím tắt: cách native (`one_handed_mode_activated`, tự gán tạm phím tắt rồi trả lại, kiểm tra trạng thái thật qua dump WMShell) và cách fallback (giả lập cử chỉ vuốt xuống ở mép dưới). Cách nào chạy được thì lưu làm cách chính; cả hai lỗi mới báo lỗi | [actions §10](specs/actions.md) |
+| FR-U29 | Settings có section **Update**: switch *Kiểm tra khi mở app*, chọn *Kiểm tra định kỳ* (Tắt / Hằng ngày / Hằng tuần / Hằng tháng — chạy nền bằng JobScheduler, có bản mới thì gửi thông báo, mỗi bản một lần), dòng *Kiểm tra cập nhật* thủ công (chuyển từ About). Có bản mới khi mở app → hộp thoại cập nhật ở bất kỳ màn hình nào | [update §5–6](specs/update.md), [ui §3](specs/ui.md) |
+| FR-U31 | Splash screen: giữ splash của hệ thống (icon app) đến khi đọc xong cài đặt rồi mờ dần, không còn khung trống | [ui — Splash](specs/ui.md) |
+| FR-D11 | Home › Permissions thêm **Install updates** (quyền "Cài ứng dụng không rõ nguồn gốc"): bật/tắt qua Shizuku (`appops`), tắt thì hỏi xác nhận vì Android khởi động lại app; không có Shizuku → mở trang cài đặt của hệ thống | [detection-modes §6](specs/detection-modes.md), [ui §3](specs/ui.md) |

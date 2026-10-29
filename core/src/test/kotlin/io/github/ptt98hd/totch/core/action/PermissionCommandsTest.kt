@@ -61,4 +61,18 @@ class PermissionCommandsTest {
         assertNull(PermissionCommands.revokeNotificationsAndRestart("a.b; reboot", "a.b.Main"))
         assertNull(PermissionCommands.revokeNotificationsAndRestart("a.b", "Main'x"))
     }
+
+    @Test fun `PC-6 install packages allow`() {
+        assertEquals("appops set 'a.b' REQUEST_INSTALL_PACKAGES allow", PermissionCommands.allowInstallPackages("a.b"))
+    }
+
+    @Test fun `PC-7 install packages deny runs detached and reopens the app`() {
+        assertEquals(
+            "setsid sh -c 'sleep 1; appops set a.b REQUEST_INSTALL_PACKAGES deny; am start -n a.b/a.b.ui.Main' " +
+                "</dev/null >/dev/null 2>&1 &",
+            PermissionCommands.denyInstallPackagesAndRestart("a.b", "a.b.ui.Main"),
+        )
+        assertNull(PermissionCommands.denyInstallPackagesAndRestart("a.b; reboot", "a.b.Main"))
+        assertNull(PermissionCommands.denyInstallPackagesAndRestart("a.b", "Main'x"))
+    }
 }

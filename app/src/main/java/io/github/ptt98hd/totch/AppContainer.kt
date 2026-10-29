@@ -4,6 +4,7 @@ import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.update.Release
+import io.github.ptt98hd.totch.update.UpdateController
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -20,6 +21,8 @@ interface AppContainer {
     val appActivities: AppActivities
     val quickSettingsTiles: QuickSettingsTiles
     val appUpdater: AppUpdater
+    /** Shared update state and dialog (update spec §5). */
+    val updates: UpdateController
     val touchArea: TouchArea
 }
 
@@ -43,7 +46,7 @@ sealed interface EngineStatus {
 }
 
 /** Optional permissions shown on Home; each can be switched through Shizuku (detection-modes §6). */
-enum class Permission { ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS, BATTERY }
+enum class Permission { ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS, BATTERY, INSTALL_UPDATES }
 
 data class Requirements(
     val shizukuRunning: Boolean = false,
@@ -54,6 +57,8 @@ data class Requirements(
     val mediaAccessGranted: Boolean = false,
     /** App is exempt from battery optimization (FR-D7, recommended). */
     val batteryUnrestricted: Boolean = false,
+    /** "Install unknown apps" for the self-update (FR-D11). */
+    val installUpdatesAllowed: Boolean = false,
 )
 
 interface SystemStatus {

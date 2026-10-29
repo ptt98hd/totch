@@ -5,7 +5,7 @@
 
 **Totch** turns the notch (display cutout / camera hole) of your Android phone into a multi-purpose touch button. Tap, double-tap, long-press or swipe right on the notch to trigger system actions, control media, toggle the flashlight or launch an app.
 
-Free and open source (GPL-3.0-or-later). No ads, no trackers. The network is used only when you tap **Check for updates** (GitHub Releases).
+Free and open source (GPL-3.0-or-later). No ads, no trackers. The network is used only for updates from GitHub Releases: when you tap **Check for updates**, or by the automatic checks you turn on yourself (off by default).
 
 ## Features
 
@@ -14,8 +14,8 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers. The network is use
   - System: Back, Home, Recents, Lock screen, Screenshot, Notification shade, Quick Settings, Assistant
   - Flashlight toggle; media Play/Pause, Next, Previous; Volume up/down; show the volume panel
   - Launch any installed app, one of its static app shortcuts, or one of its exported activities
-  - Tap an app's Quick Settings tile (the tile must be added to Quick Settings)
-  - Toggle Android's one-handed mode (needs the One-handed mode shortcut enabled in system settings)
+  - Tap an app's Quick Settings tile (a tile that is not in Quick Settings is added for the tap and removed again)
+  - Toggle Android's one-handed mode (no shortcut needed; falls back to the launcher's swipe gesture and remembers what works)
 - Adjustable sensitivity, manual notch size, position and padding shown live on screen, haptic feedback, start on boot.
 - Optionally keeps working in landscape, on the physical notch.
 - Material 3 with dynamic color; light / dark / AMOLED black theme; English and Vietnamese (or follow the system).
@@ -30,8 +30,9 @@ Every other permission is optional and can be switched on or off from the Home s
 - **Notifications** (Android 13+) — for the foreground service notification. Android closes an app when one of its permissions is revoked, so switching it off restarts Totch.
 - **Media control** (notification access) — only to find the active media session and send play/pause/skip commands (more reliable than media key events). It never reads notifications.
 - **Unrestricted battery** — keeps the gesture service from being killed.
+- **Install updates** (install unknown apps) — lets the self-update install the new APK. Switching it off also restarts Totch.
 
-Self-update (Settings › About › Check for updates) reads the latest [GitHub release](https://github.com/ptt98hd/totch/releases), downloads its signed APK, checks its SHA-256 and hands it to the system installer. It never runs in the background. The APK is signed with the same key as the F-Droid build, so either can update the other.
+Self-update (Settings › Update › Check for updates) reads the latest [GitHub release](https://github.com/ptt98hd/totch/releases), downloads its signed APK, checks its SHA-256 and hands it to the system installer. Optionally it also checks when the app opens, or daily / weekly / monthly in the background with a notification; both are off by default. The APK is signed with the same key as the F-Droid build, so either can update the other.
 
 ## Requirements
 

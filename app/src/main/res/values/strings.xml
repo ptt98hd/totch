@@ -32,11 +32,13 @@
     <string name="permission_notifications">Notifications</string>
     <string name="permission_media">Media control</string>
     <string name="permission_battery">Unrestricted battery</string>
+    <string name="permission_install_updates">Install updates</string>
     <string name="permission_granted">Granted</string>
     <string name="permission_not_granted">Not granted</string>
     <string name="revoke_notifications_title">Turn off notifications?</string>
     <string name="revoke_notifications_text">Android closes an app whenever one of its permissions is revoked. Totch will close and reopen by itself; gestures keep working.</string>
     <string name="revoke_notifications_confirm">Turn off</string>
+    <string name="revoke_install_title">Turn off update installs?</string>
 
     <!-- Gestures -->
     <string name="gesture_tap">Tap</string>
@@ -73,7 +75,6 @@
     <string name="action_launch_app">Open %1$s</string>
     <string name="action_assistant">Open assistant</string>
     <string name="action_one_handed">One-handed mode</string>
-    <string name="action_one_handed_hint">Needs the One-handed mode shortcut</string>
     <string name="action_open_shortcut">Open shortcut…</string>
     <string name="action_launch_shortcut">%1$s: %2$s</string>
     <string name="action_open_activity">Open activity…</string>
@@ -95,7 +96,6 @@
     <string name="tile_search">Search tiles</string>
     <string name="tile_empty">No tiles match “%1$s”</string>
     <string name="tile_none">No Quick Settings tiles found</string>
-    <string name="tile_hint">Only tiles added to Quick Settings respond</string>
     <string name="activity_search">Search activities</string>
     <string name="activity_empty">No activities match “%1$s”</string>
     <string name="activity_none">No activities found</string>
@@ -159,6 +159,17 @@
     <string name="update_action">Update</string>
     <string name="update_later">Later</string>
     <string name="update_install_failed">Update failed</string>
+    <string name="section_update">Update</string>
+    <string name="setting_update_on_launch">Check on app launch</string>
+    <string name="setting_update_on_launch_summary">Look for a new version when Totch opens</string>
+    <string name="setting_update_interval">Automatic checks</string>
+    <string name="update_interval_never">Off</string>
+    <string name="update_interval_daily">Daily</string>
+    <string name="update_interval_weekly">Weekly</string>
+    <string name="update_interval_monthly">Monthly</string>
+    <string name="update_channel_name">Updates</string>
+    <string name="update_notification_title">Totch %1$s is available</string>
+    <string name="update_notification_text">Tap to see what’s new and update</string>
     <string name="about_license_title">License</string>
     <string name="about_license" translatable="false">GPL-3.0-or-later</string>
     <string name="about_source_title">Source code</string>

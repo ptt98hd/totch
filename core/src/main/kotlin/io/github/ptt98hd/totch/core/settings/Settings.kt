@@ -1,5 +1,6 @@
 package io.github.ptt98hd.totch.core.settings
 
+import io.github.ptt98hd.totch.core.action.OneHandedMethod
 import io.github.ptt98hd.totch.core.gesture.GestureConfig
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
@@ -19,6 +20,15 @@ enum class AppLanguage(val tag: String?) {
     @SerialName("system") SYSTEM(null),
     @SerialName("en") ENGLISH("en"),
     @SerialName("vi") VIETNAMESE("vi"),
+}
+
+/** How often the background job looks for a new release (update spec §6, UP-10). */
+@Serializable
+enum class UpdateInterval(val days: Int) {
+    @SerialName("never") NEVER(0),
+    @SerialName("daily") DAILY(1),
+    @SerialName("weekly") WEEKLY(7),
+    @SerialName("monthly") MONTHLY(30),
 }
 
 /** Manual notch region override in dp (converted to px by the app); [topDp] is the vertical position (FR-R6). */
@@ -78,6 +88,11 @@ data class Settings(
     val disabledGestures: Set<Gesture> = emptySet(),
     /** Keep detecting gestures at the physical notch while rotated (FR-R8). */
     val landscapeGestures: Boolean = false,
+    /** Look for a new release when the app opens (FR-U29). */
+    val updateOnLaunch: Boolean = false,
+    val updateInterval: UpdateInterval = UpdateInterval.NEVER,
+    /** The one-handed method that last worked; written by the Shizuku executor (OH-5). */
+    val oneHandedMethod: OneHandedMethod = OneHandedMethod.SYSTEM,
 ) {
     /** Clamps values to FR-S4 limits and ensures every [Gesture] has a binding. */
     fun sanitized(): Settings = copy(

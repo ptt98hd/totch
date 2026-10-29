@@ -29,6 +29,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessibilityNew
 import androidx.compose.material.icons.outlined.BatteryFull
+import androidx.compose.material.icons.outlined.InstallMobile
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.MusicNote
@@ -77,6 +78,7 @@ import io.github.ptt98hd.totch.ui.common.isShizukuInstalled
 import io.github.ptt98hd.totch.ui.common.openAccessibilitySettings
 import io.github.ptt98hd.totch.ui.common.openAppNotificationSettings
 import io.github.ptt98hd.totch.ui.common.openBatteryOptimizationSettings
+import io.github.ptt98hd.totch.ui.common.openInstallUnknownAppsSettings
 import io.github.ptt98hd.totch.ui.common.requestUnrestrictedBattery
 import io.github.ptt98hd.totch.ui.common.openMediaAccessSettings
 import io.github.ptt98hd.totch.ui.common.openShizuku
@@ -90,7 +92,7 @@ fun HomeRoute(container: AppContainer) {
     val context = LocalContext.current
     var shizukuInstalled by remember { mutableStateOf(context.isShizukuInstalled()) }
     var notificationAsked by rememberSaveable { mutableStateOf(false) }
-    var confirmRevokeNotifications by rememberSaveable { mutableStateOf(false) }
+    var confirmRevoke by rememberSaveable { mutableStateOf<Permission?>(null) }
 
     LifecycleResumeEffect(Unit) {
         shizukuInstalled = context.isShizukuInstalled()
@@ -108,6 +110,7 @@ fun HomeRoute(container: AppContainer) {
         when (permission) {
             Permission.ACCESSIBILITY -> context.openAccessibilitySettings()
             Permission.MEDIA_ACCESS -> context.openMediaAccessSettings()
+            Permission.INSTALL_UPDATES -> context.openInstallUnknownAppsSettings()
             Permission.BATTERY ->
                 if (state.permissions.any { it.permission == Permission.BATTERY && it.granted }) {
                     context.openBatteryOptimizationSettings()
@@ -135,28 +138,34 @@ fun HomeRoute(container: AppContainer) {
         },
         onPermissionChange = { permission, granted ->
             if (needsConfirmation(permission, granted)) {
-                confirmRevokeNotifications = true
+                confirmRevoke = permission
             } else {
                 vm.setPermission(permission, granted, openSystemPage)
             }
         },
     )
 
-    if (confirmRevokeNotifications) {
+    confirmRevoke?.let { permission ->
         AlertDialog(
-            onDismissRequest = { confirmRevokeNotifications = false },
-            title = { Text(stringResource(R.string.revoke_notifications_title)) },
+            onDismissRequest = { confirmRevoke = null },
+            title = {
+                Text(
+                    stringResource(
+                        if (permission == Permission.INSTALL_UPDATES) R.string.revoke_install_title else R.string.revoke_notifications_title,
+                    ),
+                )
+            },
             text = { Text(stringResource(R.string.revoke_notifications_text)) },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        confirmRevokeNotifications = false
-                        vm.setPermission(Permission.NOTIFICATIONS, false, openSystemPage)
+                        confirmRevoke = null
+                        vm.setPermission(permission, false, openSystemPage)
                     },
                 ) { Text(stringResource(R.string.revoke_notifications_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmRevokeNotifications = false }) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = { confirmRevoke = null }) { Text(stringResource(R.string.cancel)) }
             },
         )
     }
@@ -308,6 +317,7 @@ private val Permission.icon: ImageVector
         Permission.NOTIFICATIONS -> Icons.Outlined.Notifications
         Permission.MEDIA_ACCESS -> Icons.Outlined.MusicNote
         Permission.BATTERY -> Icons.Outlined.BatteryFull
+        Permission.INSTALL_UPDATES -> Icons.Outlined.InstallMobile
     }
 
 private val Permission.titleRes: Int
@@ -316,6 +326,7 @@ private val Permission.titleRes: Int
         Permission.NOTIFICATIONS -> R.string.permission_notifications
         Permission.MEDIA_ACCESS -> R.string.permission_media
         Permission.BATTERY -> R.string.permission_battery
+        Permission.INSTALL_UPDATES -> R.string.permission_install_updates
     }
 
 /** UI-51: permission icon, name, granted state and a switch. */
@@ -345,6 +356,7 @@ private fun HomeScreenPreview() {
                     PermissionItem(Permission.NOTIFICATIONS, false),
                     PermissionItem(Permission.MEDIA_ACCESS, false),
                     PermissionItem(Permission.BATTERY, true),
+                    PermissionItem(Permission.INSTALL_UPDATES, false),
                 ),
             ),
             shizukuInstalled = true,

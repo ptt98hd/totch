@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- FR-D7: recommended, keeps the gesture service from being killed. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <!-- FR-U27: self-update from GitHub Releases, only when the user asks for it. -->
+    <!-- FR-U27, FR-U29: self-update from GitHub Releases, on request or on checks the user turned on. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
@@ -91,6 +91,12 @@
         <receiver
             android:name=".update.UpdateInstallReceiver"
             android:exported="false" />
+
+        <!-- FR-U29: periodic update check, scheduled only when the user picks a frequency. -->
+        <service
+            android:name=".update.UpdateCheckJobService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <provider
             android:name="rikka.shizuku.ShizukuProvider"

@@ -42,6 +42,12 @@ Mục tiêu độ phủ: `:core` ≥ 90% dòng (NFR-6).
 | actions §9 (QT-\*), ui (UI-28)     | `app/.../ui/picker/TileFilterTest`, `ActionPickerViewModelTest`                         |
 | update (UP-1…UP-4)                 | `core/.../update/ReleasesTest`                                                          |
 | update (UP-5…UP-7)                 | `app/.../ui/settings/AppSettingsViewModelTest`                                          |
+| update (UP-9, UP-13)               | `app/.../update/UpdateControllerTest`, `app/.../ui/settings/AppSettingsViewModelTest`   |
+| update (UP-10…UP-12)               | `core/.../update/UpdatePolicyTest`                                                      |
+| actions §9 (QT-2), §10 (SC-9, OH-1…OH-4) | `core/.../action/ShellCommandsTest`, `OneHandedTest`                              |
+| actions §10 (OH-5)                 | `app/.../shizuku/OneHandedRunnerTest`                                                   |
+| detection-modes §6 (PC-6, PC-7)    | `core/.../action/PermissionCommandsTest`                                                |
+| ui (UI-51, UI-53)                  | `app/.../ui/home/HomeViewModelTest`                                                     |
 
 ## 4. Checklist thủ công trước release
 

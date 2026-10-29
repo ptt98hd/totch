@@ -1,0 +1,5 @@
+* Quick Settings tiles work without adding them to Quick Settings: a missing tile is added for the tap and removed again.
+* One-handed mode works without the system shortcut, with a gesture fallback; Totch remembers the method that works.
+* New Settings › Update section: check on app launch, automatic checks (daily / weekly / monthly, with a notification), manual check.
+* Home › Permissions: "Install updates", switchable through Shizuku.
+* The splash screen stays until the app is ready, then fades out (no blank frame).

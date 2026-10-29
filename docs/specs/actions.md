@@ -1,6 +1,6 @@
 # Spec: Hành động & điều phối (`ActionDispatcher`)
 
-Yêu cầu: FR-A1…FR-A16 · Module: `:core` (logic) + `:app` (executor)
+Yêu cầu: FR-A1…FR-A16 (v1.6.1) · Module: `:core` (logic) + `:app` (executor)
 
 ## 1. Ma trận khả năng — `ActionRequirements.of(action)`
 
@@ -61,12 +61,12 @@ lúc chọn để hiển thị mà không cần đọc lại manifest.
 | Notifications | `cmd statusbar expand-notifications` |
 | QuickSettings | `cmd statusbar expand-settings` |
 | Assistant | `input keyevent 219` (KEYCODE_ASSIST → trợ lý mặc định của hệ thống) |
-| OneHandedMode | script bật/tắt `one_handed_mode_activated` (§10) |
+| OneHandedMode | `null` từ `of()`; dùng `OneHandedCommands` (v1.6.1, §10) |
 | các action LOCAL, None | `null` |
 | LaunchApp(pkg) | `null` từ `of()`; dùng `launch(pkg, activity)` |
 | LaunchShortcut | `null` từ `of()`; dùng `startIntent(intentUri)` |
 | LaunchActivity | `null` từ `of()`; dùng `startActivity(pkg, activity)` (v1.5) |
-| ClickTile | `null` từ `of()`; dùng `clickTile(pkg, service)` (v1.6) |
+| ClickTile | `null` từ `of()`; dùng `clickTile(pkg, service)` (v1.6, script v1.6.1 §9) |
 
 `ShellCommands.launch(packageName, activityName): String?` →
 `am start -n <pkg>/<activity> -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000`
@@ -79,7 +79,7 @@ lúc chọn để hiển thị mà không cần đọc lại manifest.
 | SC-4 | `startIntent("intent:#Intent;component=com.a/.B;end")` → `am start 'intent:#Intent;component=com.a/.B;end'` |
 | SC-5 | Dấu `'` trong URI được escape thành `'\''` (không thoát được khỏi chuỗi quote) |
 | SC-6 | URI không bắt đầu bằng `intent:` hoặc `#Intent;`, hoặc chứa ký tự điều khiển (`\n`, `\r`, `\u0000`…) → `null` |
-| SC-8 | (v1.6) `clickTile("com.a", "com.a.qs.Tile$Inner")` → `cmd statusbar click-tile 'com.a/com.a.qs.Tile$Inner'`; tên sai định dạng (SC-2) → `null` |
+| SC-8 | (v1.6.1) `clickTile("com.a", "com.a.qs.Tile$Inner")` → script §9 với component `'com.a/com.a.qs.Tile$Inner'` (single-quote); tên sai định dạng (SC-2) → `null` |
 | SC-7 | (v1.5) `startActivity("com.a", "com.a.Main$Sub")` → `am start -n 'com.a/com.a.Main$Sub' -f 0x10000000`; tên sai định dạng (SC-2) → `null` |
 
 ## 4. Executor phía `:app`
@@ -170,35 +170,99 @@ Nguồn: `QuickSettingsTiles.tiles()` — `queryIntentServices(Intent(TileServic
 action này), giữ service `exported`, `enabled`, `permission == BIND_QUICK_SETTINGS_TILE`, bỏ ô của chính Totch. Nhãn =
 `loadLabel` của service, kèm tên app.
 
-Thực thi: chỉ Shizuku — `cmd statusbar click-tile <pkg>/<service>` (SystemUI tìm ô trong bảng Cài đặt nhanh và bấm như
-người dùng: bật/tắt, mở dialog hoặc activity của ô). Ô chưa được thêm vào bảng → hệ thống bỏ qua lệnh (không báo lỗi);
-picker hiển thị gợi ý "Chỉ ô đã thêm vào Cài đặt nhanh mới phản hồi". Không tự thêm ô vào bảng của người dùng.
+Thực thi: chỉ Shizuku. `cmd statusbar click-tile <pkg>/<service>` đi qua `StatusBarManagerService` (shell được phép
+gọi) tới SystemUI, nhưng SystemUI (cả QS cũ `QSPanelControllerBase` lẫn QS Compose) **chỉ tìm ô trong danh sách đang
+có ở bảng Cài đặt nhanh**; không có thì bỏ qua lệnh. Không có cách bấm ô mà không đụng tới bảng: tự bind `TileService`
+cần `BIND_QUICK_SETTINGS_TILE` (signature, shell không có), `requestAddTileService` chỉ cho ô của chính app.
+
+v1.6.1 (FR-A15): **tạm thêm → bấm → gỡ**. Shell được gọi cả `add-tile`, `click-tile`, `remove-tile`. Nếu service của ô
+chưa bind xong, SystemUI xếp hàng cú bấm và gửi khi bind xong; ô mới thêm ở trạng thái active nên cú bấm đầu không bị bỏ.
+
+`sysui_qs_tiles` lưu ô của app dạng `custom(<ComponentName.flattenToShortString()>)` — tên lớp bắt đầu bằng package
+được rút gọn (`com.a/.qs.Tile`), nên script so cả 2 dạng:
+```sh
+c='<pkg>/<service>'
+case ",$(settings get secure sysui_qs_tiles)," in
+  *",custom($c),"*|*",custom(<pkg>/<.short>),"*) cmd statusbar click-tile "$c" ;;      # đã có: bấm như cũ
+  *) cmd statusbar add-tile "$c" && sleep 0.8 && cmd statusbar click-tile "$c"; r=$?
+     sleep 2; cmd statusbar remove-tile "$c"; exit $r ;;                               # chưa có: thêm, bấm, gỡ
+esac
+```
+(nhánh rút gọn chỉ có khi `service` bắt đầu bằng `<pkg>.`). Hai thời gian chờ là ước lượng, cần chỉnh trên máy thật
+(lệnh Shizuku tối đa 10 s). Hạn chế: chậm ~3 s với ô chưa có trong bảng; app của ô nhận thêm sự kiện thêm/gỡ ô; nếu
+bảng Cài đặt nhanh đang mở, ô chớp hiện rồi biến mất. Thứ tự ô của người dùng giữ nguyên. Ô dựng sẵn của hệ thống
+(Wi-Fi, Bluetooth…) không phải `TileService` nên vẫn không có. Picker bỏ gợi ý "Chỉ ô đã thêm vào Cài đặt nhanh…".
 
 `filterTiles(entries, query): List<TileEntry>`:
 
 | ID | Tiêu chí |
 |---|---|
 | QT-1 | Sắp theo nhãn ô rồi tên app (không phân biệt hoa thường); query (trim, không phân biệt hoa thường) khớp nhãn ô **hoặc** tên app |
+| QT-2 | (v1.6.1) `clickTile("com.a", "com.a.qs.Tile")`: so `sysui_qs_tiles` với `custom(com.a/com.a.qs.Tile)` **và** `custom(com.a/.qs.Tile)`; đã có → chỉ `click-tile`; chưa có → `add-tile`, chờ, `click-tile`, chờ, `remove-tile` (luôn gỡ, kể cả khi bấm lỗi), thoát bằng mã của `click-tile`. `clickTile("com.a", "org.b.Tile")` không có dạng rút gọn |
 
-## 10. Chế độ một tay (v1.6 — FR-A16)
+## 10. Chế độ một tay (v1.6 — FR-A16; v1.6.1 viết lại)
 
-`@SerialName("one_handed") data object OneHandedMode : Action` — nhóm System của picker, dòng phụ "Cần phím tắt Chế độ một tay".
+`@SerialName("one_handed") data object OneHandedMode : Action` — nhóm System của picker (v1.6.1: bỏ dòng phụ "Cần phím
+tắt Chế độ một tay").
 
+### Vì sao bản 1.6.0 không chạy
 Android không có global action / keyevent / lệnh shell cho One-handed mode. WMShell (`OneHandedController`) theo dõi
-`Settings.Secure.one_handed_mode_activated`: đổi thành 1 → vào chế độ một tay, 0 → thoát; khi thoát bằng chạm ngoài /
-hết giờ hệ thống tự ghi lại 0. Nhưng thay đổi bị **bỏ qua** nếu phím tắt chưa bật, tức `accessibility_button_targets`
-và `accessibility_shortcut_target_service` đều không chứa `OneHandedMode` (`OneHandedSettingsUtil.getShortcutEnabled`).
-Nếu `one_handed_mode_enabled` = 0 hệ thống tự bật khi nhận lệnh. Máy không hỗ trợ (`ro.support_one_handed_mode`) hoặc
-ROM thay chế độ một tay riêng (Samsung) → không có tác dụng.
+`Settings.Secure.one_handed_mode_activated`: 1 → vào chế độ một tay, 0 → thoát. Nhưng thay đổi bị **bỏ qua** khi chưa
+gán phím tắt Chế độ một tay (`accessibility_button_targets` / `accessibility_shortcut_target_service` không chứa
+`OneHandedMode`); ngoài ra khi người dùng chọn kiểu "Hiện thông báo" (`swipe_bottom_to_notification_enabled` = 1) thì
+lệnh mở thông báo. Bản 1.6.0 chỉ ghi giá trị và báo lỗi khi thiếu phím tắt, nên đa số máy không có tác dụng. Hệ thống
+cũng chỉ ghi lại 0 khi thoát nếu có phím tắt, nên đảo theo giá trị đã lưu dễ lệch với trạng thái thật.
 
-Lệnh (`sh -c` qua Shizuku), thoát 1 khi chưa có phím tắt để hiện Toast lỗi (FR-A9):
-```sh
-case "$(settings get secure accessibility_button_targets):$(settings get secure accessibility_shortcut_target_service)" in
-  *OneHandedMode*) ;; *) exit 1 ;; esac
-if [ "$(settings get secure one_handed_mode_activated)" = 1 ]; then v=0; else v=1; fi
-settings put secure one_handed_mode_activated $v
+### Trạng thái thật
+`dumpsys activity service SystemUIService WMShell` in `OneHandedState` → dòng `sCurrentState=<n>` (0 NONE, 1 ENTERING,
+2 ACTIVE, 3 EXITING). Script đọc dòng này để biết đang bật hay tắt và để **kiểm tra** lệnh có tác dụng. Không đọc được
+(ROM khác, dump đổi định dạng) → coi như không kiểm tra được: chọn hướng theo `one_handed_mode_activated` và coi là thành công.
+
+### Hai cách, có fallback và nhớ cách chạy được
+```kotlin
+@Serializable enum class OneHandedMethod { @SerialName("system") SYSTEM, @SerialName("gesture") GESTURE }
+
+object OneHandedCommands {
+    fun system(): String                                          // OH-1
+    fun gesture(widthPx: Int, heightPx: Int, density: Float): String // OH-2
+}
+object OneHandedFallback {
+    fun order(preferred: OneHandedMethod): List<OneHandedMethod>  // OH-3
+    suspend fun run(preferred: OneHandedMethod, attempt: suspend (OneHandedMethod) -> Boolean): OneHandedMethod? // OH-4
+}
 ```
+Mã thoát của script: 0 thành công (hoặc không kiểm tra được), 2 lệnh không có tác dụng, 3 máy không hỗ trợ
+(`ro.support_one_handed_mode` ≠ `true`), 4 không dùng điều hướng bằng cử chỉ (cách GESTURE).
+
+**SYSTEM (native)** — vẫn qua `one_handed_mode_activated`, nhưng tự lo phím tắt:
+1. Không hỗ trợ → `exit 3`. Đích `t` = 0 nếu trạng thái là 1/2, ngược lại 1.
+2. Chưa có phím tắt → **tạm** thêm `com.android.server.accessibility.OneHandedMode` vào
+   `accessibility_shortcut_target_service` (phím tắt giữ phím âm lượng, không hiện gì trên màn hình; giữ target cũ,
+   ngăn bằng `:`), chờ 0,3 s cho WMShell đọc lại.
+3. Ghi `1-t` rồi `t` (giá trị đổi chắc chắn → observer luôn chạy; lần ghi đầu không có tác dụng vì trùng trạng thái).
+4. Chờ tối đa ~1,5 s đến khi trạng thái khớp đích (t=1 → 1/2, t=0 → 0/3); không khớp → mã 2.
+5. Trả lại giá trị cũ của `accessibility_shortcut_target_service` nếu đã đổi (`null` → `settings delete`), kể cả khi lỗi.
+   `swipe_bottom_to_notification_enabled` = 1 → ghi như bước 3 rồi `exit 0` (hệ thống mở thông báo theo lựa chọn của người dùng).
+
+**GESTURE (fallback)** — giả lập cử chỉ của launcher (Launcher3 `OneHandedModeInputConsumer`, gesture monitor nhận cả
+sự kiện tiêm bằng `input`):
+1. Không hỗ trợ → `exit 3`; `navigation_mode` ≠ 2 → `exit 4`. `one_handed_mode_enabled` ≠ 1 → bật (cử chỉ cần nó; hệ
+   thống cũng tự bật khi dùng phím tắt).
+2. Đang bật (1/2) → `input tap x yTop` (chạm vùng trống phía trên để thoát); ngược lại `input swipe x y1 x y2 150`
+   (vuốt xuống từ mép dưới, điểm cuối ra ngoài màn hình để vượt ngưỡng kéo ~20 dp).
+   x = w/2, y1 = h − round(8·d), y2 = h + round(40·d), yTop = round(0,15·h). Kích thước theo hướng hiện tại; xoay
+   ngang thì chế độ một tay không chạy (hệ thống bỏ qua) → mã 2.
+3. Kiểm tra như SYSTEM bước 4.
+
+**Chọn cách** (`ShizukuExecutor`): `OneHandedFallback.run(settings.oneHandedMethod) { exec(script(it)) == 0 }`.
+Cách đầu tiên thành công được dùng; khác `oneHandedMethod` đang lưu → **lưu lại làm cách chính** cho lần sau. Cả 2 thất
+bại → `Failed` → Toast "Không thể thực hiện" (FR-A9).
 
 | ID | Tiêu chí |
 |---|---|
-| SC-9 | `ShellCommands.of(OneHandedMode)` kiểm tra phím tắt (`*OneHandedMode*` trong 2 key trên, không có → `exit 1`) rồi đảo `one_handed_mode_activated` (1 → 0, khác → 1) |
+| SC-9 | (v1.6.1) `ShellCommands.of(OneHandedMode) == null`; `ShizukuExecutor.supports(OneHandedMode)` vẫn đúng |
+| OH-1 | `system()`: kiểm tra `ro.support_one_handed_mode` (`exit 3`); đọc `sCurrentState` từ `dumpsys activity service SystemUIService WMShell`; chỉ khi thiếu `OneHandedMode` trong 2 key phím tắt mới ghi tạm `accessibility_shortcut_target_service` và luôn khôi phục (`trap … EXIT`); ghi `one_handed_mode_activated` 2 lần (`1-t` rồi `t`); kiểm tra trạng thái, không khớp → `exit 2` |
+| OH-2 | `gesture(1080, 2400, 2.5f)`: `exit 4` khi `navigation_mode` ≠ 2; bật `one_handed_mode_enabled`; vuốt `input swipe 540 2380 540 2500 150`; đang bật → `input tap 540 360`; kích thước ≤ 0 hoặc density ≤ 0 → vẫn trả script nhưng `exit 2` ngay |
+| OH-3 | `order(SYSTEM) = [SYSTEM, GESTURE]`, `order(GESTURE) = [GESTURE, SYSTEM]` |
+| OH-4 | `run`: thử theo `order`, dừng ở cách đầu tiên trả true và trả về cách đó (cách sau không bị gọi); cả 2 false → `null`; exception (trừ hủy coroutine) coi như false |
+| OH-5 | (`:app`) Executor lưu `oneHandedMethod` khi cách chạy được khác cách đang lưu; không lưu khi giống; cả 2 lỗi → `Result.failure` |
