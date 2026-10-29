@@ -1,12 +1,14 @@
 # Spec: Giao diện (Material 3)
 
-Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S6…FR-S9, FR-R5…FR-R7, FR-D9 · Module: `:app` · Package: `io.github.ptt98hd.totch.ui`
+Yêu cầu: FR-U1…FR-U42, FR-A20, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S6…FR-S9, FR-R5…FR-R7, FR-D9 · Module: `:app` · Package: `io.github.ptt98hd.totch.ui`
 
 ## 1. Nguyên tắc
 - Jetpack Compose + Material 3, `dynamicLightColorScheme/dynamicDarkColorScheme`, edge-to-edge.
 - Một Activity (`MainActivity`), Navigation Compose.
-- **Top bar tĩnh** (`TopAppBar` pinned, không co giãn khi cuộn) trên mọi màn hình, **chỉ có tiêu đề** = tên màn hình
-  ở bên trái (v1.4: bỏ icon Settings và nút Back).
+- **Top bar tĩnh** (`TopAppBar` pinned, không co giãn khi cuộn) trên mọi màn hình: tiêu đề = tên màn hình ở bên trái
+  (v1.4: bỏ icon Settings và nút Back). v1.7 (FR-U40, FR-U41): bên phải có 2 nút icon, theo thứ tự **Check for updates**
+  (icon `SystemUpdate`, chấm báo khi có bản mới — update §8) rồi **Buy me a coffee** (icon ly cà phê, ngoài cùng bên
+  phải). Hai nút lấy hành động từ `LocalAppActions` (do `MainActivity` cung cấp) nên màn hình không phải truyền tay.
 - `NavigationBar` dưới cùng có 4 mục (v1.4, FR-U19): **Home**, **Gestures**, **Notch** (icon điện thoại có notch,
   vector riêng `NotchIcons`), **Settings** (cài đặt ứng dụng). Luôn hiển thị.
 - Chuyển tab có animation (FR-U22): trang mới trượt vào 1/5 chiều rộng + fade theo hướng tab (sang phải nếu tab
@@ -14,6 +16,10 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 - Action picker là **sheet** trên màn Gestures (FR-U20), không phải destination riêng.
 - Mỗi màn hình có `ViewModel` riêng, expose `StateFlow<UiState>`; Composable stateless nhận `state` + lambda → test được.
 - Giao diện gọn: không có đoạn mô tả giải thích dài.
+- **Dòng danh sách đồng nhất** (v1.7, FR-U39): mọi dòng (`ListItem`) trong app — Home, Gestures, picker, Settings —
+  dùng chung `TotchListItem`: cao tối thiểu `RowHeight` = 72 dp (bằng nhau dù có hay không có mô tả), icon trái 40 dp,
+  tiêu đề và mô tả `maxLines = 1` + `TextOverflow.Ellipsis`. Thanh trượt (màn Notch) và dòng trong hộp thoại chọn không
+  phải dòng danh sách.
 - Chuỗi trong `strings.xml` (en) và `values-vi/strings.xml`.
 
 | ID | Tiêu chí |
@@ -21,6 +27,18 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 | UI-40 | Top bar pinned, chỉ có tiêu đề = tên màn hình bên trái |
 | UI-41 | Bottom bar có Home, Gestures, Notch, Settings theo thứ tự; luôn hiển thị |
 | UI-43 | Chuyển tab: hướng trượt = dấu của (chỉ số tab đích − chỉ số tab nguồn) |
+| UI-44 | (v1.7) Top bar: bên phải đúng 2 nút — Check for updates (mở hộp thoại cập nhật, update §8) rồi Buy me a coffee (mở hộp thoại ủng hộ) |
+| UI-45 | (v1.7) Mọi dòng danh sách cao ≥ 72 dp, tiêu đề và mô tả một dòng (kiểm thủ công MT-U40) |
+
+### Buy me a coffee (v1.7 — FR-U40, prototype)
+Hộp thoại ủng hộ dùng chung cho nút top bar, dòng ở Home và Settings: icon ly cà phê, tiêu đề "Buy me a coffee", một
+đoạn ngắn "Totch is free and open source, with no ads. If it helps you, a coffee keeps it going." / "Totch miễn phí, mã
+nguồn mở, không quảng cáo. Nếu thấy hữu ích, một ly cà phê giúp Totch tiếp tục phát triển.", nút **Buy me a coffee**
+(mở `donate_url` trong trình duyệt) và **Maybe later**. Đây là prototype: URL là chuỗi `donate_url` (không dịch) trong
+`strings.xml`, đổi được mà không sửa code; chưa có cổng thanh toán trong app (F-Droid: không thư viện độc quyền).
+
+Dòng *Buy me a coffee* (Home, Settings): icon ly cà phê (box tonal), tiêu đề "Buy me a coffee", mô tả "Support Totch's
+development" / "Ủng hộ phát triển Totch", chevron (›).
 
 ## 2. Highlight vùng notch trực tiếp (FR-U8)
 - Khi app đang mở (mọi màn hình, hướng dọc), vùng chạm hiện tại được tô trực tiếp trên màn hình tại đúng vị
@@ -34,7 +52,7 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 
 ## 3. Màn hình
 
-### Home (FR-U1, FR-D4, FR-D9, FR-U21) — v1.4
+### Home (FR-U1, FR-D4, FR-D9, FR-U21, FR-U42) — v1.4, v1.7
 ```
 ┌──────────────────────────────────┐
 │ Home                             │  ← top bar tĩnh, chỉ tiêu đề
@@ -43,8 +61,6 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 │ │ │✓ │ Gestures are on         │ │
 │ │ └──┘                         │ │
 │ └──────────────────────────────┘ │
-│ Requirement                      │
-│ [▣] Shizuku                [on]  │  Running, permission granted / Not running / …
 │ Permissions                      │
 │ [♿] Accessibility          [on]  │  Granted / Not granted
 │ [🔔] Notifications         [off] │  (Android 13+)
@@ -52,6 +68,10 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 │ [⊖] Do Not Disturb access  [off] │  v1.6.3
 │ [🔋] Unrestricted battery  [on]  │
 │ [⤓] Install updates        [off] │  v1.6.1
+│ Advanced                         │  v1.7: đổi tên từ Requirement, chuyển xuống dưới
+│ [▣] Shizuku                [on]  │  Running, permission granted / Not running · optional
+│ Support                          │  v1.7
+│ [☕] Buy me a coffee          ›  │
 ├──────────────────────────────────┤
 │ Home | Gestures | Notch | Settings│
 └──────────────────────────────────┘
@@ -59,7 +79,10 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 - Thẻ Totch: tiêu đề = tên app; bên trái là **box** bo góc (48 dp) chứa 1 trong 3 icon (UI-42): `Check` (bật,
   box `primary`), `Close` (tắt; box `error` khi đã bật mà có lỗi / thiếu Shizuku, ngược lại `surfaceVariant`),
   `Sync` xoay liên tục (đang bật / đang tắt, box `tertiary`). Mô tả ngắn "Gestures are …" theo `EngineStatus`.
-- **Requirement**: 1 dòng Shizuku (icon, tên, trạng thái, switch = sẵn sàng). Chạm: chưa cấp quyền → hộp thoại
+- **Advanced** / **Nâng cao** (v1.7, FR-U42 — trước đây là **Requirement**, nằm trên Permissions): 1 dòng Shizuku (icon,
+  tên, trạng thái, switch = sẵn sàng). Shizuku là tùy chọn (FR-D13) nên dòng không còn tô màu lỗi khi chưa sẵn sàng; mô
+  tả khi chưa chạy / chưa cài: "Not running · optional" / "Chưa chạy · tùy chọn", "Not installed · optional" / "Chưa
+  cài đặt · tùy chọn". Chạm: chưa cấp quyền → hộp thoại
   quyền Shizuku; còn lại → mở app Shizuku (hoặc trang web khi chưa cài).
 - **Permissions**: mỗi dòng như thẻ Totch nhưng icon là **biểu tượng quyền** (box tonal), tên quyền, mô tả
   "Granted" / "Not granted", switch. Bật/tắt → `SystemStatus.setPermission` (qua Shizuku); trả về false → mở trang
@@ -73,6 +96,8 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 | UI-50 | `HomeUiState.shizuku`: chưa chạy → NOT_RUNNING; chạy, chưa cấp quyền → PERMISSION_REQUIRED; còn lại READY |
 | UI-51 | `permissions` = Accessibility, Notifications (chỉ Android 13+), Media control, Do Not Disturb (v1.6.3), Battery, Install updates (v1.6.1), theo thứ tự, `granted` từ `Requirements` |
 | UI-52 | `setPermission(p, on)` gọi `SystemStatus.setPermission(p, on)`; kết quả false → gọi fallback (mở trang hệ thống) |
+| UI-54 | (v1.7) Thứ tự Home: thẻ Totch, Permissions, Advanced (Shizuku), Support (Buy me a coffee) |
+| UI-55 | (v1.7) Thẻ Totch khi `NeedsAccess`: "Turn on Accessibility or Shizuku" / "Bật Trợ năng hoặc Shizuku" (UI-2) |
 | UI-53 | (v1.5, FR-D10) Tắt switch Thông báo → hộp thoại xác nhận "Totch sẽ khởi động lại"; chỉ khi đồng ý mới gọi `setPermission(NOTIFICATIONS, false)`. v1.6.1: tắt **Install updates** cũng hỏi như vậy (FR-D11); bật / các quyền khác không hỏi |
 | ~~UI-3, UI-4~~ | Bỏ ở v1.4: quyền media / pin luôn nằm trong Permissions |
 
@@ -96,8 +121,10 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
 - v1.3: bỏ nút **Lặp lại** (FR-G11).
 - Swipe down, Swipe down & hold bị vô hiệu (mờ, không bấm được, switch **tắt** + disabled) với nhãn "Cần quyền Trợ năng
   (bật ở Home)" khi Trợ năng **chưa** bật; Trợ năng đang bật → dùng như mọi cử chỉ khác (v1.5, FR-G14).
-- Picker mở ra như sheet **trong vùng nội dung** của màn Gestures (giữa top bar và bottom bar), trượt lên từ dưới; mép
-  trên của sheet chạm sát mép dưới top bar (v1.5, FR-U25).
+- ~~Picker mở ra như sheet **trong vùng nội dung** của màn Gestures (giữa top bar và bottom bar), trượt lên từ dưới; mép
+  trên của sheet chạm sát mép dưới top bar (v1.5, FR-U25).~~ v1.7 (FR-U37): màn Gestures là một `BottomSheetScaffold`
+  (top bar trong slot `topBar`, danh sách là `content`, picker là `sheetContent`); sheet mở ra cao **toàn màn Gestures**
+  — che cả top bar, dừng ở mép trên bottom bar.
 - Không có nút Reset gestures (FR-S9).
 
 | ID | Tiêu chí |
@@ -110,8 +137,17 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
 | UI-17 | `setOn(g, true)` với binding `None` → không lưu gì, `picking = g`; `openPicker(g)` chỉ đặt `picking` khi `on`; `closePicker()` → `picking = null` |
 
 ### Action picker (FR-U9, FR-U16, FR-U20, FR-A11…FR-A13)
-Sheet (`Surface` bo 2 góc trên 28 dp) chiếm vùng nội dung của màn Gestures — **không** che top bar và bottom bar, hai
-thanh này vẫn bấm được (chuyển tab → đóng picker). **Không** kéo xuống để ẩn; hàng tiêu đề = tên cử chỉ + nút **đóng**
+v1.7 (FR-U37): sheet **native** của `BottomSheetScaffold` (Material 3), thay `Surface` + `AnimatedVisibility` tự vẽ:
+- `rememberStandardBottomSheetState(initialValue = Hidden, skipHiddenState = false)`, `confirmValueChange` từ chối
+  `PartiallyExpanded` (chỉ có Hidden / Expanded), `sheetPeekHeight = 0`, `sheetSwipeEnabled = false`,
+  `sheetDragHandle = null`; mở bằng `expand()`, đóng bằng `hide()` (animation của Material).
+- Sheet cao toàn màn Gestures (che top bar; nội dung sheet chừa `WindowInsets.statusBars` ở trên); bottom bar của app
+  nằm ngoài scaffold nên luôn hiện và bấm được (chuyển tab → đóng picker).
+- `picking` (UI-17) là nguồn sự thật: `picking ≠ null` → `expand()`; `null` → `hide()` rồi mới bỏ nội dung picker (view
+  model của picker sống đúng bằng một lần mở).
+
+~~Sheet (`Surface` bo 2 góc trên 28 dp) chiếm vùng nội dung của màn Gestures — **không** che top bar và bottom bar, hai
+thanh này vẫn bấm được (chuyển tab → đóng picker).~~ **Không** kéo xuống để ẩn; hàng tiêu đề = tên cử chỉ + nút **đóng**
 (✕) bên phải; nút Back hệ thống cũng đóng. Bên dưới là **hàng chip cuộn ngang** (`LazyRow` của `FilterChip`, mỗi chip có
 icon + nhãn, chip đang chọn được tô màu và luôn được cuộn vào tầm nhìn — v1.5, FR-U25; thay segmented button để thêm
 mục mới như Intents, Settings… mà nhãn không bị hẹp lại). Nội dung đổi mục có fade:
@@ -120,6 +156,12 @@ mục mới như Intents, Settings… mà nhãn không bị hẹp lại). Nội 
 |---|---|
 | System | v1.6.3 (FR-U34, FR-U35): ô tìm kiếm như tab Applications, rồi 6 nhóm (bảng dưới). Không có "Không làm gì". Hành động âm thanh (trừ âm lượng) có dòng phụ "Requires Do Not Disturb access" khi chưa có quyền (FR-A18) |
 | Applications | Ô tìm kiếm + danh sách app (icon, tên, radio) |
+
+Ô tìm kiếm (v1.7, FR-U38): `CompactSearchField` cao 44 dp (thay `SearchBar` 56 dp), bo tròn hoàn toàn, nền
+`surfaceContainerHigh`, icon kính lúp 20 dp, nút xóa khi có chữ, bàn phím `ImeAction.Search` (bấm → ẩn bàn phím).
+
+Hành động chỉ chạy qua Shizuku (v1.7, FR-A20 — actions §14) có dòng phụ "Requires Shizuku" / "Cần Shizuku" khi Shizuku
+chưa sẵn sàng; ở tab Tiles dòng phụ thành "<tên app> · Requires Shizuku".
 | Shortcuts | Ô tìm kiếm + danh sách **app** như tab Applications; chạm app → mở rộng/thu gọn, shortcut của app hiện ngay bên dưới (thụt vào, icon `SubdirectoryArrowRight`, nhãn, radio). Mặc định thu gọn tất cả; khi đang tìm kiếm, mọi app khớp đều mở rộng |
 | Activities | (v1.5, FR-A14) Giống hệt Shortcuts nhưng dòng con là activity: icon activity, nhãn + dòng phụ tên lớp rút gọn, radio. Trạng thái mở rộng riêng (`expandedActivities`) |
 | Tiles | (v1.6, FR-A15) Ô tìm kiếm + gợi ý một dòng "Chỉ ô đã thêm vào Cài đặt nhanh mới phản hồi" + danh sách phẳng các ô (icon app, nhãn ô + dòng phụ tên app, radio), một card (UI-26) |
@@ -156,6 +198,7 @@ dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọ
 | UI-25 | `expanded` ban đầu rỗng; `toggleExpanded(pkg)` thêm/bớt pkg; `isExpanded(pkg)` = đang tìm kiếm (query không rỗng) hoặc pkg ∈ `expanded` |
 | UI-27 | (v1.5) Tab Activities dùng `groupActivities` (AC-1, AC-2), tải lần đầu mở tab (như UI-22); `toggleActivityApp(pkg)`/`isActivityAppExpanded(pkg)` như UI-25; chọn → `LaunchActivity(pkg, activity, label)` |
 | UI-28 | (v1.6) Tab Tiles dùng `filterTiles` (QT-1), tải lần đầu mở tab (như UI-22); chọn → `ClickTile(pkg, service, label)` |
+| UI-29b | (v1.7) `ActionPickerUiState.shizukuReady` = `Requirements.shizukuRunning && shizukuGranted`; `needsShizuku` theo AR-10 |
 | UI-26 | Mỗi nhóm là một card bo góc (`Modifier.groupItem(index, count)`: bo góc trên ở dòng đầu, góc dưới ở dòng cuối, đường kẻ trên mỗi dòng trừ dòng đầu) |
 
 ### Notch (FR-U12, FR-U17, FR-U18, FR-S9, FR-R5…FR-R7) — tab thứ 3
@@ -220,7 +263,8 @@ Các section, theo thứ tự (v1.5):
    tả "Look for a new version when Totch opens" / "Tìm bản mới mỗi khi mở Totch"), *Automatic checks* (icon đồng hồ cập nhật,
    giá trị Off / Daily / Weekly / Monthly, chevron, dialog chọn), *Check for updates* (icon cập nhật hệ thống, mô tả theo
    trạng thái — chuyển từ Giới thiệu).
-4. **Giới thiệu** (cuối cùng): phiên bản, license, mã nguồn (`github.com/ptt98hd/totch`), credit ("Shizuku by
+4. **Ủng hộ** (v1.7, FR-U40): một dòng *Buy me a coffee* (§1 — Buy me a coffee).
+5. **Giới thiệu** (cuối cùng): phiên bản, license, mã nguồn (`github.com/ptt98hd/totch`), credit ("Shizuku by
    RikkaApps"). Dòng mở link có **chevron** (›) ở cuối.
 
 - Mọi mô tả (dòng phụ) chỉ một dòng (`maxLines = 1`, cắt bằng "…" nếu vẫn quá dài).
@@ -233,7 +277,7 @@ Các section, theo thứ tự (v1.5):
 |---|---|
 | UI-32 | Setter theme / amoled / language / startOnBoot / haptics / landscapeGestures lưu đúng field |
 | UI-37 | (v1.6) Dòng Check for updates hiển thị mô tả theo `UpdateState` (UP-6); bấm khi `Available` → hộp thoại tên bản + ghi chú phát hành, nút **Update** / **Later** (v1.6.1: hộp thoại ở `MainActivity`, update §5) |
-| UI-38 | (v1.6.1) Thứ tự section: System, Appearance, Update, About; Update có đúng 3 dòng như trên, About không còn Check for updates |
+| UI-38 | (v1.6.1) Thứ tự section: System, Appearance, Update, About; Update có đúng 3 dòng như trên, About không còn Check for updates. v1.7: System, Appearance, Update, **Support**, About |
 
 ### Giao diện & ngôn ngữ (FR-S6, FR-S7)
 | ID | Tiêu chí |

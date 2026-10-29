@@ -77,13 +77,63 @@ class UpdateControllerTest {
     }
 
     @Test
-    fun `UP-17 a failed Shizuku install is reported`() {
+    fun `UP-21 a failed Shizuku install is reported in the dialog`() {
         val c = controller()
         updater.latest.complete(release)
         c.check()
         c.startUpdate()
         updater.install.complete(InstallResult.SHIZUKU)
         c.installFailed()
-        assertEquals(UpdateUi(UpdateState.Failed), c.state.value)
+        assertEquals(UpdateUi(UpdateState.Failed, dialog = true), c.state.value)
+    }
+
+    @Test
+    fun `UP-19 opening the dialog checks when nothing is known yet`() {
+        val c = controller()
+        c.openDialog()
+        assertEquals(UpdateUi(UpdateState.Checking, dialog = true), c.state.value)
+        updater.latest.complete(null)
+        assertEquals(UpdateUi(UpdateState.UpToDate, dialog = true), c.state.value) // the dialog stays to say so
+        assertEquals(1, updater.checks)
+
+        c.dismissDialog()
+        updater.latest = CompletableDeferred<Release?>().apply { completeExceptionally(IOException("offline")) }
+        c.openDialog() // UpToDate: checks again
+        assertEquals(UpdateUi(UpdateState.Failed, dialog = true), c.state.value)
+        assertEquals(2, updater.checks)
+    }
+
+    @Test
+    fun `UP-19 opening the dialog while busy or with a known release does not check again`() {
+        val c = controller()
+        c.check()
+        c.openDialog() // Checking
+        assertEquals(UpdateUi(UpdateState.Checking, dialog = true), c.state.value)
+        updater.latest.complete(release)
+        c.dismissDialog()
+        c.openDialog() // Available
+        assertEquals(UpdateUi(UpdateState.Available(release), dialog = true), c.state.value)
+        assertEquals(1, updater.checks)
+    }
+
+    @Test
+    fun `UP-20 the dialog stays open while downloading and after`() {
+        val c = controller()
+        updater.latest.complete(release)
+        c.openDialog()
+        c.startUpdate()
+        assertEquals(UpdateUi(UpdateState.Downloading(0f), dialog = true), c.state.value)
+        c.dismissDialog() // hides it; the download goes on
+        assertEquals(UpdateUi(UpdateState.Downloading(0f), dialog = false), c.state.value)
+        c.openDialog()
+        updater.install.complete(InstallResult.SYSTEM_INSTALLER)
+        assertEquals(UpdateUi(UpdateState.Installing(viaShizuku = false), dialog = true), c.state.value)
+    }
+
+    @Test
+    fun `UP-22 the badge shows only for an available release`() {
+        assertTrue(UpdateUi(UpdateState.Available(release)).badge)
+        assertFalse(UpdateUi(UpdateState.UpToDate).badge)
+        assertFalse(UpdateUi(UpdateState.Downloading(0.5f)).badge)
     }
 }

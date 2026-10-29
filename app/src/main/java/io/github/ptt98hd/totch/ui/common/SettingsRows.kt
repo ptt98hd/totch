@@ -16,8 +16,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
@@ -29,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.ptt98hd.totch.R
 
@@ -59,26 +56,24 @@ fun SwitchRow(
     icon: ImageVector? = null,
     summary: String? = null,
 ) {
-    ListItem(
+    TotchListItem(
+        headline = title,
         modifier = Modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        leadingContent = icon?.let { { TonalIcon(it) } },
-        headlineContent = { Text(title) },
-        supportingContent = summary?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
-        trailingContent = { Switch(checked = checked, onCheckedChange = null) },
+        supporting = summary,
+        leading = icon?.let { { TonalIcon(it) } },
+        trailing = { Switch(checked = checked, onCheckedChange = null) },
     )
 }
 
 /** A row showing the current choice that opens a [ChoiceDialog]; the chevron marks it as openable (FR-U14). */
 @Composable
 fun ChoiceRow(title: String, value: String, icon: ImageVector? = null, onClick: () -> Unit) {
-    ListItem(
+    TotchListItem(
+        headline = title,
         modifier = Modifier.clickable(onClick = onClick),
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        leadingContent = icon?.let { { TonalIcon(it) } },
-        headlineContent = { Text(title) },
-        supportingContent = { Text(value, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        trailingContent = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) },
+        supporting = value,
+        leading = icon?.let { { TonalIcon(it) } },
+        trailing = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) },
     )
 }
 

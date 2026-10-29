@@ -24,11 +24,15 @@ sealed interface UpdateState {
     data object Failed : UpdateState
 }
 
-data class UpdateUi(val state: UpdateState = UpdateState.Idle, val dialog: Boolean = false)
+/** [dialog]: the update dialog is open, in any state (update spec §8). */
+data class UpdateUi(val state: UpdateState = UpdateState.Idle, val dialog: Boolean = false) {
+    /** UP-22: dot on the top bar button. */
+    val badge: Boolean get() = state is UpdateState.Available
+}
 
 /**
- * Process-wide update state (update spec §5), so the new-version dialog can open on any screen: from the Settings
- * row, when the app opens (FR-U29) or from the update notification.
+ * Process-wide update state (update spec §5, §8), so the update dialog can open on any screen: from the top bar
+ * button, the Settings row, when the app opens (FR-U29) or from the update notification.
  */
 class UpdateController(
     private val updater: AppUpdater,
@@ -48,21 +52,29 @@ class UpdateController(
         }
     }
 
-    private fun start(silent: Boolean) {
+    /** UP-19: opens the dialog from the top bar; checks unless a result is pending or already known. */
+    fun openDialog() {
+        when (_state.value.state) {
+            UpdateState.Idle, UpdateState.UpToDate, UpdateState.Failed -> start(silent = false, dialog = true)
+            else -> _state.update { it.copy(dialog = true) }
+        }
+    }
+
+    private fun start(silent: Boolean, dialog: Boolean = false) {
         val before = _state.value
-        if (!silent) _state.value = UpdateUi(UpdateState.Checking)
+        if (!silent) _state.value = UpdateUi(UpdateState.Checking, dialog)
         scope.launch {
             val result = try {
                 val release = updater.latestRelease()
                 when {
                     release != null && Releases.isNewer(release, currentVersion) -> UpdateUi(UpdateState.Available(release), dialog = true)
                     silent -> before
-                    else -> UpdateUi(UpdateState.UpToDate)
+                    else -> UpdateUi(UpdateState.UpToDate, _state.value.dialog)
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                if (silent) before else UpdateUi(UpdateState.Failed)
+                if (silent) before else UpdateUi(UpdateState.Failed, _state.value.dialog)
             }
             // A manual check may have started meanwhile; a silent result only lands on an unchanged state.
             if (!silent || _state.value == before) _state.value = result
@@ -71,30 +83,31 @@ class UpdateController(
 
     fun dismissDialog() = _state.update { it.copy(dialog = false) }
 
-    /** UP-7 */
+    /** UP-7, UP-20: the dialog stays open to show the progress; hiding it does not stop the download. */
     fun startUpdate() {
         val release = (_state.value.state as? UpdateState.Available)?.release ?: return
-        _state.value = UpdateUi(UpdateState.Downloading(0f))
+        _state.value = UpdateUi(UpdateState.Downloading(0f), dialog = true)
         scope.launch {
             val result = try {
-                updater.downloadAndInstall(release) { p -> _state.value = UpdateUi(UpdateState.Downloading(p.coerceIn(0f, 1f))) }
+                updater.downloadAndInstall(release) { p ->
+                    _state.update { it.copy(state = UpdateState.Downloading(p.coerceIn(0f, 1f))) }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
                 InstallResult.FAILED
             }
-            _state.value = UpdateUi( // UP-16
-                when (result) {
-                    InstallResult.SHIZUKU -> UpdateState.Installing(viaShizuku = true)
-                    InstallResult.SYSTEM_INSTALLER -> UpdateState.Installing(viaShizuku = false)
-                    InstallResult.FAILED -> UpdateState.Failed
-                },
-            )
+            val state = when (result) { // UP-16
+                InstallResult.SHIZUKU -> UpdateState.Installing(viaShizuku = true)
+                InstallResult.SYSTEM_INSTALLER -> UpdateState.Installing(viaShizuku = false)
+                InstallResult.FAILED -> UpdateState.Failed
+            }
+            _state.update { it.copy(state = state) }
         }
     }
 
-    /** UP-17: the detached `pm install` failed and reopened Totch to say so. */
+    /** UP-21: the detached `pm install` failed and reopened Totch to say so. */
     fun installFailed() {
-        _state.value = UpdateUi(UpdateState.Failed)
+        _state.value = UpdateUi(UpdateState.Failed, dialog = true)
     }
 }

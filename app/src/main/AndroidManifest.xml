@@ -69,7 +69,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Reads touchscreen input via Shizuku to detect gestures on the display cutout" />
+                android:value="Keeps notch gesture detection running (touch input via Shizuku or the accessibility overlay)" />
         </service>
 
         <service

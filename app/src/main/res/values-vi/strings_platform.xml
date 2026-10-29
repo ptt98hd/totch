@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="accessibility_service_label">Cử chỉ notch Totch</string>
-    <string name="accessibility_service_description">Tuỳ chọn. Thực hiện các hành động hệ thống bạn gán cho cử chỉ notch (Quay lại, Màn hình chính, khóa màn hình…) mở ứng dụng từ nền, và chặn chạm tại notch để vuốt xuống ở đó không kéo thanh thông báo. Totch không đọc bất kỳ nội dung nào trên màn hình.</string>
+    <string name="accessibility_service_description">Giúp Totch nhận chạm và vuốt tại notch mà không cần Shizuku: một vùng trong suốt trên notch chỉ nhận các chạm tại đó. Ngoài ra thực hiện các hành động hệ thống bạn gán (Quay lại, Màn hình chính, khóa màn hình…) và mở ứng dụng từ nền. Totch không đọc nội dung màn hình.</string>
 
     <string name="platform_channel_name">Dịch vụ cử chỉ</string>
-    <string name="platform_channel_description">Hiển thị khi Totch nhận cử chỉ notch qua Shizuku</string>
+    <string name="platform_channel_description">Hiện khi Totch đang nhận cử chỉ tại notch</string>
     <string name="platform_notification_title">Totch đang hoạt động</string>
     <string name="platform_notification_running">Đang nhận cử chỉ tại notch</string>
-    <string name="platform_notification_waiting">Đang chờ Shizuku…</string>
-    <string name="platform_notification_permission">Cần cấp quyền Shizuku</string>
+    <string name="platform_notification_waiting">Đang kết nối Shizuku…</string>
+    <string name="platform_notification_needs_access">Bật Trợ năng hoặc Shizuku</string>
     <string name="platform_notification_paused">Tạm dừng khi xoay ngang</string>
 
     <string name="platform_error_no_touchscreen">Không tìm thấy màn hình cảm ứng cho getevent.</string>

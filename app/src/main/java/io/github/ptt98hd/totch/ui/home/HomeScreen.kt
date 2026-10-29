@@ -70,6 +70,7 @@ import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.EngineStatus
 import io.github.ptt98hd.totch.Permission
 import io.github.ptt98hd.totch.R
+import io.github.ptt98hd.totch.ui.common.DonateRow
 import io.github.ptt98hd.totch.ui.common.GroupCard
 import io.github.ptt98hd.totch.ui.common.IconBox
 import io.github.ptt98hd.totch.ui.common.SectionHeader
@@ -194,14 +195,7 @@ fun HomeScreen(
             item(key = "master") {
                 MasterSwitchCard(enabled = state.enabled, status = state.status, onEnabledChange = onEnabledChange)
             }
-            item(key = "requirement") {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionHeader(stringResource(R.string.requirement_title))
-                    GroupCard {
-                        ShizukuRow(state.shizuku, shizukuInstalled, onShizukuClick)
-                    }
-                }
-            }
+            // UI-54: Permissions, then Advanced (Shizuku, optional — FR-U42), then Support (FR-U40).
             if (state.permissions.isNotEmpty()) {
                 item(key = "permissions") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -210,6 +204,20 @@ fun HomeScreen(
                             PermissionRow(item, onPermissionChange)
                         }
                     }
+                }
+            }
+            item(key = "advanced") {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionHeader(stringResource(R.string.advanced_title))
+                    GroupCard {
+                        ShizukuRow(state.shizuku, shizukuInstalled, onShizukuClick)
+                    }
+                }
+            }
+            item(key = "support") {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionHeader(stringResource(R.string.section_support))
+                    GroupCard { DonateRow() }
                 }
             }
         }
@@ -295,7 +303,7 @@ private fun MasterIconBox(icon: MasterIcon, problem: Boolean) {
     }
 }
 
-/** UI-50: Shizuku is the only requirement; the switch shows whether it is ready and leads to the next step. */
+/** UI-50: optional Shizuku (FR-D13); the switch shows whether it is ready and leads to the next step. */
 @Composable
 private fun ShizukuRow(status: ShizukuStatus, installed: Boolean, onClick: () -> Unit) {
     val description = when {
@@ -310,7 +318,6 @@ private fun ShizukuRow(status: ShizukuStatus, installed: Boolean, onClick: () ->
         description = stringResource(description),
         checked = status == ShizukuStatus.READY,
         onCheckedChange = { onClick() },
-        error = status != ShizukuStatus.READY,
     )
 }
 

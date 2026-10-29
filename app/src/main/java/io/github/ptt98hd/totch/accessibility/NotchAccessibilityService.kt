@@ -15,7 +15,9 @@ import android.view.accessibility.AccessibilityEvent
 import io.github.ptt98hd.totch.EngineStatus
 import io.github.ptt98hd.totch.TotchApp
 import io.github.ptt98hd.totch.core.model.Rect
+import io.github.ptt98hd.totch.core.model.TouchEvent
 import io.github.ptt98hd.totch.core.settings.needsTouchBlocking
+import io.github.ptt98hd.totch.engine.TouchSource
 import io.github.ptt98hd.totch.service.DefaultAppContainer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
@@ -25,23 +27,30 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /**
- * Optional accessibility service (detection-modes §6, §7): runs actions — global actions, launching apps, shortcuts
- * and activities from the background — and blocks touches at the notch with an empty overlay while a swipe-down
- * gesture is on, so the system does not pull down the shade (FR-G14). Touches are still read through Shizuku; the
- * overlay only swallows them. Receives no accessibility events.
+ * Accessibility service (detection-modes §6–§8): runs actions — global actions, launching apps, shortcuts and
+ * activities from the background — and puts an overlay on the notch. Without Shizuku the overlay is the touch source
+ * and passes its touches to the engine (FR-D13); with Shizuku it only swallows them while a swipe-down gesture is on,
+ * so the system does not pull down the shade (FR-G14). Receives no accessibility events.
  */
 class NotchAccessibilityService : AccessibilityService() {
     private var platform: DefaultAppContainer? = null
     private var scope: CoroutineScope? = null
-    private var overlay: View? = null
+    private var overlay: NotchView? = null
 
     override fun onServiceConnected() {
         val platform = (application as TotchApp).platform.also { platform = it }
         platform.accessibility.attach(this)
         val scope = MainScope().also { scope = it }
         scope.launch {
-            combine(platform.settingsRepository.settings, platform.engineStatus, platform.region) { settings, status, region ->
-                region.takeIf { status == EngineStatus.Running && settings.needsTouchBlocking() } // DM-15
+            combine(
+                platform.settingsRepository.settings,
+                platform.engineStatus,
+                platform.region,
+                platform.touchSource,
+            ) { settings, status, region, source ->
+                val forward = source == TouchSource.ACCESSIBILITY
+                region.takeIf { status == EngineStatus.Running && (forward || settings.needsTouchBlocking()) } // DM-15
+                    ?.let { OverlaySpec(it, forward) }
             }.distinctUntilChanged().collect(::updateOverlay)
         }
     }
@@ -90,14 +99,16 @@ class NotchAccessibilityService : AccessibilityService() {
         startActivity(intent)
     }
 
-    private fun updateOverlay(rect: Rect?) {
+    private fun updateOverlay(spec: OverlaySpec?) {
         val windowManager = getSystemService(WindowManager::class.java)
-        if (rect == null) {
+        if (spec == null) {
             overlay?.let { runCatching { windowManager.removeViewImmediate(it) } }
             overlay = null
             return
         }
-        val view = overlay ?: BlockingView(this)
+        val rect = spec.rect
+        val view = overlay ?: NotchView(this)
+        view.onTouch = if (spec.forward) platform?.engine?.let { engine -> engine::onTouch } else null
         overlay = try {
             if (overlay == null) windowManager.addView(view, layoutParams(rect)) else windowManager.updateViewLayout(view, layoutParams(rect))
             view
@@ -130,11 +141,24 @@ class NotchAccessibilityService : AccessibilityService() {
         platform = null
     }
 
-    /** Swallows every touch (DM-16); gestures are recognized from getevent, not from these events. */
+    /** Overlay [rect]; [forward] passes its touches to the engine (touch source = Accessibility, FR-D13). */
+    private data class OverlaySpec(val rect: Rect, val forward: Boolean)
+
+    /**
+     * Swallows every touch (DM-16). With [onTouch] set it also reports them (detection-modes §8); otherwise gestures
+     * come from getevent and these events are ignored.
+     */
     @SuppressLint("ViewConstructor")
-    private class BlockingView(context: Context) : View(context) {
+    private class NotchView(context: Context) : View(context) {
+        @Volatile var onTouch: ((TouchEvent) -> Unit)? = null
+
         @SuppressLint("ClickableViewAccessibility")
-        override fun onTouchEvent(event: MotionEvent): Boolean = true
+        override fun onTouchEvent(event: MotionEvent): Boolean {
+            onTouch?.let { report ->
+                touchEventOf(event.actionMasked, event.rawX, event.rawY, event.eventTime, event.pointerCount)?.let(report)
+            }
+            return true
+        }
     }
 
     private companion object {

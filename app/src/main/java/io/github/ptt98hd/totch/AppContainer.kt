@@ -34,8 +34,8 @@ interface SettingsRepository {
 
 sealed interface EngineStatus {
     data object Disabled : EngineStatus
-    data object WaitingShizuku : EngineStatus
-    data object ShizukuPermissionRequired : EngineStatus
+    /** No touch source: neither Shizuku nor the accessibility service is available (FR-D13, DM-41). */
+    data object NeedsAccess : EngineStatus
     /** Shizuku is ready and the touch pipeline is connecting. */
     data object Starting : EngineStatus
     /** Switched off while the touch pipeline is still shutting down. */
@@ -45,7 +45,7 @@ sealed interface EngineStatus {
     data object PausedRotation : EngineStatus
 }
 
-/** Optional permissions shown on Home; each can be switched through Shizuku (detection-modes §6). */
+/** Permissions shown on Home; each can be switched through Shizuku (detection-modes §6). */
 enum class Permission { ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS, DND_ACCESS, BATTERY, INSTALL_UPDATES }
 
 data class Requirements(

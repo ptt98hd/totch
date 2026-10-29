@@ -4,8 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Code
@@ -21,14 +19,8 @@ import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.Vibration
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,6 +44,8 @@ import io.github.ptt98hd.totch.core.settings.ThemeMode
 import io.github.ptt98hd.totch.core.settings.UpdateInterval
 import io.github.ptt98hd.totch.ui.common.ChoiceDialog
 import io.github.ptt98hd.totch.ui.common.ChoiceRow
+import io.github.ptt98hd.totch.ui.common.DonateRow
+import io.github.ptt98hd.totch.ui.common.TotchListItem
 import io.github.ptt98hd.totch.ui.common.RowDivider
 import io.github.ptt98hd.totch.ui.common.SettingsSection
 import io.github.ptt98hd.totch.ui.common.SwitchRow
@@ -60,7 +53,6 @@ import io.github.ptt98hd.totch.ui.common.TonalIcon
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.withGutters
 import io.github.ptt98hd.totch.ui.theme.TotchTheme
-import io.github.ptt98hd.totch.update.UpdateController
 import io.github.ptt98hd.totch.update.UpdateState
 
 /** Callbacks of the app settings screen, grouped to keep the stateless signature readable. */
@@ -180,6 +172,9 @@ fun AppSettingsScreen(state: AppSettingsUiState, actions: AppSettingsActions, ve
                     )
                 }
             }
+            item(key = "support") {
+                SettingsSection(stringResource(R.string.section_support)) { DonateRow() } // FR-U40, UI-38
+            }
             item(key = "about") { AboutSection(versionName, actions) }
         }
     }
@@ -220,35 +215,6 @@ fun AppSettingsScreen(state: AppSettingsUiState, actions: AppSettingsActions, ve
         )
         null -> Unit
     }
-}
-
-/** UI-37: the new-version dialog, drawn above every screen by `MainActivity` (update spec §5). */
-@Composable
-fun UpdateDialogHost(updates: UpdateController) {
-    val ui by updates.state.collectAsStateWithLifecycle()
-    val available = ui.state as? UpdateState.Available
-    if (ui.dialog && available != null) {
-        UpdateDialog(available, onUpdate = updates::startUpdate, onDismiss = updates::dismissDialog)
-    }
-}
-
-/** UI-37: release notes of the new version, Update / Later. */
-@Composable
-private fun UpdateDialog(available: UpdateState.Available, onUpdate: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Outlined.SystemUpdate, contentDescription = null) },
-        title = { Text(stringResource(R.string.update_dialog_title, available.release.version.toString())) },
-        text = {
-            Text(
-                available.release.notes.trim(),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-            )
-        },
-        confirmButton = { TextButton(onClick = onUpdate) { Text(stringResource(R.string.update_action)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.update_later)) } },
-    )
 }
 
 /** UP-5…UP-7: one-line summary of the update row. */
@@ -315,13 +281,12 @@ private fun AboutSection(versionName: String, actions: AppSettingsActions) {
 
 @Composable
 private fun AboutRow(icon: ImageVector, title: String, summary: String, onClick: (() -> Unit)? = null, chevron: Boolean = true) {
-    ListItem(
+    TotchListItem(
+        headline = title,
         modifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        leadingContent = { TonalIcon(icon) },
-        headlineContent = { Text(title) },
-        supportingContent = { Text(summary, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        trailingContent = onClick?.takeIf { chevron }?.let { { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) } },
+        supporting = summary,
+        leading = { TonalIcon(icon) },
+        trailing = onClick?.takeIf { chevron }?.let { { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) } },
     )
 }
 

@@ -247,4 +247,26 @@ class ActionPickerViewModelTest {
             assertFalse(expectMostRecentItem().needsDndAccess(Action.RingerSilent))
         }
     }
+
+    @Test
+    fun `AR-10 UI-29b Shizuku-only actions are flagged while Shizuku is not ready`() = runTest {
+        val vm = vm(bound(Action.Back), Gesture.TAP)
+        vm.state.test {
+            val without = expectMostRecentItem()
+            assertFalse(without.shizukuReady)
+            assertTrue(without.needsShizuku(Action.ToggleWifi))
+            assertTrue(without.needsShizuku(Action.OneHandedMode))
+            assertTrue(without.needsShizuku(Action.ClickTile("com.notes", "com.notes.QuickNote", "Quick note")))
+            assertFalse(without.needsShizuku(Action.Back)) // Accessibility can run it
+            assertFalse(without.needsShizuku(Action.ToggleTorch)) // local
+
+            requirements.value = Requirements(shizukuRunning = true, shizukuGranted = false) // still not ready: no new state
+            assertTrue(vm.state.value.needsShizuku(Action.ToggleWifi))
+
+            requirements.value = Requirements(shizukuRunning = true, shizukuGranted = true)
+            val ready = expectMostRecentItem()
+            assertTrue(ready.shizukuReady)
+            assertFalse(ready.needsShizuku(Action.ToggleWifi))
+        }
+    }
 }

@@ -98,24 +98,42 @@ fun detectedRegionDp(display: DisplaySnapshot): ManualRegionDp? {
     )
 }
 
-/** Combines every input of the engine into the single status shown by the UI (detection-modes §1). */
+/** Where touches at the notch come from (FR-D13, detection-modes §8). */
+enum class TouchSource { NONE, SHIZUKU, ACCESSIBILITY }
+
+/** DM-40: Shizuku while it is ready and getevent works, otherwise the accessibility overlay. */
+fun touchSource(shizuku: ShizukuState, pipeline: PipelineState, accessibility: Boolean): TouchSource = when {
+    shizuku.ready && pipeline !is PipelineState.Failed -> TouchSource.SHIZUKU
+    accessibility -> TouchSource.ACCESSIBILITY
+    shizuku.ready -> TouchSource.SHIZUKU // failed: shown as Error
+    else -> TouchSource.NONE
+}
+
+/** Combines every input of the engine into the single status shown by the UI (detection-modes §1, §8). */
 fun resolveEngineStatus(
     settings: Settings,
     shizuku: ShizukuState,
     pipeline: PipelineState,
     rotation: Int,
+    accessibility: Boolean,
     errorMessage: (PipelineError) -> String,
-): EngineStatus = when {
-    !settings.enabled -> when (pipeline) {
-        PipelineState.Running, PipelineState.Connecting -> EngineStatus.Stopping // DM-30
-        else -> EngineStatus.Disabled
+): EngineStatus {
+    if (!settings.enabled) {
+        return when (pipeline) {
+            PipelineState.Running, PipelineState.Connecting -> EngineStatus.Stopping // DM-30
+            else -> EngineStatus.Disabled
+        }
     }
-    !shizuku.running -> EngineStatus.WaitingShizuku
-    !shizuku.granted -> EngineStatus.ShizukuPermissionRequired
-    pipeline is PipelineState.Failed -> EngineStatus.Error(errorMessage(pipeline.error))
-    rotation != 0 && !settings.landscapeGestures -> EngineStatus.PausedRotation // DM-31
-    pipeline == PipelineState.Running -> EngineStatus.Running
-    else -> EngineStatus.Starting // DM-30
+    return when (touchSource(shizuku, pipeline, accessibility)) {
+        TouchSource.NONE -> EngineStatus.NeedsAccess // DM-41
+        TouchSource.ACCESSIBILITY -> if (rotation != 0) EngineStatus.PausedRotation else EngineStatus.Running // DM-42
+        TouchSource.SHIZUKU -> when {
+            pipeline is PipelineState.Failed -> EngineStatus.Error(errorMessage(pipeline.error))
+            rotation != 0 && !settings.landscapeGestures -> EngineStatus.PausedRotation // DM-31
+            pipeline == PipelineState.Running -> EngineStatus.Running
+            else -> EngineStatus.Starting // DM-30
+        }
+    }
 }
 
 /** [notchRegion] and the same region without padding, for the highlight (ui spec §2); null when inactive. */

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="accessibility_service_label">Totch notch gestures</string>
-    <string name="accessibility_service_description">Optional. Performs the system actions you assign to notch gestures (Back, Home, lock screen…) opens apps from the background, and blocks touches on the notch so swiping down there does not pull down the notification shade. Totch does not read any screen content.</string>
+    <string name="accessibility_service_description">Lets Totch detect taps and swipes on the notch without Shizuku: a transparent area over the notch receives only touches made there. Also performs the system actions you assign (Back, Home, lock screen…) and opens apps from the background. Totch does not read any screen content.</string>
 
     <!-- Foreground service -->
     <string name="platform_channel_name">Gesture service</string>
-    <string name="platform_channel_description">Shown while Totch listens for notch gestures through Shizuku</string>
+    <string name="platform_channel_description">Shown while Totch listens for notch gestures</string>
     <string name="platform_notification_title">Totch is active</string>
     <string name="platform_notification_running">Listening for notch gestures</string>
-    <string name="platform_notification_waiting">Waiting for Shizuku…</string>
-    <string name="platform_notification_permission">Shizuku permission required</string>
+    <string name="platform_notification_waiting">Connecting to Shizuku…</string>
+    <string name="platform_notification_needs_access">Turn on Accessibility or Shizuku</string>
     <string name="platform_notification_paused">Paused in landscape</string>
 
     <!-- Engine errors (EngineStatus.Error) -->

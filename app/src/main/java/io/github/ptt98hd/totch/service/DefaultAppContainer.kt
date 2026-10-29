@@ -33,6 +33,8 @@ import io.github.ptt98hd.totch.data.DataStoreSettingsRepository
 import io.github.ptt98hd.totch.data.settingsDataStore
 import io.github.ptt98hd.totch.engine.GestureEngine
 import io.github.ptt98hd.totch.engine.PipelineError
+import io.github.ptt98hd.totch.engine.TouchSource
+import io.github.ptt98hd.totch.engine.touchSource
 import io.github.ptt98hd.totch.engine.detectedRegionDp
 import io.github.ptt98hd.totch.engine.engineRegion
 import io.github.ptt98hd.totch.engine.highlightArea
@@ -103,13 +105,21 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
         feedback = AndroidFeedback(app, installedApps),
     )
 
+    private val accessibilityConnected: StateFlow<Boolean> = accessibility.service.map { it != null }
+        .stateIn(scope, SharingStarted.Eagerly, false)
+
+    /** Where touches come from: Shizuku's getevent or the accessibility overlay (FR-D13, DM-40). */
+    val touchSource: StateFlow<TouchSource> = combine(shizuku.state, pipeline.state, accessibilityConnected, ::touchSource)
+        .stateIn(scope, SharingStarted.Eagerly, TouchSource.NONE)
+
     override val engineStatus: StateFlow<EngineStatus> = combine(
         settings,
         shizuku.state,
         pipeline.state,
         display.state.map { it.rotation },
-    ) { s, shizukuState, pipelineState, rotation ->
-        resolveEngineStatus(s, shizukuState, pipelineState, rotation, ::errorMessage)
+        accessibilityConnected,
+    ) { s, shizukuState, pipelineState, rotation, a11y ->
+        resolveEngineStatus(s, shizukuState, pipelineState, rotation, a11y, ::errorMessage)
     }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, EngineStatus.Disabled)
 
     private val shell = ShizukuShell(app, shizuku)
@@ -131,7 +141,8 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     init {
         scope.launch { combine(settings, display.state) { s, d -> s to d.density }.collect { (s, d) -> engine.updateSettings(s, d) } }
         scope.launch { engineRegion.collect { engine.region = it } }
-        scope.launch { accessibility.service.map { it != null }.distinctUntilChanged().collect { engine.canBlockTouches = it } }
+        scope.launch { accessibilityConnected.collect { engine.canBlockTouches = it } }
+        scope.launch { touchSource.collect { engine.reset() } } // a gesture never spans two sources
         scope.launch { localExecutor.warmUp() }
         scope.launch { syncLanguage() }
         scope.launch { settingsRepository.settings.map { it.updateInterval }.distinctUntilChanged().collect { UpdateScheduler.apply(app, it) } } // UP-11

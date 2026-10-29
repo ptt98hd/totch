@@ -62,7 +62,7 @@ class ShizukuTouchPipeline(
         try {
             shizuku.state.map { it.ready }.distinctUntilChanged().collectLatest { ready ->
                 if (!ready) {
-                    _state.value = PipelineState.Idle // status shows WaitingShizuku / permission (DM-2, DM-3, DM-6)
+                    _state.value = PipelineState.Idle // Accessibility may take over, otherwise NeedsAccess (DM-6, DM-41)
                     return@collectLatest
                 }
                 _state.value = PipelineState.Connecting

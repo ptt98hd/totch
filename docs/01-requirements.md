@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), **v1.5** (§12) · Cập nhật: 2026-10-29
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), **v1.7** (§17) · Cập nhật: 2026-10-30
 
 ## 1. Tầm nhìn
 
@@ -24,7 +24,7 @@ App là **native Android (Kotlin + Jetpack Compose, Material 3 / Material You)**
 | Thuật ngữ | Định nghĩa |
 |---|---|
 | Notch region | Hình chữ nhật trên màn hình nơi nhận cử chỉ, mặc định = bounding rect của display cutout ở cạnh trên, mở rộng thêm `padding` |
-| Detection mode | ~~Cơ chế nhận chạm: `SHIZUKU` hoặc `ACCESSIBILITY`~~ — v1.4: chỉ còn Shizuku (`getevent`), FR-D8 |
+| Detection mode | ~~Cơ chế nhận chạm: `SHIZUKU` hoặc `ACCESSIBILITY`~~ — v1.4: chỉ còn Shizuku (`getevent`), FR-D8. v1.7: **nguồn chạm** (`TouchSource`) tự chọn — Shizuku nếu sẵn sàng, không thì Trợ năng (FR-D13) |
 | Gesture | Một trong 9 cử chỉ: TAP, DOUBLE_TAP, LONG_PRESS, SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT và (v1.1) SWIPE_DOWN_HOLD, SWIPE_LEFT_HOLD, SWIPE_RIGHT_HOLD |
 | Action | Hành động được gán cho một gesture |
 | Binding | Cặp (Gesture → Action) |
@@ -244,3 +244,16 @@ tham chiếu ID tương ứng.
 | FR-A19 | Hành động **kết nối** qua Shizuku: bật/tắt Wi-Fi, Bluetooth, Dữ liệu di động, Chế độ máy bay, Vị trí | [actions §13](specs/actions.md) |
 | FR-D12 | Home › Permissions thêm **Do Not Disturb access** (quyền truy cập Không làm phiền): bật/tắt qua Shizuku (`cmd notification allow_dnd`), không có Shizuku → mở trang cài đặt của hệ thống | [detection-modes §6](specs/detection-modes.md), [ui §3](specs/ui.md) |
 | FR-U36 | Cài bản cập nhật **qua Shizuku** khi Shizuku sẵn sàng: `pm install` dưới uid shell, không cần hộp thoại xác nhận hay quyền "Cài ứng dụng không rõ nguồn gốc", cài xong tự mở lại Totch. Không có Shizuku / lỗi khi chuyển giao → dùng `PackageInstaller` như cũ | [update §7](specs/update.md) |
+
+## 17. Phiên bản 1.7 — Shizuku tùy chọn
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-D13 | **Shizuku là tùy chọn**: không có Shizuku, Totch nhận chạm qua **Trợ năng** (overlay `TYPE_ACCESSIBILITY_OVERLAY` trên vùng notch, nhận và tiêu thụ chạm). Có Shizuku → đọc `getevent` như cũ và mở rộng: hành động qua shell, bật/tắt quyền ngay trong app, cài cập nhật không cần xác nhận. Không có cả hai → trạng thái "Bật Trợ năng hoặc Shizuku". Thay FR-D8 | [detection-modes §8](specs/detection-modes.md) |
+| FR-A20 | Hành động chỉ chạy được qua Shizuku (Bấm ô Cài đặt nhanh, Chế độ một tay, độ sáng, tự xoay, kết nối) có dòng phụ "Cần Shizuku" trong picker khi Shizuku chưa sẵn sàng | [actions §14](specs/actions.md), [ui §3](specs/ui.md) |
+| FR-U37 | Action picker dùng **`BottomSheetScaffold`** (sheet native của Material 3) thay sheet tự vẽ: cao **toàn màn hình** (được che top bar), chỉ giữ **bottom bar** (vẫn bấm được); không kéo để ẩn, không có thanh kéo. Thay phần "không che top bar" của FR-U20 và "sát mép dưới top bar" của FR-U25 | [ui §3](specs/ui.md) |
+| FR-U38 | Ô tìm kiếm trong picker **gọn hơn** (cao 44 dp thay vì 56 dp của `SearchBar`) | [ui §3](specs/ui.md) |
+| FR-U39 | Mọi dòng danh sách trong app **cùng chiều cao** (tối thiểu 72 dp, có hay không có mô tả); tiêu đề và mô tả luôn **một dòng** (cắt bằng "…"). Thay FR-U24/FR-U26 phần một dòng (nay áp dụng toàn app) | [ui §1](specs/ui.md) |
+| FR-U40 | **Buy me a coffee** (prototype): nút ly cà phê ở **bên phải** top bar mọi màn hình, dòng *Buy me a coffee* ở Home (section **Ủng hộ**, cuối) và Settings (section **Ủng hộ**, trước Giới thiệu); bấm → hộp thoại ủng hộ → mở trang ủng hộ trong trình duyệt | [ui §1, §3](specs/ui.md) |
+| FR-U41 | Nút **Kiểm tra cập nhật** ở top bar (bên trái nút cà phê, có chấm báo khi đã biết có bản mới): mở hộp thoại cập nhật — đang kiểm tra → bản mới nhất / có bản mới (ghi chú) → tải (tiến độ) → cài (qua Shizuku nếu sẵn sàng, không thì trình cài đặt hệ thống) / lỗi (thử lại) | [update §8](specs/update.md), [ui §1](specs/ui.md) |
+| FR-U42 | Home: section **Requirement** đổi tên thành **Nâng cao** (Advanced) và chuyển xuống **dưới** Permissions; dòng Shizuku ghi rõ là tùy chọn. Thay phần thứ tự của FR-U21 | [ui §3](specs/ui.md) |

@@ -1,18 +1,19 @@
 package io.github.ptt98hd.totch.ui.gestures
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,17 +26,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -52,6 +48,7 @@ import io.github.ptt98hd.totch.core.settings.isAvailable
 import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.SectionHeader
 import io.github.ptt98hd.totch.ui.common.TonalIcon
+import io.github.ptt98hd.totch.ui.common.TotchListItem
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.actionDisplayName
 import io.github.ptt98hd.totch.ui.common.icon
@@ -82,6 +79,7 @@ private val GestureGroup.labelRes: Int
         GestureGroup.SWIPE_HOLD -> R.string.group_swipe_hold
     }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GesturesScreen(
     state: GesturesUiState,
@@ -90,48 +88,61 @@ fun GesturesScreen(
     modifier: Modifier = Modifier,
     picker: @Composable (Gesture) -> Unit = {},
 ) {
-    // Keeps the last gesture while the sheet animates out.
+    // FR-U37: native standard sheet with only Hidden / Expanded; opened and closed from `picking` (UI-17), never dragged.
+    val sheetState = rememberStandardBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        confirmValueChange = { it != SheetValue.PartiallyExpanded },
+        skipHiddenState = false,
+    )
+    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
+    // Keeps the last gesture while the sheet animates out; cleared once hidden so the next opening starts fresh.
     var sheetGesture by remember { mutableStateOf(state.picking) }
     if (state.picking != null) sheetGesture = state.picking
-    Scaffold(
+    LaunchedEffect(state.picking) {
+        if (state.picking != null) {
+            sheetState.expand()
+        } else {
+            sheetState.hide()
+            sheetGesture = null
+        }
+    }
+    BottomSheetScaffold(
+        sheetContent = {
+            // Full height of the Gestures screen, over the top bar; the bottom bar stays outside (FR-U37).
+            Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars)) {
+                sheetGesture?.let { picker(it) }
+            }
+        },
         modifier = modifier,
+        scaffoldState = scaffoldState,
+        sheetPeekHeight = 0.dp,
+        sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        sheetDragHandle = null,
+        sheetSwipeEnabled = false,
         topBar = { TotchTopBar(stringResource(R.string.nav_gestures)) },
+        containerColor = MaterialTheme.colorScheme.background, // as the other screens' Scaffold
     ) { padding ->
-        Box(Modifier.fillMaxSize()) {
-            LazyColumn(contentPadding = padding.withGutters(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(state.groups, key = { it.group }) { section ->
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
-                        SectionHeader(stringResource(section.group.labelRes))
-                        Card(
-                            Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                        ) {
-                            section.rows.forEachIndexed { index, row ->
-                                if (index > 0) HorizontalDivider(Modifier.padding(horizontal = Gutter))
-                                GestureListItem(
-                                    row = row,
-                                    onClick = { onGestureClick(row.gesture) },
-                                    onSwitchChange = { onSwitchChange(row.gesture, it) },
-                                )
-                            }
+        LazyColumn(
+            contentPadding = padding.withGutters(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            items(state.groups, key = { it.group }) { section ->
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
+                    SectionHeader(stringResource(section.group.labelRes))
+                    Card(
+                        Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                    ) {
+                        section.rows.forEachIndexed { index, row ->
+                            if (index > 0) HorizontalDivider(Modifier.padding(horizontal = Gutter))
+                            GestureListItem(
+                                row = row,
+                                onClick = { onGestureClick(row.gesture) },
+                                onSwitchChange = { onSwitchChange(row.gesture, it) },
+                            )
                         }
                     }
-                }
-            }
-            // FR-U20, FR-U25: fills the content between the top and bottom bars (flush with the top bar); both stay usable.
-            AnimatedVisibility(
-                visible = state.picking != null,
-                enter = slideInVertically(tween(300)) { it } + fadeIn(tween(300)),
-                exit = slideOutVertically(tween(250)) { it } + fadeOut(tween(250)),
-                modifier = Modifier.padding(padding),
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    shadowElevation = 8.dp,
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    sheetGesture?.let { picker(it) }
                 }
             }
         }
@@ -154,21 +165,13 @@ private fun GestureListItem(row: GestureRow, onClick: () -> Unit, onSwitchChange
     }
     val colors = MaterialTheme.colorScheme
     val contentAlpha by animateFloatAsState(if (row.on) 1f else 0.5f, label = "gestureAlpha")
-    ListItem(
+    TotchListItem(
+        headline = stringResource(row.gesture.labelRes),
         modifier = Modifier.clickable(enabled = row.enabled && row.on, onClick = onClick),
-        colors = ListItemDefaults.colors(containerColor = colors.surfaceContainer),
-        leadingContent = { TonalIcon(row.gesture.icon, Modifier.alpha(contentAlpha)) },
-        headlineContent = { Text(stringResource(row.gesture.labelRes), Modifier.alpha(contentAlpha)) },
-        supportingContent = supporting?.let {
-            {
-                Text(
-                    it,
-                    color = if (notInstalled && row.on) colors.error else colors.onSurfaceVariant,
-                    modifier = Modifier.alpha(contentAlpha),
-                )
-            }
-        },
-        trailingContent = {
+        supporting = supporting,
+        supportingColor = if (notInstalled && row.on) colors.error else colors.onSurfaceVariant,
+        leading = { TonalIcon(row.gesture.icon) },
+        trailing = {
             val switchDescription = stringResource(R.string.gesture_switch_cd, stringResource(row.gesture.labelRes))
             Switch(
                 checked = row.on,
@@ -177,6 +180,7 @@ private fun GestureListItem(row: GestureRow, onClick: () -> Unit, onSwitchChange
                 modifier = Modifier.semantics { contentDescription = switchDescription },
             )
         },
+        contentAlpha = contentAlpha,
     )
 }
 

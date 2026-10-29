@@ -1,6 +1,6 @@
-# Spec: Tự cập nhật từ GitHub Releases (v1.6, v1.6.1, v1.6.3)
+# Spec: Tự cập nhật từ GitHub Releases (v1.6, v1.6.1, v1.6.3, v1.7)
 
-Yêu cầu: FR-U27, FR-U29, NFR-4 · Module: `:core` (`core.update.Releases`, `UpdatePolicy`, thuần) + `:app` (`AppUpdater`,
+Yêu cầu: FR-U27, FR-U29, FR-U36, FR-U41, NFR-4 · Module: `:core` (`core.update.Releases`, `UpdatePolicy`, thuần) + `:app` (`AppUpdater`,
 `UpdateController`, `UpdateCheckJobService`, `UpdateInstallReceiver`, `AppSettingsViewModel`)
 
 ## 1. Vì sao không cần backend
@@ -96,7 +96,7 @@ sealed interface UpdateState {
 |---|---|
 | UP-5 | Trạng thái ban đầu `Idle`, `updateDialog = false`; không gọi mạng khi mở màn hình |
 | UP-6 | `onUpdateRowClick()`: `Idle`/`UpToDate`/`Failed`/`Installing` → `Checking` → bản mới hơn (UP-4) → `Available` + `updateDialog = true`; không mới hơn hoặc `null` → `UpToDate`; ném exception → `Failed`. `Available` → chỉ mở lại dialog. `Checking`/`Downloading` → bỏ qua |
-| UP-7 | `startUpdate()` (từ `Available`): đóng dialog → `Downloading(p)` theo tiến độ → `true` → `Installing`, `false`/exception → `Failed`. `dismissUpdateDialog()` đóng dialog, giữ `Available` |
+| UP-7 | `startUpdate()` (từ `Available`): ~~đóng dialog~~ (v1.7: giữ mở, UP-20) → `Downloading(p)` theo tiến độ → `true` → `Installing`, `false`/exception → `Failed`. `dismissUpdateDialog()` đóng dialog, giữ `Available` |
 | UP-9 | (v1.6.1) `check(silent = true)` (khi mở app, mở từ thông báo cũng dùng): chỉ khi `Idle`/`UpToDate`/`Failed`; trong lúc kiểm tra trạng thái **không đổi** (dòng Settings không hiện "Checking…"); bản mới → `Available` + dialog; không mới / `null` / exception → trạng thái giữ nguyên, không dialog. `Available` → mở lại dialog |
 
 ## 6. Kiểm tra tự động (v1.6.1 — FR-U29)
@@ -173,5 +173,37 @@ data class Installing(val viaShizuku: Boolean) : UpdateState    // thay data obj
 | UP-14 | `UpdateCommands.shellInstall(pkg, activity, path)` = `setsid sh -c '<script>' </dev/null >/dev/null 2>&1 &` với script trên; package / activity sai định dạng (SC-2) hoặc path không phải `/data/local/tmp/<tên an toàn>.apk` → `null` |
 | UP-15 | Script (chạy trên `ShellSim`): `pm install` thành công → `rm` file rồi `am start -n pkg/activity`; lỗi → `rm` rồi `am start` kèm `-a pkg.action.UPDATE_FAILED` |
 | UP-16 | `startUpdate`: `SHIZUKU` → `Installing(viaShizuku = true)`, `SYSTEM_INSTALLER` → `Installing(false)`, `FAILED` / exception → `Failed` |
-| UP-17 | `installFailed()` → `Failed`, đóng dialog |
+| UP-17 | `installFailed()` → `Failed`, ~~đóng dialog~~ (v1.7: mở dialog, UP-21) |
 | UP-18 | `TouchUserService.writeFile` chỉ ghi vào path được UP-14 chấp nhận (file thuộc shell, cùng uid với `pm`, không cần đổi quyền); lỗi → -1 |
+
+## 8. Hộp thoại cập nhật từ top bar (v1.7 — FR-U41)
+
+Top bar có nút **Check for updates** (icon cập nhật hệ thống, bên trái nút cà phê — ui §1). Bấm →
+`UpdateController.openDialog()`: mở hộp thoại cập nhật và, nếu chưa biết kết quả, kiểm tra luôn. Hộp thoại (vẽ ở
+`MainActivity` như §5) hiện **mọi** trạng thái, không chỉ `Available`:
+
+| Trạng thái | Nội dung hộp thoại | Nút |
+|---|---|---|
+| Checking | vòng tiến độ + "Checking for updates…" | Close |
+| UpToDate | "You have the latest version (X.Y.Z)" (bản đang chạy) | OK |
+| Available | tiêu đề "Totch X.Y.Z", ghi chú phát hành (cuộn), dòng cách cài: "Installs through Shizuku" khi Shizuku sẵn sàng, ngược lại "Android will ask to confirm" | Update / Later |
+| Downloading | thanh tiến độ + "Downloading… N%" | Hide (tải tiếp ở nền) |
+| Installing | "Installing…" (Shizuku) hoặc "Confirm to install" (hệ thống) | OK |
+| Failed | "Couldn't update" | Retry / Close |
+
+Hộp thoại "bản mới" tự hiện (kiểm tra khi mở app, thông báo — §5, §6) là cùng hộp thoại này ở trạng thái `Available`.
+Nút top bar có **chấm báo** (badge) khi trạng thái là `Available`.
+
+`UpdateUi.dialog` nay nghĩa là "hộp thoại cập nhật đang mở" ở mọi trạng thái; `startUpdate()` **giữ** hộp thoại mở để
+hiện tiến độ (v1.6: đóng); `installFailed()` mở hộp thoại ở `Failed`. Dòng *Check for updates* ở Settings vẫn gọi
+`check()` (UP-6, không đổi).
+
+**Cài qua Shizuku:** đã có từ v1.6.3 (§7, FR-U36). Shizuku sẵn sàng → `pm install` dưới uid shell: không có hộp thoại
+xác nhận, không cần quyền "Cài ứng dụng không rõ nguồn gốc", Totch tự mở lại sau khi cài.
+
+| ID | Tiêu chí |
+|---|---|
+| UP-19 | `openDialog()`: `Idle` / `UpToDate` / `Failed` → `dialog = true` và kiểm tra như `check()` (UP-6: `Checking` → kết quả, dialog vẫn mở khi kết quả là `UpToDate` / `Failed`); `Checking` / `Available` / `Downloading` / `Installing` → chỉ `dialog = true`, không gọi mạng thêm |
+| UP-20 | `startUpdate()` giữ `dialog = true` trong `Downloading` và sau khi xong (`Installing` / `Failed`); `dismissDialog()` ở `Downloading` đóng dialog, tải vẫn tiếp tục |
+| UP-21 | `installFailed()` → `Failed` với `dialog = true` (thay UP-17: đóng dialog) |
+| UP-22 | `UpdateUi.badge` đúng khi trạng thái là `Available` |

@@ -16,7 +16,7 @@
 <li>One-handed mode</li>
 </ul>
 
-<p><b>How it works:</b> Totch reads raw touch events with shell privileges through <b>Shizuku, which is required</b>. Touches are not consumed: the system still receives them, so swipe-down gestures are unavailable (they would also pull the notification shade). Runs as a foreground service with a persistent notification. Other permissions are optional and can be granted through Shizuku from the Home screen.</p>
+<p><b>How it works:</b> turn on the Totch <b>Accessibility</b> service: an invisible area over the notch receives only the touches made there (no screen content is read). <b>Shizuku is optional</b>: with it Totch reads raw touch events with shell privileges instead, and unlocks extra actions (Quick Settings tiles, brightness, Wi-Fi, Bluetooth…), one-tap permissions and updates without confirmation. Runs as a foreground service with a persistent notification.</p>
 
 <p><b>About the Accessibility service (optional):</b> Totch uses the Accessibility API only to perform global actions such as Back, Home, Recents, lock screen, screenshot and opening the notification shade, to open apps from the background, and to block touches on the notch with an invisible, empty overlay so that swiping down there does not pull the notification shade. It does not read, collect or transmit any screen content or typed text.</p>
 <p><b>About notification access (optional):</b> if you bind Play/Pause, Next or Previous, Totch recommends granting notification access. It is used only to find the active media player and send it play/pause/skip commands. Totch does not read, store or transmit any notification.</p>

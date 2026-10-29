@@ -15,7 +15,8 @@ class EngineStatusTest {
         shizuku: ShizukuState = ready,
         pipeline: PipelineState = PipelineState.Running,
         rotation: Int = 0,
-    ) = resolveEngineStatus(settings, shizuku, pipeline, rotation) { "err:$it" }
+        accessibility: Boolean = false,
+    ) = resolveEngineStatus(settings, shizuku, pipeline, rotation, accessibility) { "err:$it" }
 
     @Test
     fun `disabled wins when the pipeline is stopped`() {
@@ -30,13 +31,40 @@ class EngineStatusTest {
     }
 
     @Test
-    fun `DM-2 shizuku not running is WaitingShizuku`() {
-        assertEquals(EngineStatus.WaitingShizuku, status(on, ShizukuState(running = false, granted = false)))
+    fun `DM-41 neither Shizuku nor Accessibility is NeedsAccess`() {
+        assertEquals(EngineStatus.NeedsAccess, status(on, ShizukuState(running = false, granted = false), PipelineState.Idle))
+        assertEquals(EngineStatus.NeedsAccess, status(on, ShizukuState(running = true, granted = false), PipelineState.Idle))
     }
 
     @Test
-    fun `DM-3 permission missing is ShizukuPermissionRequired`() {
-        assertEquals(EngineStatus.ShizukuPermissionRequired, status(on, ShizukuState(running = true, granted = false)))
+    fun `DM-42 Accessibility alone runs, but only in portrait`() {
+        val none = ShizukuState(running = false, granted = false)
+        assertEquals(EngineStatus.Running, status(on, none, PipelineState.Idle, accessibility = true))
+        assertEquals(EngineStatus.PausedRotation, status(on, none, PipelineState.Idle, rotation = 1, accessibility = true))
+        assertEquals(
+            EngineStatus.PausedRotation,
+            status(on.copy(landscapeGestures = true), none, PipelineState.Idle, rotation = 1, accessibility = true),
+        )
+    }
+
+    @Test
+    fun `DM-43 Accessibility takes over when the Shizuku pipeline fails`() {
+        val failed = PipelineState.Failed(PipelineError.NO_TOUCHSCREEN)
+        assertEquals(EngineStatus.Running, status(on, pipeline = failed, accessibility = true))
+        assertEquals(EngineStatus.Error("err:NO_TOUCHSCREEN"), status(on, pipeline = failed, accessibility = false))
+    }
+
+    @Test
+    fun `DM-40 touch source prefers Shizuku, then Accessibility`() {
+        val none = ShizukuState(running = false, granted = false)
+        val failed = PipelineState.Failed(PipelineError.STREAM_ENDED)
+        assertEquals(TouchSource.SHIZUKU, touchSource(ready, PipelineState.Running, accessibility = true))
+        assertEquals(TouchSource.SHIZUKU, touchSource(ready, PipelineState.Connecting, accessibility = false))
+        assertEquals(TouchSource.ACCESSIBILITY, touchSource(ready, failed, accessibility = true))
+        assertEquals(TouchSource.SHIZUKU, touchSource(ready, failed, accessibility = false))
+        assertEquals(TouchSource.ACCESSIBILITY, touchSource(none, PipelineState.Idle, accessibility = true))
+        assertEquals(TouchSource.NONE, touchSource(none, PipelineState.Idle, accessibility = false))
+        assertEquals(TouchSource.NONE, touchSource(ShizukuState(running = true, granted = false), PipelineState.Idle, false))
     }
 
     @Test

@@ -19,14 +19,21 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import io.github.ptt98hd.totch.BuildConfig
 import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.TotchApp
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.locale.AppLocales
+import io.github.ptt98hd.totch.ui.common.AppActions
+import io.github.ptt98hd.totch.ui.common.DonateDialog
+import io.github.ptt98hd.totch.ui.common.LocalAppActions
 import io.github.ptt98hd.totch.ui.common.LocalNotchHighlight
 import io.github.ptt98hd.totch.ui.common.NotchHighlightOverlay
 import io.github.ptt98hd.totch.ui.common.NotchHighlightState
@@ -86,11 +93,25 @@ class MainActivity : ComponentActivity() {
             TotchTheme(themeMode = settings.theme, amoledBlack = settings.amoledBlack) {
                 val highlight = remember { NotchHighlightState() }
                 val area by container.touchArea.area.collectAsStateWithLifecycle()
-                CompositionLocalProvider(LocalNotchHighlight provides highlight) {
+                val update by container.updates.state.collectAsStateWithLifecycle()
+                val requirements by container.systemStatus.requirements.collectAsStateWithLifecycle()
+                var donate by rememberSaveable { mutableStateOf(false) }
+                val actions = AppActions( // FR-U40, FR-U41: top bar buttons and the Support rows
+                    onCheckUpdates = container.updates::openDialog,
+                    onDonate = { donate = true },
+                    updateBadge = update.badge,
+                )
+                CompositionLocalProvider(LocalNotchHighlight provides highlight, LocalAppActions provides actions) {
                     Box(Modifier.fillMaxSize()) {
                         TotchNavHost(container)
                         NotchHighlightOverlay(area, highlight) // FR-U8, drawn above every screen
-                        UpdateDialogHost(container.updates) // update spec §5: on any screen
+                        // update spec §5, §8: on any screen
+                        UpdateDialogHost(
+                            container.updates,
+                            versionName = BuildConfig.VERSION_NAME,
+                            shizukuReady = requirements.shizukuRunning && requirements.shizukuGranted,
+                        )
+                        if (donate) DonateDialog(onDismiss = { donate = false })
                     }
                 }
             }

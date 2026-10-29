@@ -1,0 +1,5 @@
+* Shizuku is now optional: with the Accessibility service on, Totch detects notch gestures by itself. Shizuku still adds extra actions, one-tap permissions and silent updates.
+* Check for updates and Buy me a coffee buttons in the top bar.
+* Native full-height action picker sheet with a smaller search box.
+* All list rows share one height, descriptions stay on one line.
+* Home: "Requirement" is now "Advanced", below Permissions.

@@ -281,6 +281,25 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-I5 | Đổi hình nền (màu khác hẳn) | Màu icon đổi theo bảng màu mới (có launcher cần khởi động lại) | [ ] |
 | MT-I6 | Bật Themed icons (Android 13+); xem icon thông báo | Vòng sáng + đĩa đơn sắc, cân giữa | [ ] |
 
+## 16. v1.7 — Shizuku tùy chọn, sheet native, top bar, dòng đồng nhất
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-A10 | Dừng Shizuku, tắt Trợ năng, bật Totch | Thẻ Totch đỏ "Bật Trợ năng hoặc Shizuku"; thông báo cùng nội dung | [ ] |
+| MT-A11 | Không có Shizuku, bật Trợ năng (DM-45) | "Cử chỉ đang bật"; chạm, chạm đúp, nhấn giữ, vuốt trái/phải/xuống tại notch chạy đúng hành động; chạm ở notch không tới app bên dưới; chạm ngoài notch bình thường | [ ] |
+| MT-A12 | Như MT-A11, xoay ngang (bật "Nhận cử chỉ khi xoay ngang") | "Tạm dừng khi xoay ngang" (chỉ Shizuku nhận ở landscape) | [ ] |
+| MT-A13 | Bật cả Shizuku và Trợ năng, rồi dừng Shizuku giữa chừng | Cử chỉ vẫn chạy (chuyển sang Trợ năng), không nhận đúp; bật lại Shizuku → vẫn chạy | [ ] |
+| MT-A14 | Không có Shizuku, picker › System › Kết nối; tab Tiles | Mỗi hành động có "Cần Shizuku"; ô Tiles "<app> · Cần Shizuku"; Điều hướng / Media không có | [ ] |
+| MT-P1 | Gestures › chạm một cử chỉ | Sheet native trượt lên cao toàn màn hình (che top bar, chừa status bar), bottom bar vẫn hiện; không kéo xuống được, không có thanh kéo | [ ] |
+| MT-P2 | Khi sheet mở: bấm ✕ / Back / chọn hành động / chuyển tab bottom bar | Sheet trượt xuống đóng; mở lại cùng cử chỉ → picker mới (tab theo hành động hiện tại) | [ ] |
+| MT-P3 | Ô tìm kiếm các tab picker | Cao 44 dp, bo tròn; gõ → lọc; nút ✕ xóa; Enter ẩn bàn phím | [ ] |
+| MT-U40 | Lướt Home, Gestures, picker (mọi tab), Settings; đặt cỡ chữ hệ thống lớn | Các dòng cao bằng nhau (dòng có / không có mô tả); không mô tả nào xuống dòng 2 (cắt "…") | [ ] |
+| MT-U41 | Top bar mọi màn hình | Bên phải: nút cập nhật rồi nút ly cà phê | [ ] |
+| MT-U42 | Bấm nút cập nhật: đang mới nhất / tắt mạng / có bản mới | "Bạn đang dùng bản mới nhất (1.7.0)" / "Không cập nhật được" + Thử lại / ghi chú + "Cài qua Shizuku…" hoặc "Android sẽ hỏi…" → Cập nhật → thanh tiến độ trong hộp thoại → cài | [ ] |
+| MT-U43 | Có bản mới (đã kiểm tra), đóng hộp thoại | Nút cập nhật có chấm báo | [ ] |
+| MT-D10 | Nút ly cà phê, Home › Ủng hộ, Settings › Ủng hộ | Cùng hộp thoại "Mời mình ly cà phê"; "Mời cà phê" mở trình duyệt tới trang ủng hộ | [ ] |
+| MT-H10 | Home | Thứ tự: thẻ Totch, Quyền, Nâng cao (Shizuku, mô tả "· tùy chọn" khi chưa chạy, không tô đỏ), Ủng hộ | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)
