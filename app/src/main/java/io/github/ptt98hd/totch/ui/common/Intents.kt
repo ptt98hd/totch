@@ -28,6 +28,11 @@ fun Context.openAppNotificationSettings() = safeStart(
 )
 
 /** Notification access page of the media listener, falling back to the full list. */
+/** FR-D12: the system list of apps with Do Not Disturb access. */
+fun Context.openDndAccessSettings() {
+    safeStart(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+}
+
 fun Context.openMediaAccessSettings() {
     val component = ComponentName(this, MediaListenerService::class.java).flattenToString()
     val detail = Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS)

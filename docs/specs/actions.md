@@ -1,6 +1,6 @@
 # Spec: Hành động & điều phối (`ActionDispatcher`)
 
-Yêu cầu: FR-A1…FR-A16 (v1.6.1) · Module: `:core` (logic) + `:app` (executor)
+Yêu cầu: FR-A1…FR-A19 (v1.6.3) · Module: `:core` (logic) + `:app` (executor)
 
 ## 1. Ma trận khả năng — `ActionRequirements.of(action)`
 
@@ -10,6 +10,8 @@ Yêu cầu: FR-A1…FR-A16 (v1.6.1) · Module: `:core` (logic) + `:app` (executo
 | `Back`, `Home`, `Recents`, `LockScreen`, `Screenshot`, `Notifications`, `QuickSettings`, `LaunchApp`, `Assistant`, `LaunchShortcut`, `LaunchActivity` | {ACCESSIBILITY, SHIZUKU} |
 | `ToggleTorch`, `MediaPlayPause`, `MediaNext`, `MediaPrevious`, `VolumeUp`, `VolumeDown`, `VolumePanel` | {LOCAL} |
 | `ClickTile`, `OneHandedMode` (v1.6) | {SHIZUKU} |
+| (v1.6.3) `BrightnessUp`, `BrightnessDown`, `ToggleAutoBrightness`, `ToggleAutoRotate`, `ToggleWifi`, `ToggleBluetooth`, `ToggleMobileData`, `ToggleAirplaneMode`, `ToggleLocation` | {SHIZUKU} |
+| (v1.6.3) `RingerNormal`, `RingerVibrate`, `RingerSilent`, `CycleRingerMode`, `ToggleDnd` | {LOCAL} |
 
 ## 2. Điều phối
 
@@ -34,6 +36,7 @@ Yêu cầu: FR-A1…FR-A16 (v1.6.1) · Module: `:core` (logic) + `:app` (executo
 | AD-9 | `LaunchActivity` có requirements {ACCESSIBILITY, SHIZUKU} (v1.5, FR-A14) |
 | AD-11 | `OneHandedMode` có requirements {SHIZUKU} (v1.6, FR-A16) |
 | AD-10 | `ClickTile` có requirements {SHIZUKU} (v1.6, FR-A15): chỉ có Trợ năng → `Failed("unavailable")` |
+| AD-12 | (v1.6.3) Hành động màn hình và kết nối có requirements {SHIZUKU}; hành động âm thanh có {LOCAL} |
 
 Action mới (v1.1):
 ```kotlin
@@ -61,6 +64,8 @@ lúc chọn để hiển thị mà không cần đọc lại manifest.
 | Notifications | `cmd statusbar expand-notifications` |
 | QuickSettings | `cmd statusbar expand-settings` |
 | Assistant | `input keyevent 219` (KEYCODE_ASSIST → trợ lý mặc định của hệ thống) |
+| BrightnessUp / BrightnessDown | `input keyevent 221` / `input keyevent 220` (v1.6.3, §11) |
+| ToggleAutoBrightness, ToggleAutoRotate, ToggleWifi, ToggleBluetooth, ToggleMobileData, ToggleAirplaneMode, ToggleLocation | script bật/tắt (v1.6.3, §11, §13) |
 | OneHandedMode | `null` từ `of()`; dùng `OneHandedCommands` (v1.6.1, §10) |
 | các action LOCAL, None | `null` |
 | LaunchApp(pkg) | `null` từ `of()`; dùng `launch(pkg, activity)` |
@@ -268,3 +273,86 @@ bại → `Failed` → Toast "Không thể thực hiện" (FR-A9).
 | OH-3 | `order(SYSTEM) = [SYSTEM, GESTURE]`, `order(GESTURE) = [GESTURE, SYSTEM]` |
 | OH-4 | `run`: thử theo `order`, dừng ở cách đầu tiên trả true và trả về cách đó (cách sau không bị gọi); cả 2 false → `null`; exception (trừ hủy coroutine) coi như false |
 | OH-5 | (`:app`) Executor lưu `oneHandedMethod` khi cách chạy được khác cách đang lưu; không lưu khi giống; cả 2 lỗi → `Result.failure` |
+
+## 11. Màn hình (v1.6.3 — FR-A17)
+
+```kotlin
+@SerialName("brightness_up")   data object BrightnessUp : Action
+@SerialName("brightness_down") data object BrightnessDown : Action
+@SerialName("auto_brightness") data object ToggleAutoBrightness : Action
+@SerialName("auto_rotate")     data object ToggleAutoRotate : Action
+```
+
+Chỉ Shizuku (ghi `Settings.System` cần `WRITE_SETTINGS`, Totch không xin quyền này).
+
+- Độ sáng: `input keyevent 221` (`KEYCODE_BRIGHTNESS_UP`) / `220` (`DOWN`). `PhoneWindowManager` tự tăng/giảm một nấc
+  theo đường cong gamma của hệ thống và hiện thanh độ sáng của SystemUI — giống phím độ sáng phần cứng. Hệ thống **tắt
+  độ sáng tự động** khi dùng phím này (hành vi AOSP).
+- Bật/tắt dùng script chung `toggle` (§13): độ sáng tự động `system screen_brightness_mode` (1 = tự động), tự động xoay
+  `system accelerometer_rotation` (1 = bật); bật/tắt bằng `settings put system <key> 1|0`.
+
+## 12. Chế độ âm thanh (v1.6.3 — FR-A18)
+
+```kotlin
+@SerialName("ringer_normal")  data object RingerNormal : Action
+@SerialName("ringer_vibrate") data object RingerVibrate : Action
+@SerialName("ringer_silent")  data object RingerSilent : Action
+@SerialName("ringer_cycle")   data object CycleRingerMode : Action
+@SerialName("dnd")            data object ToggleDnd : Action
+
+enum class RingerMode { NORMAL, VIBRATE, SILENT }                       // core.action
+object SoundModes { fun next(current: RingerMode, canVibrate: Boolean): RingerMode }
+```
+
+`LocalExecutor`: `AudioManager.setRingerMode`, `NotificationManager.setInterruptionFilter`. Android chặn mọi thay đổi có
+thể bật/tắt Không làm phiền (im lặng, hoặc đổi chế độ khi đang Không làm phiền) nếu app chưa có **quyền truy cập Không
+làm phiền** → cần quyền đó (Home › Permissions, detection-modes §6). Shell không có lệnh đổi chế độ chuông ổn định trên
+Android 12, nên không có đường Shizuku. Chưa có quyền → `Failed` → toast (FR-A9); picker hiện dòng phụ "Cần quyền
+Không làm phiền" dưới các hành động này.
+
+- `RingerNormal` / `RingerVibrate` / `RingerSilent`: `setRingerMode(NORMAL|VIBRATE|SILENT)`.
+- `CycleRingerMode`: `setRingerMode(next(hiện tại, hasVibrator))`.
+- `ToggleDnd`: bộ lọc hiện tại `INTERRUPTION_FILTER_ALL` (hoặc `UNKNOWN`) → `INTERRUPTION_FILTER_PRIORITY`; còn lại →
+  `INTERRUPTION_FILTER_ALL`.
+- Hệ thống không hiện gì khi đổi chế độ; rung phản hồi của cử chỉ là xác nhận.
+
+| ID | Tiêu chí |
+|---|---|
+| SM-1 | `next(NORMAL, true) = VIBRATE`, `next(VIBRATE, true) = SILENT`, `next(SILENT, true) = NORMAL` |
+| SM-2 | Không có bộ rung: `next(NORMAL, false) = SILENT`, `next(VIBRATE, false) = SILENT`, `next(SILENT, false) = NORMAL` |
+| SM-3 | `LocalExecutor.supports` đúng cho 5 hành động âm thanh; `ShellCommands.of` trả `null` cho chúng |
+
+## 13. Kết nối (v1.6.3 — FR-A19)
+
+```kotlin
+@SerialName("wifi")        data object ToggleWifi : Action
+@SerialName("bluetooth")   data object ToggleBluetooth : Action
+@SerialName("mobile_data") data object ToggleMobileData : Action
+@SerialName("airplane")    data object ToggleAirplaneMode : Action
+@SerialName("location")    data object ToggleLocation : Action
+```
+
+Chỉ Shizuku. Mọi hành động bật/tắt (cả §11) dùng một dạng script: đọc trạng thái từ `settings`, đang bật → lệnh tắt,
+ngược lại → lệnh bật; mã thoát là mã của lệnh bật/tắt.
+```sh
+case "$(settings get <ns> <key>)" in <on1>|<on2>…) <lệnh tắt> ;; *) <lệnh bật> ;; esac
+```
+
+| Action | Trạng thái (`ns key` → giá trị "bật") | Bật | Tắt |
+|---|---|---|---|
+| ToggleAutoBrightness | `system screen_brightness_mode` → 1 | `settings put system screen_brightness_mode 1` | `… 0` |
+| ToggleAutoRotate | `system accelerometer_rotation` → 1 | `settings put system accelerometer_rotation 1` | `… 0` |
+| ToggleWifi | `global wifi_on` → 1, 2 (2 = bật khi đang ở chế độ máy bay) | `svc wifi enable` | `svc wifi disable` |
+| ToggleBluetooth | `global bluetooth_on` → 1, 2 | `cmd bluetooth_manager enable \|\| svc bluetooth enable` | tương tự `disable` |
+| ToggleMobileData | `global mobile_data` → 1 | `svc data enable` | `svc data disable` |
+| ToggleAirplaneMode | `global airplane_mode_on` → 1 | `cmd connectivity airplane-mode enable` | `… disable` |
+| ToggleLocation | `secure location_mode` → 1, 2, 3 | `cmd location set-location-enabled true` | `… false` |
+
+`cmd bluetooth_manager` chỉ có từ Android 13; Android 12 rơi về `svc bluetooth`. Hệ thống không hiện gì khi bật/tắt;
+rung phản hồi của cử chỉ là xác nhận.
+
+| ID | Tiêu chí |
+|---|---|
+| SC-10 | `of(BrightnessUp) = "input keyevent 221"`, `of(BrightnessDown) = "input keyevent 220"` |
+| SC-11 | Script bật/tắt (§11, §13) chạy trên `ShellSim`: giá trị "bật" → chỉ lệnh tắt; giá trị khác hoặc `null` → chỉ lệnh bật; mã thoát = mã của lệnh đó |
+| SC-12 | `ToggleWifi` coi `wifi_on` = 2 là bật, = 3 là tắt; `ToggleBluetooth` lỗi `cmd bluetooth_manager` → chạy `svc bluetooth` |

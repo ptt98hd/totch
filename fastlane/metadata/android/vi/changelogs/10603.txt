@@ -1,0 +1,5 @@
+* Ô tìm kiếm và nhóm mới cho hành động System: Điều hướng, Hệ thống, Media, Âm thanh, Màn hình, Kết nối.
+* Hành động mới: tăng/giảm độ sáng, độ sáng tự động, tự động xoay; chế độ âm thanh (đổ chuông, rung, im lặng, đổi lần lượt) và Không làm phiền; Wi-Fi, Bluetooth, dữ liệu di động, chế độ máy bay, vị trí.
+* Quyền tùy chọn mới: quyền Không làm phiền (cho các hành động chế độ âm thanh).
+* Cài bản cập nhật qua Shizuku khi Shizuku đang chạy: không cần xác nhận, Totch tự mở lại.
+* Icon: lỗ đen nằm chính giữa, đĩa nằm ngang, màu theo hình nền (Material You).

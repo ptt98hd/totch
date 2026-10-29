@@ -1,4 +1,4 @@
-# Spec: Tự cập nhật từ GitHub Releases (v1.6, v1.6.1)
+# Spec: Tự cập nhật từ GitHub Releases (v1.6, v1.6.1, v1.6.3)
 
 Yêu cầu: FR-U27, FR-U29, NFR-4 · Module: `:core` (`core.update.Releases`, `UpdatePolicy`, thuần) + `:app` (`AppUpdater`,
 `UpdateController`, `UpdateCheckJobService`, `UpdateInstallReceiver`, `AppSettingsViewModel`)
@@ -139,3 +139,39 @@ và lưu `lastNotified` (SharedPreferences `update`), để mỗi bản chỉ b�
 | UP-11 | `periodMillis(NEVER) = null`; `periodMillis(WEEKLY) = 7 × 86 400 000` |
 | UP-12 | `shouldNotify`: `null` → false; không mới hơn (UP-4) → false; `release.version.toString() == lastNotified` → false; bản mới hơn, `lastNotified` khác / `null` → true |
 | UP-13 | `AppSettingsViewModel.setUpdateOnLaunch`, `setUpdateInterval` lưu đúng field |
+
+## 7. Cài qua Shizuku (v1.6.3 — FR-U36)
+
+Shell (uid 2000) có `INSTALL_PACKAGES`, nên `pm install` cài đè Totch **không cần** xác nhận của người dùng và không
+cần quyền "Cài ứng dụng không rõ nguồn gốc". Android vẫn từ chối APK khác chữ ký.
+
+Luồng trong `GitHubAppUpdater.downloadAndInstall` sau khi tải và kiểm tra (UP-8):
+1. Shizuku sẵn sàng → `ShellInstaller.install(apk)`: bind `TouchUserService` tag `shell` (như `ShizukuShell`), gọi
+   `writeFile(ParcelFileDescriptor, path)` để UserService chép APK (app không đọc được file của shell và ngược lại) vào
+   `/data/local/tmp/totch-update.apk`, rồi `exec(UpdateCommands.shellInstall(...))`.
+2. Lệnh chạy **tách rời** (`setsid`, như PC-5) vì cài đè giết process của Totch và Shizuku gỡ UserService theo:
+   ```sh
+   setsid sh -c 'sleep 1; pm install -r <apk>; r=$?; rm -f <apk>;
+     if [ $r = 0 ]; then am start -n <pkg>/<activity>; else am start -n <pkg>/<activity> -a <pkg>.action.UPDATE_FAILED; fi' \
+     </dev/null >/dev/null 2>&1 &
+   ```
+   Cài xong → Totch được mở lại (bản mới). Lỗi → mở Totch với action `UPDATE_FAILED` → `UpdateController.installFailed()`
+   → `Failed` + toast "Update failed".
+3. Bước 1 trả `false` (Shizuku không sẵn sàng, bind / chép / exec lỗi) → `PackageInstaller` như §4.
+
+`downloadAndInstall` trả `true` khi đã chuyển giao (Shizuku hoặc `PackageInstaller`) → `Installing`. Dòng Settings ở
+trạng thái `Installing` hiện "Installing…" khi qua Shizuku ("Confirm to install" khi qua hệ thống) — `AppUpdater`
+báo cách cài qua kết quả `InstallResult`:
+
+```kotlin
+enum class InstallResult { FAILED, SYSTEM_INSTALLER, SHIZUKU }   // thay Boolean
+data class Installing(val viaShizuku: Boolean) : UpdateState    // thay data object Installing
+```
+
+| ID | Tiêu chí |
+|---|---|
+| UP-14 | `UpdateCommands.shellInstall(pkg, activity, path)` = `setsid sh -c '<script>' </dev/null >/dev/null 2>&1 &` với script trên; package / activity sai định dạng (SC-2) hoặc path không phải `/data/local/tmp/<tên an toàn>.apk` → `null` |
+| UP-15 | Script (chạy trên `ShellSim`): `pm install` thành công → `rm` file rồi `am start -n pkg/activity`; lỗi → `rm` rồi `am start` kèm `-a pkg.action.UPDATE_FAILED` |
+| UP-16 | `startUpdate`: `SHIZUKU` → `Installing(viaShizuku = true)`, `SYSTEM_INSTALLER` → `Installing(false)`, `FAILED` / exception → `Failed` |
+| UP-17 | `installFailed()` → `Failed`, đóng dialog |
+| UP-18 | `TouchUserService.writeFile` chỉ ghi vào path được UP-14 chấp nhận (file thuộc shell, cùng uid với `pm`, không cần đổi quyền); lỗi → -1 |

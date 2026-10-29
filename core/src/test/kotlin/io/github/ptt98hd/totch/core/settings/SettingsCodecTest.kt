@@ -180,4 +180,29 @@ class SettingsCodecTest {
         assertEquals("gesture", json.getValue("oneHandedMethod").jsonPrimitive.content)
         assertEquals(Settings(), SettingsCodec.decode("""{"enabled":true,"updateInterval":"hourly"}"""))
     }
+
+    @Test fun `ST-29 v1_6_3 actions round trip with stable type names`() {
+        val names = mapOf(
+            Action.BrightnessUp to "brightness_up",
+            Action.BrightnessDown to "brightness_down",
+            Action.ToggleAutoBrightness to "auto_brightness",
+            Action.ToggleAutoRotate to "auto_rotate",
+            Action.RingerNormal to "ringer_normal",
+            Action.RingerVibrate to "ringer_vibrate",
+            Action.RingerSilent to "ringer_silent",
+            Action.CycleRingerMode to "ringer_cycle",
+            Action.ToggleDnd to "dnd",
+            Action.ToggleWifi to "wifi",
+            Action.ToggleBluetooth to "bluetooth",
+            Action.ToggleMobileData to "mobile_data",
+            Action.ToggleAirplaneMode to "airplane",
+            Action.ToggleLocation to "location",
+        )
+        names.forEach { (action, name) ->
+            val s = Settings(bindings = DefaultBindings + (Gesture.TAP to action))
+            assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)), name)
+            val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
+            assertEquals("""{"type":"$name"}""", json.getValue("bindings").jsonObject.getValue("TAP").toString())
+        }
+    }
 }

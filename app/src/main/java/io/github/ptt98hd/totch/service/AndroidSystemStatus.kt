@@ -1,5 +1,6 @@
 package io.github.ptt98hd.totch.service
 
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.database.ContentObserver
@@ -40,13 +41,16 @@ class AndroidSystemStatus(
     private val mediaAccessGranted = MutableStateFlow(false)
     private val batteryUnrestricted = MutableStateFlow(false)
     private val installUpdatesAllowed = MutableStateFlow(false)
+    private val dndAccessGranted = MutableStateFlow(false)
     private val powerManager = context.getSystemService(PowerManager::class.java)
+    private val notificationManager = context.getSystemService(NotificationManager::class.java)
 
     override val requirements: StateFlow<Requirements> = combine(
         combine(shizuku.state, accessibilityEnabled, accessibility.service, ::Triple),
-        notificationsGranted, mediaAccessGranted, batteryUnrestricted, installUpdatesAllowed,
-    ) { (s, enabled, service), notifications, media, battery, install ->
-        Requirements(s.running, s.granted, enabled || service != null, notifications, media, battery, install)
+        combine(notificationsGranted, mediaAccessGranted, ::Pair),
+        batteryUnrestricted, installUpdatesAllowed, dndAccessGranted,
+    ) { (s, enabled, service), (notifications, media), battery, install, dnd ->
+        Requirements(s.running, s.granted, enabled || service != null, notifications, media, battery, install, dnd)
     }.stateIn(scope, SharingStarted.Eagerly, Requirements())
 
     init {
@@ -73,6 +77,7 @@ class AndroidSystemStatus(
         mediaAccessGranted.value = context.packageName in NotificationManagerCompat.getEnabledListenerPackages(context)
         batteryUnrestricted.value = powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
         installUpdatesAllowed.value = context.packageManager.canRequestPackageInstalls()
+        dndAccessGranted.value = notificationManager?.isNotificationPolicyAccessGranted == true
     }
 
     override fun requestShizukuPermission() = shizuku.requestPermission()
@@ -90,6 +95,7 @@ class AndroidSystemStatus(
                     ComponentName(context, MediaListenerService::class.java).flattenToString(), granted,
                 ),
             )
+            Permission.DND_ACCESS -> listOf(PermissionCommands.dndAccess(pkg, granted))
             Permission.BATTERY -> listOf(PermissionCommands.batteryUnrestricted(pkg, granted))
             // Denying the app-op kills Totch too, so it is detached and reopens the app (PC-7, UI-53).
             Permission.INSTALL_UPDATES -> listOf(

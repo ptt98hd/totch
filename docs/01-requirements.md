@@ -230,4 +230,17 @@ tham chiếu ID tương ứng.
 | ID | Yêu cầu | Spec |
 |---|---|---|
 | FR-A10 (sửa) | Rung phản hồi ngay khi **nhận diện** cử chỉ có gán hành động, không chờ hành động chạy xong (hành động qua Shizuku có thể mất vài trăm ms). Hành động lỗi vẫn báo toast | [actions §6](specs/actions.md), [detection-modes §5](specs/detection-modes.md) |
-| FR-U32 | Icon mới: **lỗ đen** (đĩa bồi tụ vàng cam trên nền không gian tím than, màu cố định — thay icon Monet FR-U11); có layer `monochrome` cho themed icon; icon thông báo và icon F-Droid dùng cùng hình | [ui — Icon](specs/ui.md) |
+| FR-U32 | Icon mới: **lỗ đen** (đĩa bồi tụ vàng cam trên nền không gian tím than, màu cố định — thay icon Monet FR-U11; v1.6.3: hình và màu sửa bởi FR-U33); có layer `monochrome` cho themed icon; icon thông báo và icon F-Droid dùng cùng hình | [ui — Icon](specs/ui.md) |
+
+## 16. Phiên bản 1.6.3
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-U33 | Sửa icon lỗ đen: tâm các vòng tròn (vòng sáng, chân trời sự kiện) đúng **chính giữa** (54, 54); đĩa bồi tụ **nằm ngang hoàn toàn** (bỏ nghiêng −10°), giữ dạng con thoi; màu lấy theo **Monet** (`@android:color/system_*`) nên đổi theo hình nền. Thay phần màu cố định của FR-U32 | [ui — Icon](specs/ui.md) |
+| FR-U34 | Tab **System** của picker có **ô tìm kiếm** như các tab khác (khớp tên hành động hoặc tên nhóm, không phân biệt hoa thường và dấu tiếng Việt) | [ui §3](specs/ui.md) |
+| FR-U35 | Chia lại nhóm của tab System: **Điều hướng**, **Hệ thống**, **Media**, **Âm thanh**, **Màn hình**, **Kết nối** | [ui §3](specs/ui.md) |
+| FR-A17 | Hành động **màn hình** qua Shizuku: Tăng / Giảm độ sáng (phím độ sáng của hệ thống, hiện thanh độ sáng), Bật/tắt độ sáng tự động, Bật/tắt tự động xoay | [actions §11](specs/actions.md) |
+| FR-A18 | Hành động **chế độ âm thanh**: Đổ chuông, Rung, Im lặng, Đổi chế độ âm thanh (lần lượt Đổ chuông → Rung → Im lặng), Bật/tắt Không làm phiền. Cần quyền **Không làm phiền** (Home › Permissions, bật qua Shizuku được) | [actions §12](specs/actions.md), [detection-modes §6](specs/detection-modes.md) |
+| FR-A19 | Hành động **kết nối** qua Shizuku: bật/tắt Wi-Fi, Bluetooth, Dữ liệu di động, Chế độ máy bay, Vị trí | [actions §13](specs/actions.md) |
+| FR-D12 | Home › Permissions thêm **Do Not Disturb access** (quyền truy cập Không làm phiền): bật/tắt qua Shizuku (`cmd notification allow_dnd`), không có Shizuku → mở trang cài đặt của hệ thống | [detection-modes §6](specs/detection-modes.md), [ui §3](specs/ui.md) |
+| FR-U36 | Cài bản cập nhật **qua Shizuku** khi Shizuku sẵn sàng: `pm install` dưới uid shell, không cần hộp thoại xác nhận hay quyền "Cài ứng dụng không rõ nguồn gốc", cài xong tự mở lại Totch. Không có Shizuku / lỗi khi chuyển giao → dùng `PackageInstaller` như cũ | [update §7](specs/update.md) |

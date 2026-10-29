@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Runs a shell script with `sh` against stand-ins for the Android commands it uses (`settings`, `dumpsys`, `getprop`,
- * `input`, `cmd`, `sleep`), so the scripts sent through Shizuku can be checked on the JVM. Every call is logged.
+ * `input`, `cmd`, `svc`, `pm`, `am`, `sleep`), so the scripts sent through Shizuku can be checked on the JVM. Every call is logged.
  *
  * WMShell is simulated: writing `one_handed_mode_activated` moves [wmState] only while the one-handed shortcut is set
  * (actions spec §10) and [nativeWorks]; a bottom-edge swipe opens it and a tap closes it while [gestureWorks].
@@ -18,7 +18,7 @@ class ShellSim {
     var wmState: Int? = 0
     var nativeWorks = true
     var gestureWorks = true
-    /** `cmd` calls whose arguments contain one of these fail with exit 1. */
+    /** `cmd` / `svc` / `pm` / `am` calls whose command line contains one of these fail with exit 1. */
     val failing = mutableListOf<String>()
     var log: List<String> = emptyList()
         private set
@@ -95,14 +95,22 @@ class ShellSim {
                 esac
                 exit 0
             """.trimIndent(),
-            "cmd" to """
-                echo "cmd $*" >> "${'$'}D/log"
-                while read -r f; do
-                  [ -n "${'$'}f" ] && case "$*" in *"${'$'}f"*) exit 1 ;; esac
-                done < "${'$'}D/failing"
-                exit 0
-            """.trimIndent(),
+            "cmd" to logged("cmd"),
+            "svc" to logged("svc"),
+            "pm" to logged("pm"),
+            "am" to logged("am"),
             "sleep" to "exit 0",
+            // Device paths are never touched on the host; the stubs' own files still are.
+            "rm" to "case \"$*\" in *\"/data/local/tmp/\"*) exit 0 ;; esac; exec /bin/rm \"$@\"",
         )
+
+        /** Logs the call; fails with exit 1 when `<name> <args>` contains an entry of [failing]. */
+        fun logged(name: String) = """
+            echo "$name $*" >> "${'$'}D/log"
+            while read -r f; do
+              [ -n "${'$'}f" ] && case "$name $*" in *"${'$'}f"*) exit 1 ;; esac
+            done < "${'$'}D/failing"
+            exit 0
+        """.trimIndent()
     }
 }

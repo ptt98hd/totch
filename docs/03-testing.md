@@ -48,6 +48,13 @@ Mục tiêu độ phủ: `:core` ≥ 90% dòng (NFR-6).
 | actions §10 (OH-5)                 | `app/.../shizuku/OneHandedRunnerTest`                                                   |
 | detection-modes §6 (PC-6, PC-7)    | `core/.../action/PermissionCommandsTest`                                                |
 | ui (UI-51, UI-53)                  | `app/.../ui/home/HomeViewModelTest`                                                     |
+| actions §11–§13 (AD-12, SC-10…SC-12, SM-1…SM-3) | `core/.../action/ActionDispatcherTest`, `ShellCommandsTest`, `SoundModesTest` |
+| settings (ST-29)                   | `core/.../settings/SettingsCodecTest`                                                   |
+| detection-modes §6 (PC-8)          | `core/.../action/PermissionCommandsTest`                                                |
+| ui (UI-23, UI-24)                  | `app/.../ui/common/ActionCatalogTest`                                                   |
+| ui (UI-29)                         | `app/.../ui/picker/ActionPickerViewModelTest`                                           |
+| update (UP-14, UP-15)              | `core/.../update/UpdateCommandsTest`                                                    |
+| update (UP-16, UP-17)              | `app/.../update/UpdateControllerTest`, `app/.../ui/settings/AppSettingsViewModelTest`   |
 
 ## 4. Checklist thủ công trước release
 

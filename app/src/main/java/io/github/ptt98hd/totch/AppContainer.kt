@@ -46,7 +46,7 @@ sealed interface EngineStatus {
 }
 
 /** Optional permissions shown on Home; each can be switched through Shizuku (detection-modes §6). */
-enum class Permission { ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS, BATTERY, INSTALL_UPDATES }
+enum class Permission { ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS, DND_ACCESS, BATTERY, INSTALL_UPDATES }
 
 data class Requirements(
     val shizukuRunning: Boolean = false,
@@ -59,6 +59,8 @@ data class Requirements(
     val batteryUnrestricted: Boolean = false,
     /** "Install unknown apps" for the self-update (FR-D11). */
     val installUpdatesAllowed: Boolean = false,
+    /** Do Not Disturb access for the sound mode actions (FR-D12). */
+    val dndAccessGranted: Boolean = false,
 )
 
 interface SystemStatus {
@@ -127,9 +129,12 @@ interface QuickSettingsTiles {
 interface AppUpdater {
     /** Latest usable release; throws on network failure, null when there is none (UP-3). */
     suspend fun latestRelease(): Release?
-    /** Downloads, verifies (UP-8) and hands the APK to the system installer; progress 0..1; false on any failure. */
-    suspend fun downloadAndInstall(release: Release, onProgress: (Float) -> Unit): Boolean
+    /** Downloads, verifies (UP-8) and hands the APK to Shizuku or the system installer (update spec §7); progress 0..1. */
+    suspend fun downloadAndInstall(release: Release, onProgress: (Float) -> Unit): InstallResult
 }
+
+/** Who the verified APK was handed to (update spec §7). */
+enum class InstallResult { FAILED, SYSTEM_INSTALLER, SHIZUKU }
 
 /** The highlighted touch area in screen pixels: [notch] (width × height) inside [touch] (notch + padding). */
 data class HighlightArea(val touch: Rect, val notch: Rect)

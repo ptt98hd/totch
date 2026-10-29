@@ -37,5 +37,19 @@
     <string name="platform_action_shortcut">Mở shortcut</string>
     <string name="platform_action_activity">Mở activity</string>
     <string name="platform_action_tile">Bấm ô Cài đặt nhanh</string>
+    <string name="platform_action_brightness_up">Tăng độ sáng</string>
+    <string name="platform_action_brightness_down">Giảm độ sáng</string>
+    <string name="platform_action_auto_brightness">Bật/tắt độ sáng tự động</string>
+    <string name="platform_action_auto_rotate">Bật/tắt tự động xoay</string>
+    <string name="platform_action_ringer_normal">Chế độ âm thanh: đổ chuông</string>
+    <string name="platform_action_ringer_vibrate">Chế độ âm thanh: rung</string>
+    <string name="platform_action_ringer_silent">Chế độ âm thanh: im lặng</string>
+    <string name="platform_action_ringer_cycle">Đổi chế độ âm thanh</string>
+    <string name="platform_action_dnd">Bật/tắt Không làm phiền</string>
+    <string name="platform_action_wifi">Bật/tắt Wi-Fi</string>
+    <string name="platform_action_bluetooth">Bật/tắt Bluetooth</string>
+    <string name="platform_action_mobile_data">Bật/tắt dữ liệu di động</string>
+    <string name="platform_action_airplane">Bật/tắt chế độ máy bay</string>
+    <string name="platform_action_location">Bật/tắt vị trí</string>
     <string name="media_listener_label">Totch điều khiển media</string>
 </resources>

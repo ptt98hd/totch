@@ -213,7 +213,8 @@ sequenceDiagram
   EN->>EN: Gesture → binding → ActionDispatcher
 ```
 - `TouchUserService` chạy trong process của Shizuku với uid shell; giao tiếp qua AIDL
-  `ITouchService { void start(ILineCallback cb); void stop(); int exec(String cmd); destroy() }` và
+  `ITouchService { void start(ILineCallback cb); void stop(); int exec(String cmd); int writeFile(ParcelFileDescriptor, String path); destroy() }`
+  (`writeFile` từ v1.6.3: chép APK cập nhật cho `pm install`, update §7) và
   `oneway ILineCallback { onDevice(path, name, minX, maxX, minY, maxY); onLines(String[] frame); onError(int) }`
   (mỗi lần gọi `onLines` chứa các dòng của một khung, tới `SYN_REPORT`).
 - `ShizukuExecutor.execute` gọi `exec("input keyevent 4")` …

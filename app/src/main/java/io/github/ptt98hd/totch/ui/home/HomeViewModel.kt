@@ -67,6 +67,7 @@ internal fun permissionsFor(r: Requirements, notificationPermissionRequired: Boo
     add(PermissionItem(Permission.ACCESSIBILITY, r.accessibilityEnabled))
     if (notificationPermissionRequired) add(PermissionItem(Permission.NOTIFICATIONS, r.notificationsGranted))
     add(PermissionItem(Permission.MEDIA_ACCESS, r.mediaAccessGranted))
+    add(PermissionItem(Permission.DND_ACCESS, r.dndAccessGranted))
     add(PermissionItem(Permission.BATTERY, r.batteryUnrestricted))
     add(PermissionItem(Permission.INSTALL_UPDATES, r.installUpdatesAllowed))
 }

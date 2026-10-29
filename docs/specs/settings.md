@@ -87,6 +87,7 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ST-26 | `needsTouchBlocking`: false khi `!enabled`, hoặc cả 2 cử chỉ vuốt xuống chưa gán / bị tắt; true khi `enabled` và `SWIPE_DOWN` (hoặc `SWIPE_DOWN_HOLD`) đã gán và bật (DM-15) |
 | ST-27 | (v1.6) `decode(encode(s)) == s` với `ClickTile(pkg, service, label)` và `OneHandedMode` (`"one_handed"`); JSON `{"type":"click_tile",…}` |
 | ST-28 | (v1.6.1) Field mới: `updateOnLaunch = false`, `updateInterval = NEVER` (update §6), `oneHandedMethod = SYSTEM` (actions §10, do executor ghi, không có trên UI). JSON v1.6.0 (không có key) → mặc định; `decode(encode(s)) == s` với `updateOnLaunch=true`, `updateInterval=WEEKLY`, `oneHandedMethod=GESTURE`; JSON `"oneHandedMethod":"gesture"`, `"updateInterval":"weekly"`; giá trị enum lạ → mặc định toàn bộ (ST-5) |
+| ST-29 | (v1.6.3) Hành động mới round-trip với `type` ổn định: `brightness_up`, `brightness_down`, `auto_brightness`, `auto_rotate`, `ringer_normal`, `ringer_vibrate`, `ringer_silent`, `ringer_cycle`, `dnd`, `wifi`, `bluetooth`, `mobile_data`, `airplane`, `location` |
 
 ## 3. `SettingsRepository` (`:app`)
 - DataStore Preferences, key `settings_json`.

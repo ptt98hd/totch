@@ -1,5 +1,6 @@
 package io.github.ptt98hd.totch.update
 
+import io.github.ptt98hd.totch.InstallResult
 import io.github.ptt98hd.totch.core.update.Release
 import io.github.ptt98hd.totch.core.update.SemVer
 import io.github.ptt98hd.totch.ui.FakeAppUpdater
@@ -57,5 +58,32 @@ class UpdateControllerTest {
         c.check(silent = true)
         assertEquals(1, updater.checks)
         assertEquals(UpdateState.Checking, c.state.value.state)
+    }
+
+    @Test
+    fun `UP-16 the install path decides the Installing state`() {
+        val c = controller()
+        updater.latest.complete(release)
+        c.check()
+        c.startUpdate()
+        updater.install.complete(InstallResult.SHIZUKU)
+        assertEquals(UpdateState.Installing(viaShizuku = true), c.state.value.state)
+
+        updater.latest = CompletableDeferred(release)
+        updater.install = CompletableDeferred<InstallResult>().apply { completeExceptionally(IOException("disk")) }
+        c.check()
+        c.startUpdate()
+        assertEquals(UpdateState.Failed, c.state.value.state)
+    }
+
+    @Test
+    fun `UP-17 a failed Shizuku install is reported`() {
+        val c = controller()
+        updater.latest.complete(release)
+        c.check()
+        c.startUpdate()
+        updater.install.complete(InstallResult.SHIZUKU)
+        c.installFailed()
+        assertEquals(UpdateUi(UpdateState.Failed), c.state.value)
     }
 }

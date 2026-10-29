@@ -75,4 +75,9 @@ class PermissionCommandsTest {
         assertNull(PermissionCommands.denyInstallPackagesAndRestart("a.b; reboot", "a.b.Main"))
         assertNull(PermissionCommands.denyInstallPackagesAndRestart("a.b", "Main'x"))
     }
+
+    @Test fun `PC-8 do not disturb access`() {
+        assertEquals("cmd notification allow_dnd 'a.b'", PermissionCommands.dndAccess("a.b", true))
+        assertEquals("cmd notification disallow_dnd 'a.b'", PermissionCommands.dndAccess("a.b", false))
+    }
 }

@@ -29,7 +29,13 @@ class ShizukuShell(context: Context, private val shizuku: ShizukuManager) {
         .version(BuildConfig.VERSION_CODE)
 
     /** Runs [commands] in order, stopping at the first failure; false when Shizuku is not ready or any command failed. */
-    suspend fun exec(commands: List<String>): Boolean = mutex.withLock {
+    suspend fun exec(commands: List<String>): Boolean = withService { service -> commands.all { service.exec(it) == 0 } }
+
+    /**
+     * Runs [block] on a freshly bound shell service (off the main thread), then removes the service; false when Shizuku
+     * is not ready, binding times out or [block] throws.
+     */
+    suspend fun withService(block: (ITouchService) -> Boolean): Boolean = mutex.withLock {
         shizuku.refresh()
         if (!shizuku.state.value.ready) return false
         val connected = CompletableDeferred<ITouchService?>()
@@ -45,7 +51,7 @@ class ShizukuShell(context: Context, private val shizuku: ShizukuManager) {
         try {
             withContext(Dispatchers.Main) { Shizuku.bindUserService(args, connection) }
             val service = withTimeoutOrNull(BIND_TIMEOUT_MS) { connected.await() } ?: return false
-            withContext(Dispatchers.IO) { commands.all { service.exec(it) == 0 } }
+            withContext(Dispatchers.IO) { block(service) }
         } catch (e: Exception) { // RemoteException, IllegalStateException from a dead binder
             Log.w(TAG, "Shell command failed", e)
             false

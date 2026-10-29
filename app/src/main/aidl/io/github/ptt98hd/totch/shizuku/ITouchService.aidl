@@ -14,4 +14,7 @@ interface ITouchService {
 
     /** Runs a shell command, returns its exit code (-1 on timeout/failure). */
     int exec(String command) = 3;
+
+    /** Copies source to path (only /data/local/tmp/<name>.apk), as shell; 0 or -1 (update spec §7, UP-18). */
+    int writeFile(in ParcelFileDescriptor source, String path) = 4;
 }

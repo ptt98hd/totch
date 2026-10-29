@@ -1,6 +1,7 @@
 package io.github.ptt98hd.totch.update
 
 import io.github.ptt98hd.totch.AppUpdater
+import io.github.ptt98hd.totch.InstallResult
 import io.github.ptt98hd.totch.core.update.Release
 import io.github.ptt98hd.totch.core.update.Releases
 import kotlinx.coroutines.CancellationException
@@ -18,8 +19,8 @@ sealed interface UpdateState {
     data object UpToDate : UpdateState
     data class Available(val release: Release) : UpdateState
     data class Downloading(val progress: Float) : UpdateState
-    /** Handed over to the system installer. */
-    data object Installing : UpdateState
+    /** Handed over to `pm` through Shizuku (installs and reopens Totch) or to the system installer (asks to confirm). */
+    data class Installing(val viaShizuku: Boolean) : UpdateState
     data object Failed : UpdateState
 }
 
@@ -42,7 +43,7 @@ class UpdateController(
         when (_state.value.state) {
             UpdateState.Checking, is UpdateState.Downloading -> return
             is UpdateState.Available -> _state.update { it.copy(dialog = true) }
-            UpdateState.Installing -> if (silent) return else start(silent)
+            is UpdateState.Installing -> if (silent) return else start(silent)
             else -> start(silent)
         }
     }
@@ -75,14 +76,25 @@ class UpdateController(
         val release = (_state.value.state as? UpdateState.Available)?.release ?: return
         _state.value = UpdateUi(UpdateState.Downloading(0f))
         scope.launch {
-            val ok = try {
+            val result = try {
                 updater.downloadAndInstall(release) { p -> _state.value = UpdateUi(UpdateState.Downloading(p.coerceIn(0f, 1f))) }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                false
+                InstallResult.FAILED
             }
-            _state.value = UpdateUi(if (ok) UpdateState.Installing else UpdateState.Failed)
+            _state.value = UpdateUi( // UP-16
+                when (result) {
+                    InstallResult.SHIZUKU -> UpdateState.Installing(viaShizuku = true)
+                    InstallResult.SYSTEM_INSTALLER -> UpdateState.Installing(viaShizuku = false)
+                    InstallResult.FAILED -> UpdateState.Failed
+                },
+            )
         }
+    }
+
+    /** UP-17: the detached `pm install` failed and reopened Totch to say so. */
+    fun installFailed() {
+        _state.value = UpdateUi(UpdateState.Failed)
     }
 }

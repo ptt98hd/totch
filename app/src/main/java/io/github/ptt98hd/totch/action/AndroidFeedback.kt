@@ -84,6 +84,20 @@ class AndroidFeedback(private val context: Context, private val apps: InstalledA
         is Action.LaunchShortcut -> R.string.platform_action_shortcut
         is Action.LaunchActivity -> R.string.platform_action_activity
         is Action.ClickTile -> R.string.platform_action_tile
+        Action.BrightnessUp -> R.string.platform_action_brightness_up
+        Action.BrightnessDown -> R.string.platform_action_brightness_down
+        Action.ToggleAutoBrightness -> R.string.platform_action_auto_brightness
+        Action.ToggleAutoRotate -> R.string.platform_action_auto_rotate
+        Action.RingerNormal -> R.string.platform_action_ringer_normal
+        Action.RingerVibrate -> R.string.platform_action_ringer_vibrate
+        Action.RingerSilent -> R.string.platform_action_ringer_silent
+        Action.CycleRingerMode -> R.string.platform_action_ringer_cycle
+        Action.ToggleDnd -> R.string.platform_action_dnd
+        Action.ToggleWifi -> R.string.platform_action_wifi
+        Action.ToggleBluetooth -> R.string.platform_action_bluetooth
+        Action.ToggleMobileData -> R.string.platform_action_mobile_data
+        Action.ToggleAirplaneMode -> R.string.platform_action_airplane
+        Action.ToggleLocation -> R.string.platform_action_location
     }
 
     private companion object {

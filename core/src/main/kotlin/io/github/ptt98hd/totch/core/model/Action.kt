@@ -24,8 +24,28 @@ sealed interface Action {
     @Serializable @SerialName("volume_panel") data object VolumePanel : Action
     @Serializable @SerialName("launch_app") data class LaunchApp(val packageName: String) : Action
     @Serializable @SerialName("assistant") data object Assistant : Action
-    /** Toggles Android's one-handed mode; needs its accessibility shortcut (FR-A16). */
+    /** Toggles Android's one-handed mode (FR-A16). */
     @Serializable @SerialName("one_handed") data object OneHandedMode : Action
+
+    // v1.6.3 display actions (FR-A17), through Shizuku.
+    @Serializable @SerialName("brightness_up") data object BrightnessUp : Action
+    @Serializable @SerialName("brightness_down") data object BrightnessDown : Action
+    @Serializable @SerialName("auto_brightness") data object ToggleAutoBrightness : Action
+    @Serializable @SerialName("auto_rotate") data object ToggleAutoRotate : Action
+
+    // v1.6.3 sound modes (FR-A18), local; need Do Not Disturb access.
+    @Serializable @SerialName("ringer_normal") data object RingerNormal : Action
+    @Serializable @SerialName("ringer_vibrate") data object RingerVibrate : Action
+    @Serializable @SerialName("ringer_silent") data object RingerSilent : Action
+    @Serializable @SerialName("ringer_cycle") data object CycleRingerMode : Action
+    @Serializable @SerialName("dnd") data object ToggleDnd : Action
+
+    // v1.6.3 connections (FR-A19), through Shizuku.
+    @Serializable @SerialName("wifi") data object ToggleWifi : Action
+    @Serializable @SerialName("bluetooth") data object ToggleBluetooth : Action
+    @Serializable @SerialName("mobile_data") data object ToggleMobileData : Action
+    @Serializable @SerialName("airplane") data object ToggleAirplaneMode : Action
+    @Serializable @SerialName("location") data object ToggleLocation : Action
 
     /** Static app shortcut; [label] is kept for display, [intentUri] is `Intent.toUri(URI_INTENT_SCHEME)`. */
     @Serializable @SerialName("launch_shortcut") data class LaunchShortcut(

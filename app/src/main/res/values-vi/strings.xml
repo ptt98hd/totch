@@ -31,6 +31,7 @@
     <string name="permission_accessibility">Trợ năng</string>
     <string name="permission_notifications">Thông báo</string>
     <string name="permission_media">Điều khiển media</string>
+    <string name="permission_dnd">Quyền Không làm phiền</string>
     <string name="permission_battery">Pin không giới hạn</string>
     <string name="permission_install_updates">Cài bản cập nhật</string>
     <string name="permission_granted">Đã cấp</string>
@@ -79,9 +80,28 @@
     <string name="action_launch_shortcut">%1$s: %2$s</string>
     <string name="action_open_activity">Mở activity…</string>
     <string name="action_click_tile">Bấm ô Cài đặt nhanh…</string>
+    <string name="action_brightness_up">Tăng độ sáng</string>
+    <string name="action_brightness_down">Giảm độ sáng</string>
+    <string name="action_auto_brightness">Bật/tắt độ sáng tự động</string>
+    <string name="action_auto_rotate">Bật/tắt tự động xoay</string>
+    <string name="action_ringer_normal">Chế độ âm thanh: đổ chuông</string>
+    <string name="action_ringer_vibrate">Chế độ âm thanh: rung</string>
+    <string name="action_ringer_silent">Chế độ âm thanh: im lặng</string>
+    <string name="action_ringer_cycle">Đổi chế độ âm thanh</string>
+    <string name="action_dnd">Bật/tắt Không làm phiền</string>
+    <string name="action_wifi">Bật/tắt Wi-Fi</string>
+    <string name="action_bluetooth">Bật/tắt Bluetooth</string>
+    <string name="action_mobile_data">Bật/tắt dữ liệu di động</string>
+    <string name="action_airplane">Bật/tắt chế độ máy bay</string>
+    <string name="action_location">Bật/tắt vị trí</string>
+    <string name="action_needs_dnd">Cần quyền Không làm phiền</string>
     <string name="app_not_installed">Chưa cài đặt</string>
     <string name="group_system">Hệ thống</string>
     <string name="group_media">Media</string>
+    <string name="group_navigation">Điều hướng</string>
+    <string name="group_sound">Âm thanh</string>
+    <string name="group_display">Màn hình</string>
+    <string name="group_connections">Kết nối</string>
 
     <!-- Action picker -->
     <string name="app_picker_search">Tìm ứng dụng</string>
@@ -89,6 +109,8 @@
     <string name="app_picker_empty">Không có ứng dụng nào khớp “%1$s”</string>
     <string name="app_picker_none">Không tìm thấy ứng dụng</string>
     <string name="tab_system">Hệ thống</string>
+    <string name="action_search">Tìm hành động</string>
+    <string name="action_search_empty">Không có hành động nào khớp “%1$s”</string>
     <string name="tab_apps">Ứng dụng</string>
     <string name="tab_shortcuts">Shortcut</string>
     <string name="tab_activities">Activity</string>
@@ -152,6 +174,7 @@
     <string name="update_available">Đã có bản %1$s</string>
     <string name="update_downloading">Đang tải… %1$d%%</string>
     <string name="update_installing">Xác nhận để cài đặt</string>
+    <string name="update_installing_shizuku">Đang cài đặt…</string>
     <string name="update_failed">Không cập nhật được, chạm để thử lại</string>
     <string name="update_dialog_title">Totch %1$s</string>
     <string name="update_action">Cập nhật</string>
