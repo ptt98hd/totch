@@ -75,7 +75,6 @@ class NotchSettingsViewModel(
     fun setLongPressMs(value: Long) = save { it.copy(longPressMs = value) }
     fun setSwipeDistanceDp(value: Int) = save { it.copy(swipeMinDistanceDp = value) }
     fun setPaddingDp(value: Int) = save { it.copy(paddingDp = value) }
-    fun setHaptics(value: Boolean) = save { it.copy(haptics = value) }
 
     /** UI-33: any touch-area slider; the detected region itself is stored as "automatic". */
     fun setArea(region: ManualRegionDp) {

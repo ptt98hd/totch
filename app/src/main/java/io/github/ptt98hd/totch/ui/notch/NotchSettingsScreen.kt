@@ -25,7 +25,6 @@ import io.github.ptt98hd.totch.ui.common.LocalNotchHighlight
 import io.github.ptt98hd.totch.ui.common.ResetButton
 import io.github.ptt98hd.totch.ui.common.SettingsSection
 import io.github.ptt98hd.totch.ui.common.SliderSetting
-import io.github.ptt98hd.totch.ui.common.SwitchRow
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.withGutters
 import io.github.ptt98hd.totch.ui.theme.TotchTheme
@@ -37,7 +36,6 @@ data class NotchSettingsActions(
     val onLongPressMs: (Long) -> Unit = {},
     val onSwipeDistanceDp: (Int) -> Unit = {},
     val onPaddingDp: (Int) -> Unit = {},
-    val onHaptics: (Boolean) -> Unit = {},
     val onArea: (ManualRegionDp) -> Unit = {},
     val onReset: (NotchSetting) -> Unit = {},
     /** Unsaved settings while a touch-area slider is dragged (for the live highlight); null when done. */
@@ -66,7 +64,6 @@ fun NotchSettingsRoute(container: AppContainer) {
             onLongPressMs = vm::setLongPressMs,
             onSwipeDistanceDp = vm::setSwipeDistanceDp,
             onPaddingDp = vm::setPaddingDp,
-            onHaptics = vm::setHaptics,
             onArea = vm::setArea,
             onReset = vm::reset,
             onDraft = { draft = it },
@@ -95,11 +92,6 @@ fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActio
         topBar = { TotchTopBar(stringResource(R.string.nav_notch)) },
     ) { padding ->
         LazyColumn(contentPadding = padding.withGutters(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item(key = "feedback") {
-                SettingsSection(stringResource(R.string.section_feedback)) {
-                    SwitchRow(stringResource(R.string.setting_haptics), s.haptics, actions.onHaptics)
-                }
-            }
             item(key = "sensitivity") {
                 SettingsSection(stringResource(R.string.section_sensitivity)) {
                     SliderSetting(

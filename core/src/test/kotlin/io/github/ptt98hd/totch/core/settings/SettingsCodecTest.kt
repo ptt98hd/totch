@@ -142,4 +142,15 @@ class SettingsCodecTest {
         val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
         assertEquals("""{"type":"volume_panel"}""", json.getValue("bindings").jsonObject.getValue("TAP").toString())
     }
+
+    @Test fun `ST-25 landscape gestures and activities round trip`() {
+        assertFalse(SettingsCodec.decode("""{"bindings":{"TAP":{"type":"home"}}}""").landscapeGestures)
+        val s = Settings(
+            landscapeGestures = true,
+            bindings = DefaultBindings + (Gesture.TAP to Action.LaunchActivity("com.a", "com.a.Main\$Sub", "Main")),
+        )
+        assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
+        val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
+        assertEquals("launch_activity", json.getValue("bindings").jsonObject.getValue("TAP").jsonObject.getValue("type").jsonPrimitive.content)
+    }
 }

@@ -106,9 +106,9 @@ class SettingsTest {
         assertEquals(Action.None, s.effectiveAction(Gesture.SWIPE_DOWN_HOLD))
         assertEquals(Action.Home, s.actionFor(Gesture.SWIPE_DOWN))
         assertEquals(Action.MediaNext, s.effectiveAction(Gesture.SWIPE_RIGHT))
-        assertFalse(Gesture.SWIPE_DOWN.isAvailable)
-        assertFalse(Gesture.SWIPE_DOWN_HOLD.isAvailable)
-        assertTrue(Gesture.entries.filter { it != Gesture.SWIPE_DOWN && it != Gesture.SWIPE_DOWN_HOLD }.all { it.isAvailable })
+        assertFalse(Gesture.SWIPE_DOWN.isAvailable(canBlockTouches = false))
+        assertFalse(Gesture.SWIPE_DOWN_HOLD.isAvailable(canBlockTouches = false))
+        assertTrue(Gesture.entries.filter { it !in SwipeDownGestures }.all { it.isAvailable(canBlockTouches = false) })
     }
 
     @Test fun `ST-22 unavailable gestures are switched off`() {
@@ -161,5 +161,31 @@ class SettingsTest {
         assertEquals(0, Settings(manualRegion = ManualRegionDp(topDp = -5)).sanitized().manualRegion?.topDp)
         assertEquals(100, Settings(manualRegion = ManualRegionDp(topDp = 500)).sanitized().manualRegion?.topDp)
         assertEquals(24, Settings(manualRegion = ManualRegionDp(topDp = 24)).sanitized().manualRegion?.topDp)
+    }
+
+    @Test fun `ST-24 swipe down gestures are available when touches can be blocked`() {
+        val s = Settings(
+            bindings = DefaultBindings + mapOf(Gesture.SWIPE_DOWN to Action.Home, Gesture.SWIPE_DOWN_HOLD to Action.VolumeUp),
+        )
+        assertTrue(Gesture.entries.all { it.isAvailable(canBlockTouches = true) })
+        assertEquals(Action.Home, s.effectiveAction(Gesture.SWIPE_DOWN, canBlockTouches = true))
+        assertTrue(s.isGestureOn(Gesture.SWIPE_DOWN_HOLD, canBlockTouches = true))
+        assertFalse(s.withGestureOn(Gesture.SWIPE_DOWN_HOLD, false).isGestureOn(Gesture.SWIPE_DOWN_HOLD, canBlockTouches = true))
+        assertEquals(setOf(Gesture.SWIPE_DOWN_HOLD), s.toGestureConfig(1f, canBlockTouches = true).holdSwipes)
+        assertEquals(emptySet(), s.toGestureConfig(1f).holdSwipes)
+    }
+
+    @Test fun `ST-25 landscape gestures default off`() {
+        assertFalse(Settings().landscapeGestures)
+    }
+
+    @Test fun `ST-26 touch blocking is needed only for switched on swipe down gestures`() {
+        val on = Settings(enabled = true)
+        assertTrue(on.needsTouchBlocking()) // SWIPE_DOWN → Notifications by default
+        assertFalse(on.copy(enabled = false).needsTouchBlocking())
+        assertFalse(on.withGestureOn(Gesture.SWIPE_DOWN, false).needsTouchBlocking())
+        val holdOnly = on.withBinding(Gesture.SWIPE_DOWN, Action.None).withBinding(Gesture.SWIPE_DOWN_HOLD, Action.Home)
+        assertTrue(holdOnly.needsTouchBlocking())
+        assertFalse(holdOnly.withGestureOn(Gesture.SWIPE_DOWN_HOLD, false).needsTouchBlocking())
     }
 }

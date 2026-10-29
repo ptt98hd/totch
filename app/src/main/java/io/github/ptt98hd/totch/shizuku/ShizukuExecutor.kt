@@ -21,13 +21,15 @@ class ShizukuExecutor(
     override fun isAvailable(): Boolean = service.value?.asBinder()?.isBinderAlive == true
 
     override fun supports(action: Action): Boolean =
-        action is Action.LaunchApp || action is Action.LaunchShortcut || ShellCommands.of(action) != null
+        action is Action.LaunchApp || action is Action.LaunchShortcut || action is Action.LaunchActivity ||
+            ShellCommands.of(action) != null
 
     override suspend fun execute(action: Action): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             val command = when (action) {
                 is Action.LaunchApp -> launchCommand(action.packageName)
                 is Action.LaunchShortcut -> ShellCommands.startIntent(action.intentUri)
+                is Action.LaunchActivity -> ShellCommands.startActivity(action.packageName, action.activityName)
                 else -> ShellCommands.of(action)
             } ?: error("unsupported")
             val service = service.value ?: error("unavailable")

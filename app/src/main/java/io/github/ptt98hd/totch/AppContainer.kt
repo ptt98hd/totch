@@ -16,6 +16,7 @@ interface AppContainer {
     val systemStatus: SystemStatus
     val installedApps: InstalledApps
     val appShortcuts: AppShortcuts
+    val appActivities: AppActivities
     val touchArea: TouchArea
 }
 
@@ -86,6 +87,19 @@ data class ShortcutEntry(
 interface AppShortcuts {
     /** Static shortcuts of launchable apps that Totch is able to open; unordered. */
     suspend fun shortcuts(): List<ShortcutEntry>
+}
+
+/** An exported activity of a launchable app (actions spec §8); [name] is the fully qualified class name. */
+data class ActivityEntry(
+    val packageName: String,
+    val appLabel: String,
+    val name: String,
+    val label: String,
+)
+
+interface AppActivities {
+    /** Exported activities without a required permission, of launchable apps; unordered. */
+    suspend fun activities(): List<ActivityEntry>
 }
 
 /** The highlighted touch area in screen pixels: [notch] (width × height) inside [touch] (notch + padding). */

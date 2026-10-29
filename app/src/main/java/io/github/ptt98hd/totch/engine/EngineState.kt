@@ -24,7 +24,10 @@ sealed interface PipelineState {
     data class Failed(val error: PipelineError) : PipelineState
 }
 
-/** Display state in the current rotation; [rotation] is a `Surface.ROTATION_*` value. */
+/**
+ * Display state in the current rotation; [rotation] is a `Surface.ROTATION_*` value. [naturalCutout] is the cutout on
+ * the top edge of the natural (ROTATION_0) orientation, in natural coordinates (FR-R8).
+ */
 data class DisplaySnapshot(
     val widthPx: Int,
     val heightPx: Int,
@@ -32,10 +35,30 @@ data class DisplaySnapshot(
     val statusBarPx: Int,
     val cutoutTop: List<Rect>,
     val density: Float,
+    val naturalCutout: List<Rect> = cutoutTop,
 ) {
     /** Size in the natural (ROTATION_0) orientation, as used by getevent coordinates. */
     val naturalSize: Pair<Int, Int>
         get() = if (rotation % 2 == 0) widthPx to heightPx else heightPx to widthPx
+
+    /** The same display seen in its natural orientation (NR-17). */
+    fun natural(): DisplaySnapshot {
+        val (w, h) = naturalSize
+        return DisplaySnapshot(w, h, 0, statusBarPx, naturalCutout, density, naturalCutout)
+    }
+}
+
+/** NR-15, NR-16: [rect] of a display rotated by [rotation] ([widthPx] × [heightPx] as rotated) in natural coordinates. */
+fun toNatural(rect: Rect, rotation: Int, widthPx: Int, heightPx: Int): Rect {
+    fun point(x: Int, y: Int): Pair<Int, Int> = when (rotation) {
+        1 -> heightPx - y to x
+        2 -> widthPx - x to heightPx - y
+        3 -> y to widthPx - x
+        else -> x to y
+    }
+    val (x1, y1) = point(rect.left, rect.top)
+    val (x2, y2) = point(rect.right, rect.bottom)
+    return Rect(minOf(x1, x2), minOf(y1, y2), maxOf(x1, x2), maxOf(y1, y2))
 }
 
 /** Notch touch region for [settings] on [display], or `null` when inactive (FR-R4). */
@@ -49,6 +72,13 @@ fun notchRegion(settings: Settings, display: DisplaySnapshot): Rect? {
         paddingPx = px(settings.paddingDp),
         rotation = display.rotation,
     )
+}
+
+/** Region the engine listens to, in natural coordinates like getevent: rotated only with landscape gestures (NR-17). */
+fun engineRegion(settings: Settings, display: DisplaySnapshot): Rect? = when {
+    display.rotation == 0 -> notchRegion(settings, display)
+    settings.landscapeGestures -> notchRegion(settings, display.natural())
+    else -> null
 }
 
 /** The automatically detected region (cutout or default, no padding) in dp, or `null` when rotated (NR-12). */
@@ -83,7 +113,7 @@ fun resolveEngineStatus(
     !shizuku.running -> EngineStatus.WaitingShizuku
     !shizuku.granted -> EngineStatus.ShizukuPermissionRequired
     pipeline is PipelineState.Failed -> EngineStatus.Error(errorMessage(pipeline.error))
-    rotation != 0 -> EngineStatus.PausedRotation
+    rotation != 0 && !settings.landscapeGestures -> EngineStatus.PausedRotation // DM-31
     pipeline == PipelineState.Running -> EngineStatus.Running
     else -> EngineStatus.Starting // DM-30
 }

@@ -58,4 +58,10 @@ class EngineStatusTest {
         assertEquals(EngineStatus.Running, status(on))
         assertEquals(EngineStatus.PausedRotation, status(on, rotation = 1))
     }
+
+    @Test
+    fun `DM-31 landscape gestures keep running when rotated`() {
+        assertEquals(EngineStatus.Running, status(on.copy(landscapeGestures = true), rotation = 1))
+        assertEquals(EngineStatus.Running, status(on.copy(landscapeGestures = true), rotation = 3))
+    }
 }

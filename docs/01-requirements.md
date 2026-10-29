@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), **v1.4** (§11) · Cập nhật: 2026-10-28
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), **v1.5** (§12) · Cập nhật: 2026-10-29
 
 ## 1. Tầm nhìn
 
@@ -192,3 +192,15 @@ tham chiếu ID tương ứng.
 | FR-R7 | Padding 1–10 dp (vùng nhận chạm dư ra quanh notch rộng × cao); highlight vẽ cả phần padding (viền nét đứt) | [notch-region](specs/notch-region.md), [ui §2](specs/ui.md) |
 | FR-U22 | Hiệu ứng chuyển trang (trượt ngang + mờ dần theo hướng tab), sheet trượt lên/xuống | [ui §1](specs/ui.md) |
 | FR-S4 | (cập nhật) `doubleTapMs` 100–1000, `longPressMs` 100–1000, `paddingDp` 1–10 | [settings](specs/settings.md) |
+
+## 12. Phiên bản 1.5
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-D10 | Tắt quyền **Thông báo** qua Shizuku: Android luôn giết app khi thu hồi quyền runtime (kể cả khi tắt trong Cài đặt), nên Totch hỏi xác nhận rồi chạy `pm revoke` **tách rời** (process shell riêng) và mở lại Totch ngay sau đó | [detection-modes §6](specs/detection-modes.md) |
+| FR-A14 | Hành động **Mở activity**: activity được export (không yêu cầu quyền) của app có launcher; tab **Activities** trong picker hiển thị như tab Shortcut (nhóm theo app, mở rộng/thu gọn, tìm kiếm) | [actions §8](specs/actions.md), [ui §3](specs/ui.md) |
+| FR-G14 | Vuốt xuống / Vuốt xuống & giữ dùng được khi **Trợ năng** đang bật: service đặt overlay trong suốt trên vùng notch để chặn chạm (hệ thống không kéo thanh thông báo), cử chỉ vẫn nhận qua Shizuku. Thay FR-G10/FR-G13 khi có Trợ năng | [detection-modes §7](specs/detection-modes.md), [settings](specs/settings.md) |
+| FR-R8 | Tùy chọn **Nhận cử chỉ khi xoay ngang** (mặc định tắt): bật → khi xoay, vùng chạm vẫn là notch vật lý (tính theo hướng dọc tự nhiên), engine tiếp tục chạy. Thay FR-R4 khi bật | [notch-region](specs/notch-region.md), [detection-modes §1](specs/detection-modes.md) |
+| FR-U23 | Màn **Settings**: section **System** lên đầu gồm Haptic feedback (chuyển từ tab Notch), Nhận cử chỉ khi xoay ngang, Khởi động cùng máy; mọi dòng có icon; các dòng trong section ngăn bằng đường kẻ ngang. Tab Notch bỏ section Phản hồi | [ui §3](specs/ui.md) |
+| FR-U24 | Settings: System xếp Start on boot → Haptic feedback → Gestures in landscape; đổi "AMOLED black" thành "Amoled black" và thêm mô tả ngắn (1 dòng); mô tả trong About ngắn gọn (1 dòng), icon cuối dòng mở link là chevron (›) | [ui §3](specs/ui.md) |
+| FR-U25 | Action picker: sheet chạm sát mép dưới top bar; các mục (System, Apps, Shortcuts, Activities, sau này thêm Intents, Settings…) là **hàng chip cuộn ngang** có icon thay cho segmented button — thêm mục không làm hẹp nhãn | [ui §3](specs/ui.md) |

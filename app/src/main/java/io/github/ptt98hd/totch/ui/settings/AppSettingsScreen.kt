@@ -5,12 +5,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Contrast
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.PowerSettingsNew
+import androidx.compose.material.icons.outlined.ScreenRotation
+import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -27,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,7 +45,7 @@ import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.settings.ThemeMode
 import io.github.ptt98hd.totch.ui.common.ChoiceDialog
 import io.github.ptt98hd.totch.ui.common.ChoiceRow
-import io.github.ptt98hd.totch.ui.common.Gutter
+import io.github.ptt98hd.totch.ui.common.RowDivider
 import io.github.ptt98hd.totch.ui.common.SettingsSection
 import io.github.ptt98hd.totch.ui.common.SwitchRow
 import io.github.ptt98hd.totch.ui.common.TonalIcon
@@ -53,6 +59,8 @@ data class AppSettingsActions(
     val onAmoledBlack: (Boolean) -> Unit = {},
     val onLanguage: (AppLanguage) -> Unit = {},
     val onStartOnBoot: (Boolean) -> Unit = {},
+    val onHaptics: (Boolean) -> Unit = {},
+    val onLandscapeGestures: (Boolean) -> Unit = {},
     val onOpenUrl: (String) -> Unit = {},
 )
 
@@ -67,6 +75,8 @@ fun AppSettingsRoute(container: AppContainer) {
             onAmoledBlack = vm::setAmoledBlack,
             onLanguage = vm::setLanguage,
             onStartOnBoot = vm::setStartOnBoot,
+            onHaptics = vm::setHaptics,
+            onLandscapeGestures = vm::setLandscapeGestures,
             onOpenUrl = { uriHandler.openUri(it) },
         )
     }
@@ -85,16 +95,35 @@ fun AppSettingsScreen(state: AppSettingsUiState, actions: AppSettingsActions, ve
         topBar = { TotchTopBar(stringResource(R.string.settings_title)) },
     ) { padding ->
         LazyColumn(contentPadding = padding.withGutters(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item(key = "appearance") {
-                SettingsSection(stringResource(R.string.section_appearance)) {
-                    ChoiceRow(stringResource(R.string.setting_theme), themeName(s.theme)) { picker = Picker.THEME }
-                    SwitchRow(stringResource(R.string.setting_amoled), s.amoledBlack, actions.onAmoledBlack)
-                    ChoiceRow(stringResource(R.string.setting_language), languageName(s.language)) { picker = Picker.LANGUAGE }
-                }
-            }
             item(key = "system") {
                 SettingsSection(stringResource(R.string.section_system)) {
-                    SwitchRow(stringResource(R.string.setting_start_on_boot), s.startOnBoot, actions.onStartOnBoot)
+                    SwitchRow(stringResource(R.string.setting_start_on_boot), s.startOnBoot, actions.onStartOnBoot, Icons.Outlined.PowerSettingsNew)
+                    RowDivider()
+                    SwitchRow(stringResource(R.string.setting_haptics), s.haptics, actions.onHaptics, Icons.Outlined.Vibration)
+                    RowDivider()
+                    SwitchRow(
+                        stringResource(R.string.setting_landscape),
+                        s.landscapeGestures,
+                        actions.onLandscapeGestures,
+                        Icons.Outlined.ScreenRotation,
+                    )
+                }
+            }
+            item(key = "appearance") {
+                SettingsSection(stringResource(R.string.section_appearance)) {
+                    ChoiceRow(stringResource(R.string.setting_theme), themeName(s.theme), Icons.Outlined.Palette) { picker = Picker.THEME }
+                    RowDivider()
+                    SwitchRow(
+                        stringResource(R.string.setting_amoled),
+                        s.amoledBlack,
+                        actions.onAmoledBlack,
+                        Icons.Outlined.Contrast,
+                        summary = stringResource(R.string.setting_amoled_summary),
+                    )
+                    RowDivider()
+                    ChoiceRow(stringResource(R.string.setting_language), languageName(s.language), Icons.Outlined.Translate) {
+                        picker = Picker.LANGUAGE
+                    }
                 }
             }
             item(key = "about") { AboutSection(versionName, actions.onOpenUrl) }
@@ -149,11 +178,16 @@ private fun AboutSection(versionName: String, onOpenUrl: (String) -> Unit) {
     val shizukuUrl = stringResource(R.string.about_shizuku_url)
     SettingsSection(stringResource(R.string.section_about)) {
         AboutRow(Icons.Outlined.Info, stringResource(R.string.app_name), stringResource(R.string.about_version, versionName))
-        HorizontalDivider(Modifier.padding(horizontal = Gutter))
+        RowDivider()
         AboutRow(Icons.Outlined.Gavel, stringResource(R.string.about_license_title), stringResource(R.string.about_license))
-        HorizontalDivider(Modifier.padding(horizontal = Gutter))
-        AboutRow(Icons.Outlined.Code, stringResource(R.string.about_source_title), sourceUrl, onClick = { onOpenUrl(sourceUrl) })
-        HorizontalDivider(Modifier.padding(horizontal = Gutter))
+        RowDivider()
+        AboutRow(
+            Icons.Outlined.Code,
+            stringResource(R.string.about_source_title),
+            stringResource(R.string.about_source_summary),
+            onClick = { onOpenUrl(sourceUrl) },
+        )
+        RowDivider()
         AboutRow(
             Icons.Outlined.Favorite,
             stringResource(R.string.about_credits_title),
@@ -170,8 +204,8 @@ private fun AboutRow(icon: ImageVector, title: String, summary: String, onClick:
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         leadingContent = { TonalIcon(icon) },
         headlineContent = { Text(title) },
-        supportingContent = { Text(summary) },
-        trailingContent = onClick?.let { { Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null) } },
+        supportingContent = { Text(summary, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        trailingContent = onClick?.let { { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) } },
     )
 }
 

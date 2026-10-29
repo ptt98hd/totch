@@ -2,6 +2,7 @@ package io.github.ptt98hd.totch.core.action
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class PermissionCommandsTest {
     private val totch = "io.github.ptt98hd.totch/io.github.ptt98hd.totch.accessibility.NotchAccessibilityService"
@@ -49,5 +50,15 @@ class PermissionCommandsTest {
     @Test fun `PC-4 notifications grant and quoting`() {
         assertEquals("pm grant 'a.b' android.permission.POST_NOTIFICATIONS", PermissionCommands.grantNotifications("a.b"))
         assertEquals("cmd deviceidle whitelist +'a'\\''b'", PermissionCommands.batteryUnrestricted("a'b", true))
+    }
+
+    @Test fun `PC-5 notifications revoke runs detached and reopens the app`() {
+        assertEquals(
+            "setsid sh -c 'sleep 1; pm revoke a.b android.permission.POST_NOTIFICATIONS; am start -n a.b/a.b.ui.Main' " +
+                "</dev/null >/dev/null 2>&1 &",
+            PermissionCommands.revokeNotificationsAndRestart("a.b", "a.b.ui.Main"),
+        )
+        assertNull(PermissionCommands.revokeNotificationsAndRestart("a.b; reboot", "a.b.Main"))
+        assertNull(PermissionCommands.revokeNotificationsAndRestart("a.b", "Main'x"))
     }
 }

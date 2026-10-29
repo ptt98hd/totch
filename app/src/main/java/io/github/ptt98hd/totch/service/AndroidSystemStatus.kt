@@ -18,6 +18,7 @@ import io.github.ptt98hd.totch.action.MediaListenerService
 import io.github.ptt98hd.totch.core.action.PermissionCommands
 import io.github.ptt98hd.totch.shizuku.ShizukuManager
 import io.github.ptt98hd.totch.shizuku.ShizukuShell
+import io.github.ptt98hd.totch.ui.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -88,13 +89,15 @@ class AndroidSystemStatus(
                 ),
             )
             Permission.BATTERY -> listOf(PermissionCommands.batteryUnrestricted(pkg, granted))
-            // Revoking a runtime permission kills the app; Android 12 has no runtime notification permission.
-            Permission.NOTIFICATIONS ->
-                if (granted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    listOf(PermissionCommands.grantNotifications(pkg))
-                } else {
-                    return false
-                }
+            // Android 12 has no runtime notification permission. Revoking kills Totch, so it is detached and
+            // reopens the app (FR-D10, PC-5); the UI asks first (UI-53).
+            Permission.NOTIFICATIONS -> when {
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU -> return false
+                granted -> listOf(PermissionCommands.grantNotifications(pkg))
+                else -> listOf(
+                    PermissionCommands.revokeNotificationsAndRestart(pkg, MainActivity::class.java.name) ?: return false,
+                )
+            }
         }
         return shell.exec(commands).also { refresh() }
     }

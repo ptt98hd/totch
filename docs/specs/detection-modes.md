@@ -4,7 +4,10 @@
 > DM-21 chỉ còn giá trị lịch sử). `NotchAccessibilityService` không còn overlay, chỉ là quyền tùy chọn để thực thi
 > hành động (§6). JSON cũ có `"mode"` vẫn đọc được (key bị bỏ qua, ST-23).
 
-Yêu cầu: FR-D1…FR-D7, FR-S8, FR-G10, NFR-3, NFR-8 · Module: `:app`
+> **v1.5:** quyền Thông báo tắt được qua Shizuku (FR-D10, PC-5); overlay chặn chạm khi có Trợ năng (FR-G14, §7);
+> nhận cử chỉ khi xoay ngang (FR-R8, DM-31).
+
+Yêu cầu: FR-D1…FR-D10, FR-S8, FR-G10, FR-G14, FR-R8, NFR-3, NFR-8 · Module: `:app`
 
 ## 1. Trạng thái engine
 
@@ -71,18 +74,25 @@ Trạng thái được expose qua `StateFlow<EngineStatus>` (singleton `GestureE
 | EN-9 | `SWIPE_DOWN` gán `Notifications` → vuốt xuống không dispatch gì (FR-G10, dùng `effectiveAction`) |
 | EN-10 | `SWIPE_RIGHT_HOLD` gán `VolumeUp`: vuốt phải rồi giữ 500 + 2000 ms (virtual time) → `VolumeUp` dispatch đúng **1** lần (v1.3: không lặp, FR-G11) |
 | EN-11 | `SWIPE_RIGHT` gán `MediaNext` nhưng nằm trong `disabledGestures` → vuốt phải không dispatch gì (FR-G12) |
+| EN-12 | (v1.5, FR-G14) `engine.canBlockTouches = true` → `SWIPE_DOWN` gán `Notifications` được dispatch; đặt lại `false` → không dispatch (config cập nhật ngay) |
 
 Đồng hồ: engine dùng `SystemClock.uptimeMillis()` (CLOCK_MONOTONIC). `MotionEvent.eventTime` dùng cùng
 đồng hồ; `getevent` gọi `EVIOCSCLOCKID(CLOCK_MONOTONIC)` nên timestamp `-t` cũng vậy. EN-5 là lưới an toàn.
 
 Trạng thái (`resolveEngineStatus(settings, shizuku, pipeline, rotation)`, test `EngineStatusTest`):
 `!enabled` → pipeline Running/Connecting ? `Stopping` : `Disabled`; Shizuku chưa chạy `WaitingShizuku` → chưa cấp
-quyền `ShizukuPermissionRequired` → pipeline lỗi `Error` → xoay `PausedRotation` → pipeline chạy `Running`, còn lại
-`Starting`.
+quyền `ShizukuPermissionRequired` → pipeline lỗi `Error` → xoay (và `!landscapeGestures`, v1.5) `PausedRotation` →
+pipeline chạy `Running`, còn lại `Starting`.
 
 | ID | Tiêu chí |
 |---|---|
 | DM-30 | `enabled=false` + pipeline Running/Connecting → `Stopping`; `enabled=true`, Shizuku sẵn sàng, pipeline Idle/Connecting → `Starting` |
+| DM-31 | (v1.5, FR-R8) `landscapeGestures=true`, rotation ≠ 0, pipeline Running → `Running` (không `PausedRotation`) |
+
+Vùng của engine (v1.5): `engineRegion(settings, display)` = `notchRegion(settings, display)` khi rotation = 0; khi xoay và
+`landscapeGestures` → `notchRegion(settings, display.natural())` (vùng notch vật lý theo hướng dọc tự nhiên — cùng hệ
+tọa độ với `getevent`, xem notch-region §v1.5); ngược lại `null`. Hướng vuốt tính theo hướng dọc tự nhiên: "vuốt xuống"
+= vuốt ra xa notch.
 
 ## 6. Quyền tùy chọn qua Shizuku (v1.4 — FR-D9)
 `SystemStatus.setPermission(permission, granted): Boolean` chạy lệnh shell bằng `ShizukuShell` — bind một
@@ -92,7 +102,7 @@ quyền `ShizukuPermissionRequired` → pipeline lỗi `Error` → xoay `PausedR
 | Quyền | Bật | Tắt | Dùng để |
 |---|---|---|---|
 | Trợ năng | ghi `enabled_accessibility_services` (thêm service, giữ service khác) + `accessibility_enabled 1` | ghi lại danh sách không có service (rỗng → `settings delete`) | Thực thi global action, mở app/shortcut/trợ lý từ nền (ưu tiên hơn Shizuku) |
-| Thông báo (13+) | `pm grant <pkg> POST_NOTIFICATIONS` | không qua Shizuku (`pm revoke` giết app) → trang thông báo của app | Thông báo foreground service |
+| Thông báo (13+) | `pm grant <pkg> POST_NOTIFICATIONS` | v1.5: xác nhận → `pm revoke` tách rời rồi mở lại Totch (PC-5) | Thông báo foreground service |
 | Điều khiển media | `cmd notification allow_listener <component>` | `disallow_listener` | `MediaController` (FR-A6) |
 | Pin không giới hạn | `cmd deviceidle whitelist +<pkg>` | `whitelist -<pkg>` | Giữ service sống (FR-D7) |
 
@@ -102,3 +112,29 @@ quyền `ShizukuPermissionRequired` → pipeline lỗi `Error` → xoay `PausedR
 | PC-2 | `notificationListener(c, allowed)` = `cmd notification allow_listener|disallow_listener 'c'` |
 | PC-3 | `batteryUnrestricted(pkg, on)` = `cmd deviceidle whitelist +'pkg'` / `-'pkg'` |
 | PC-4 | `grantNotifications(pkg)` = `pm grant 'pkg' android.permission.POST_NOTIFICATIONS`; mọi giá trị được single-quote cho shell |
+| PC-5 | `revokeNotificationsAndRestart(pkg, activity)` = `setsid sh -c '<script>' </dev/null >/dev/null 2>&1 &` với script = `sleep 1; pm revoke <pkg> android.permission.POST_NOTIFICATIONS; am start -n <pkg>/<activity>`; package/activity sai định dạng (SC-2) → `null` |
+
+**Vì sao thu hồi Thông báo lại giết app (FR-D10).** Android giết process của app mỗi khi một quyền runtime bị thu hồi —
+kể cả khi người dùng tắt Thông báo trong Cài đặt; không có cách thu hồi `POST_NOTIFICATIONS` mà không giết app qua shell.
+Vì vậy: Home hiện hộp thoại xác nhận "Totch sẽ khởi động lại"; đồng ý → `setPermission(NOTIFICATIONS, false)` chạy lệnh
+PC-5. Lệnh chạy trong session riêng (`setsid`, nền) nên sống sót khi Shizuku gỡ UserService; `sleep 1` để lời gọi
+binder trả về trước khi app bị giết. Sau khi mở lại, foreground service tự chạy nếu `enabled` (DM-1).
+
+## 7. Chặn chạm bằng Trợ năng (v1.5 — FR-G14)
+
+Shizuku chỉ **đọc** chạm, không chặn được nên vuốt xuống tại notch luôn kéo thanh thông báo (R2). Khi Trợ năng đang bật,
+`NotchAccessibilityService` đặt một view trong suốt `TYPE_ACCESSIBILITY_OVERLAY` đúng bằng vùng notch (như overlay của
+Accessibility mode cũ, DM-10/11): view **nuốt** mọi chạm (status bar không nhận được) nhưng **không** chuyển chạm cho
+engine — engine vẫn nhận qua `getevent` nên không bị phát cử chỉ hai lần.
+
+- `canBlockTouches` = Accessibility service đang kết nối. Khi true, `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` khả dụng
+  (`Gesture.isAvailable(canBlockTouches)`, settings ST-24).
+- Overlay hiện khi: `enabled` ∧ rotation = 0 ∧ vùng notch ≠ null ∧ có ít nhất một cử chỉ vuốt xuống đang bật
+  (`needsTouchBlocking(settings)`, ST-26). Ngoài ra gỡ overlay (không chặn chạm vô ích). Ở landscape không cần chặn: vuốt
+  ra xa notch không phải là kéo thanh thông báo.
+- Vùng overlay cập nhật theo settings / display không tạo lại service (như DM-11).
+
+| ID | Tiêu chí |
+|---|---|
+| DM-15 | `needsTouchBlocking(s)` = `s.enabled` ∧ `isGestureOn(SWIPE_DOWN, true) ∨ isGestureOn(SWIPE_DOWN_HOLD, true)` |
+| DM-16 | Overlay nuốt chạm (`onTouchEvent` trả true) và không gọi engine (kiểm thủ công MT-A1) |

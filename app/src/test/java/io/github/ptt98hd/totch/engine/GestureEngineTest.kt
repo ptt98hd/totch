@@ -214,4 +214,22 @@ class GestureEngineTest {
         runCurrent()
         assertTrue(dispatched.isEmpty())
     }
+
+    @Test
+    fun `EN-12 swipe down is dispatched while touches can be blocked`() = runTest {
+        val e = engine(Settings(enabled = true).bind(Gesture.SWIPE_DOWN to Action.Notifications))
+        e.canBlockTouches = true
+        e.onTouch(down(0, y = 10f))
+        e.onTouch(move(50, 500f, 200f))
+        e.onTouch(up(100, 500f, 200f))
+        runCurrent()
+        assertEquals(listOf<Action>(Action.Notifications), dispatched)
+        e.canBlockTouches = false
+        e.onTouch(down(1000, y = 10f))
+        e.onTouch(move(1050, 500f, 200f))
+        e.onTouch(up(1100, 500f, 200f))
+        advanceTimeBy(1000)
+        runCurrent()
+        assertEquals(1, dispatched.size)
+    }
 }

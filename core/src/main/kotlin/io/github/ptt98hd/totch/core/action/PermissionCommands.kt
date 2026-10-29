@@ -3,6 +3,8 @@ package io.github.ptt98hd.totch.core.action
 /** Shell commands (uid shell, through Shizuku) that grant or revoke the optional permissions (PC-1..PC-4). */
 object PermissionCommands {
     private const val ACCESSIBILITY_SERVICES = "enabled_accessibility_services"
+    private val PACKAGE = Regex("""[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+""")
+    private val CLASS = Regex("""[A-Za-z0-9_.]+""")
 
     /**
      * PC-1: writes the enabled accessibility services with [component] added or removed; other services are
@@ -33,9 +35,19 @@ object PermissionCommands {
     fun batteryUnrestricted(packageName: String, unrestricted: Boolean): String =
         "cmd deviceidle whitelist ${if (unrestricted) "+" else "-"}${quote(packageName)}"
 
-    /** PC-4: runtime notification permission (Android 13+); never revoked this way, `pm revoke` kills the app. */
+    /** PC-4: runtime notification permission (Android 13+). */
     fun grantNotifications(packageName: String): String =
         "pm grant ${quote(packageName)} android.permission.POST_NOTIFICATIONS"
+
+    /**
+     * PC-5: revoking a runtime permission kills the app, so the revoke runs detached in its own session (it outlives
+     * the Shizuku user service) after a short delay, then reopens [activity]. `null` for unsafe names.
+     */
+    fun revokeNotificationsAndRestart(packageName: String, activity: String): String? {
+        if (!PACKAGE.matches(packageName) || !CLASS.matches(activity)) return null
+        val script = "sleep 1; pm revoke $packageName android.permission.POST_NOTIFICATIONS; am start -n $packageName/$activity"
+        return "setsid sh -c ${quote(script)} </dev/null >/dev/null 2>&1 &"
+    }
 
     private fun expand(component: String): String {
         val pkg = component.substringBefore('/')

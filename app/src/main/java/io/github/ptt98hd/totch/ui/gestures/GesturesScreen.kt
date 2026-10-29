@@ -118,12 +118,12 @@ fun GesturesScreen(
                     }
                 }
             }
-            // FR-U20: covers only the content between the top and bottom bars, which stay usable.
+            // FR-U20, FR-U25: fills the content between the top and bottom bars (flush with the top bar); both stay usable.
             AnimatedVisibility(
                 visible = state.picking != null,
                 enter = slideInVertically(tween(300)) { it } + fadeIn(tween(300)),
                 exit = slideOutVertically(tween(250)) { it } + fadeOut(tween(250)),
-                modifier = Modifier.padding(padding).padding(top = 8.dp),
+                modifier = Modifier.padding(padding),
             ) {
                 Surface(
                     shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
@@ -143,7 +143,7 @@ fun GesturesScreen(
 private fun GestureListItem(row: GestureRow, onClick: () -> Unit, onSwitchChange: (Boolean) -> Unit) {
     val bound = row.action != Action.None
     val actionName = if (bound) actionDisplayName(row.action, row.appLabel) else null
-    val packageAction = row.action is Action.LaunchApp || row.action is Action.LaunchShortcut
+    val packageAction = row.action is Action.LaunchApp || row.action is Action.LaunchShortcut || row.action is Action.LaunchActivity
     val notInstalled = packageAction && row.appLabel == null
     val supporting = when {
         !row.enabled -> stringResource(R.string.gesture_unavailable)
@@ -192,7 +192,7 @@ private fun GesturesScreenPreview() {
                             val action = if (g == Gesture.TAP) Action.LaunchApp("org.example.camera") else DefaultBindings.getValue(g)
                             GestureRow(
                                 g, action, appLabel = if (g == Gesture.TAP) "Camera" else null,
-                                enabled = g.isAvailable, on = g.isAvailable && action != Action.None && g != Gesture.SWIPE_LEFT,
+                                enabled = g.isAvailable(false), on = g.isAvailable(false) && action != Action.None && g != Gesture.SWIPE_LEFT,
                             )
                         },
                     )

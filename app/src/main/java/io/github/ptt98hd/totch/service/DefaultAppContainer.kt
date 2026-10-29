@@ -6,6 +6,7 @@ import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.EngineStatus
 import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.SystemStatus
+import io.github.ptt98hd.totch.AppActivities
 import io.github.ptt98hd.totch.AppShortcuts
 import io.github.ptt98hd.totch.TouchArea
 import io.github.ptt98hd.totch.HighlightArea
@@ -13,6 +14,7 @@ import io.github.ptt98hd.totch.accessibility.AccessibilityBridge
 import io.github.ptt98hd.totch.accessibility.AccessibilityExecutor
 import io.github.ptt98hd.totch.action.AndroidFeedback
 import io.github.ptt98hd.totch.action.LocalExecutor
+import io.github.ptt98hd.totch.action.PackageManagerAppActivities
 import io.github.ptt98hd.totch.action.PackageManagerAppShortcuts
 import io.github.ptt98hd.totch.action.PackageManagerInstalledApps
 import io.github.ptt98hd.totch.core.action.ActionDispatcher
@@ -24,6 +26,7 @@ import io.github.ptt98hd.totch.data.settingsDataStore
 import io.github.ptt98hd.totch.engine.GestureEngine
 import io.github.ptt98hd.totch.engine.PipelineError
 import io.github.ptt98hd.totch.engine.detectedRegionDp
+import io.github.ptt98hd.totch.engine.engineRegion
 import io.github.ptt98hd.totch.engine.highlightArea
 import io.github.ptt98hd.totch.engine.notchRegion
 import io.github.ptt98hd.totch.engine.resolveEngineStatus
@@ -56,6 +59,10 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
 
     /** Notch region for the current settings and display, independent of `enabled`; `null` when rotated. */
     val region: StateFlow<Rect?> = combine(settings, display.state, ::notchRegion)
+        .stateIn(scope, SharingStarted.Eagerly, null)
+
+    /** Region the engine listens to, in natural coordinates; also set while rotated with landscape gestures (FR-R8). */
+    private val engineRegion: StateFlow<Rect?> = combine(settings, display.state, ::engineRegion)
         .stateIn(scope, SharingStarted.Eagerly, null)
 
     val shizuku = ShizukuManager()
@@ -97,10 +104,12 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     }
 
     override val appShortcuts: AppShortcuts = PackageManagerAppShortcuts(app.packageManager)
+    override val appActivities: AppActivities = PackageManagerAppActivities(app.packageManager)
 
     init {
         scope.launch { combine(settings, display.state) { s, d -> s to d.density }.collect { (s, d) -> engine.updateSettings(s, d) } }
-        scope.launch { region.collect { engine.region = it } }
+        scope.launch { engineRegion.collect { engine.region = it } }
+        scope.launch { accessibility.service.map { it != null }.distinctUntilChanged().collect { engine.canBlockTouches = it } }
         scope.launch { localExecutor.warmUp() }
         scope.launch { syncLanguage() }
         // Repository flow (not the defaulted StateFlow) so a sticky restart is never stopped by a placeholder value.

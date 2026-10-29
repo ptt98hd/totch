@@ -21,7 +21,7 @@ object ActionRequirements {
         Action.None -> emptySet()
         Action.Back, Action.Home, Action.Recents, Action.LockScreen, Action.Screenshot,
         Action.Notifications, Action.QuickSettings, is Action.LaunchApp, Action.Assistant,
-        is Action.LaunchShortcut -> system
+        is Action.LaunchShortcut, is Action.LaunchActivity -> system
         Action.ToggleTorch, Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious,
         Action.VolumeUp, Action.VolumeDown, Action.VolumePanel -> local
     }

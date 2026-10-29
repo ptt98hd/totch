@@ -35,6 +35,7 @@ import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -42,6 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -88,6 +90,7 @@ fun HomeRoute(container: AppContainer) {
     val context = LocalContext.current
     var shizukuInstalled by remember { mutableStateOf(context.isShizukuInstalled()) }
     var notificationAsked by rememberSaveable { mutableStateOf(false) }
+    var confirmRevokeNotifications by rememberSaveable { mutableStateOf(false) }
 
     LifecycleResumeEffect(Unit) {
         shizukuInstalled = context.isShizukuInstalled()
@@ -130,8 +133,33 @@ fun HomeRoute(container: AppContainer) {
         onShizukuClick = {
             if (state.shizuku == ShizukuStatus.PERMISSION_REQUIRED) vm.requestShizukuPermission() else context.openShizuku()
         },
-        onPermissionChange = { permission, granted -> vm.setPermission(permission, granted, openSystemPage) },
+        onPermissionChange = { permission, granted ->
+            if (needsConfirmation(permission, granted)) {
+                confirmRevokeNotifications = true
+            } else {
+                vm.setPermission(permission, granted, openSystemPage)
+            }
+        },
     )
+
+    if (confirmRevokeNotifications) {
+        AlertDialog(
+            onDismissRequest = { confirmRevokeNotifications = false },
+            title = { Text(stringResource(R.string.revoke_notifications_title)) },
+            text = { Text(stringResource(R.string.revoke_notifications_text)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmRevokeNotifications = false
+                        vm.setPermission(Permission.NOTIFICATIONS, false, openSystemPage)
+                    },
+                ) { Text(stringResource(R.string.revoke_notifications_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRevokeNotifications = false }) { Text(stringResource(R.string.cancel)) }
+            },
+        )
+    }
 }
 
 @Composable

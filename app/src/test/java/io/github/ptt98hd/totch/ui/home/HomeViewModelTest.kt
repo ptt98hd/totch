@@ -155,4 +155,12 @@ class HomeViewModelTest {
             assertEquals(expected, masterIcon(status), "$status")
         }
     }
+
+    @Test
+    fun `UI-53 only switching notifications off asks for confirmation`() {
+        assertTrue(needsConfirmation(Permission.NOTIFICATIONS, granted = false))
+        assertFalse(needsConfirmation(Permission.NOTIFICATIONS, granted = true))
+        assertFalse(needsConfirmation(Permission.ACCESSIBILITY, granted = false))
+        assertFalse(needsConfirmation(Permission.BATTERY, granted = false))
+    }
 }

@@ -1,13 +1,13 @@
 # Spec: Hành động & điều phối (`ActionDispatcher`)
 
-Yêu cầu: FR-A1…FR-A13 · Module: `:core` (logic) + `:app` (executor)
+Yêu cầu: FR-A1…FR-A14 · Module: `:core` (logic) + `:app` (executor)
 
 ## 1. Ma trận khả năng — `ActionRequirements.of(action)`
 
 | Action | Capabilities |
 |---|---|
 | `None` | ∅ |
-| `Back`, `Home`, `Recents`, `LockScreen`, `Screenshot`, `Notifications`, `QuickSettings`, `LaunchApp`, `Assistant`, `LaunchShortcut` | {ACCESSIBILITY, SHIZUKU} |
+| `Back`, `Home`, `Recents`, `LockScreen`, `Screenshot`, `Notifications`, `QuickSettings`, `LaunchApp`, `Assistant`, `LaunchShortcut`, `LaunchActivity` | {ACCESSIBILITY, SHIZUKU} |
 | `ToggleTorch`, `MediaPlayPause`, `MediaNext`, `MediaPrevious`, `VolumeUp`, `VolumeDown`, `VolumePanel` | {LOCAL} |
 
 ## 2. Điều phối
@@ -30,6 +30,7 @@ Yêu cầu: FR-A1…FR-A13 · Module: `:core` (logic) + `:app` (executor)
 | AD-6 | Executor `supports()=false` bị bỏ qua |
 | AD-7 | `Assistant`, `LaunchShortcut` có requirements {ACCESSIBILITY, SHIZUKU} |
 | AD-8 | `VolumePanel` có requirements {LOCAL} (v1.3, FR-A13) |
+| AD-9 | `LaunchActivity` có requirements {ACCESSIBILITY, SHIZUKU} (v1.5, FR-A14) |
 
 Action mới (v1.1):
 ```kotlin
@@ -60,6 +61,7 @@ lúc chọn để hiển thị mà không cần đọc lại manifest.
 | các action LOCAL, None | `null` |
 | LaunchApp(pkg) | `null` từ `of()`; dùng `launch(pkg, activity)` |
 | LaunchShortcut | `null` từ `of()`; dùng `startIntent(intentUri)` |
+| LaunchActivity | `null` từ `of()`; dùng `startActivity(pkg, activity)` (v1.5) |
 
 `ShellCommands.launch(packageName, activityName): String?` →
 `am start -n <pkg>/<activity> -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000`
@@ -72,13 +74,14 @@ lúc chọn để hiển thị mà không cần đọc lại manifest.
 | SC-4 | `startIntent("intent:#Intent;component=com.a/.B;end")` → `am start 'intent:#Intent;component=com.a/.B;end'` |
 | SC-5 | Dấu `'` trong URI được escape thành `'\''` (không thoát được khỏi chuỗi quote) |
 | SC-6 | URI không bắt đầu bằng `intent:` hoặc `#Intent;`, hoặc chứa ký tự điều khiển (`\n`, `\r`, `\u0000`…) → `null` |
+| SC-7 | (v1.5) `startActivity("com.a", "com.a.Main$Sub")` → `am start -n 'com.a/com.a.Main$Sub' -f 0x10000000`; tên sai định dạng (SC-2) → `null` |
 
 ## 4. Executor phía `:app`
 
 | Executor | Thực thi |
 |---|---|
 | `LocalExecutor` | Đèn pin: `CameraManager.setTorchMode` trên camera có flash, lưu trạng thái qua `TorchCallback`. Media: xem §5. Âm lượng: `adjustStreamVolume(STREAM_MUSIC, ±1, FLAG_SHOW_UI)`. Bảng âm lượng: `adjustStreamVolume(STREAM_MUSIC, ADJUST_SAME, FLAG_SHOW_UI)` (chỉ hiện thanh, không đổi mức) |
-| `AccessibilityExecutor` | `performGlobalAction(GLOBAL_ACTION_BACK/HOME/RECENTS/LOCK_SCREEN/TAKE_SCREENSHOT/NOTIFICATIONS/QUICK_SETTINGS)`; LaunchApp: `startActivity(launchIntent)` từ service; Assistant: `startActivity(ACTION_ASSIST)`, không có thì `ACTION_VOICE_COMMAND`; LaunchShortcut: `Intent.parseUri(intentUri)` (bỏ selector và cờ grant URI) + `FLAG_ACTIVITY_NEW_TASK`. `isAvailable()` = service đang chạy |
+| `AccessibilityExecutor` | LaunchActivity (v1.5): `startActivity(Intent().setClassName(pkg, activity) + NEW_TASK)`. `performGlobalAction(GLOBAL_ACTION_BACK/HOME/RECENTS/LOCK_SCREEN/TAKE_SCREENSHOT/NOTIFICATIONS/QUICK_SETTINGS)`; LaunchApp: `startActivity(launchIntent)` từ service; Assistant: `startActivity(ACTION_ASSIST)`, không có thì `ACTION_VOICE_COMMAND`; LaunchShortcut: `Intent.parseUri(intentUri)` (bỏ selector và cờ grant URI) + `FLAG_ACTIVITY_NEW_TASK`. `isAvailable()` = service đang chạy |
 | `ShizukuExecutor` | `ITouchService.exec(ShellCommands…)`. `isAvailable()` = Shizuku binder sống + đã cấp quyền + UserService đã bind |
 
 Phản hồi: nếu `Ok` và `haptics` bật → rung (FR-A10, §6). Nếu `Failed` → Toast ngắn
@@ -130,3 +133,22 @@ activity launcher đã nhìn thấy nhờ `<queries>`.
 |---|---|
 | SH-1 | `groupShortcuts(entries, query)`: nhóm theo package, nhóm sắp theo tên app rồi package, shortcut trong nhóm theo nhãn (không phân biệt hoa thường) |
 | SH-2 | Query (trim, không phân biệt hoa thường) khớp nhãn shortcut **hoặc** tên app; nhóm không còn shortcut nào bị ẩn; khớp tên app → giữ cả nhóm |
+
+## 8. Activity của ứng dụng (v1.5 — FR-A14)
+
+```kotlin
+@SerialName("launch_activity") data class LaunchActivity(
+    val packageName: String, val activityName: String, val label: String) : Action   // label lưu để hiển thị
+```
+
+Nguồn: `AppActivities.activities()` — với mỗi app có activity launcher (đã thấy nhờ `<queries>`),
+`getPackageInfo(pkg, GET_ACTIVITIES)` → giữ activity `exported`, `enabled`, `permission == null` (app khác / shell mở
+được). Nhãn = `loadLabel` của activity; hiển thị kèm tên lớp rút gọn (bỏ tiền tố package) vì nhiều activity trùng nhãn app.
+
+`groupActivities(entries, query): List<ActivityGroup>` — như SH-1/SH-2:
+
+| ID | Tiêu chí |
+|---|---|
+| AC-1 | Nhóm theo package, nhóm sắp theo tên app rồi package; activity trong nhóm theo nhãn rồi tên lớp (không phân biệt hoa thường) |
+| AC-2 | Query (trim, không phân biệt hoa thường) khớp nhãn, tên lớp **hoặc** tên app; khớp tên app → giữ cả nhóm; nhóm rỗng bị ẩn |
+| AC-3 | `shortActivityName("com.a", "com.a.ui.Main")` = `.ui.Main`; lớp ở package khác giữ nguyên tên đầy đủ |

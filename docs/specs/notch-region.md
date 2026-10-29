@@ -52,3 +52,19 @@ quy về dp: `centerXFraction = (left + right) / 2 / widthPx`, `widthDp = round(
 engine nhận chạm trong toàn bộ vùng có padding (`notchRegion`). Highlight dùng `highlightArea(settings, display)` =
 `HighlightArea(touch = notchRegion(settings), notch = notchRegion(settings.copy(paddingDp = 0)))` để vẽ riêng phần padding
 (viền nét đứt) và phần notch (nền đậm, viền liền). `TouchArea.area` / `areaFor(draft)` thay cho `region` / `regionFor`.
+
+## Nhận cử chỉ khi xoay ngang (v1.5 — FR-R8)
+`getevent` luôn báo tọa độ theo hướng dọc tự nhiên (ROTATION_0), nên khi `landscapeGestures` bật engine dùng vùng notch
+**vật lý** tính trong hướng tự nhiên: `DisplaySnapshot.natural()` = kích thước tự nhiên, rotation 0, cutout cạnh trên đổi
+sang hệ tọa độ tự nhiên bằng `toNatural(rect, rotation, widthPx, heightPx)` (`widthPx`/`heightPx` của hướng hiện tại).
+Highlight trong app vẫn chỉ vẽ ở hướng dọc (`notchRegion` hiện tại trả `null` khi xoay).
+
+Quy đổi điểm `(x, y)` của hướng hiện tại sang tự nhiên (W, H = kích thước hiện tại):
+ROTATION_90 → `(H − y, x)`; ROTATION_180 → `(W − x, H − y)`; ROTATION_270 → `(y, W − x)`; rect lấy min/max của hai góc.
+Cutout tự nhiên = các bounding rect của cutout (mọi cạnh) sau quy đổi mà có `top == 0`.
+
+| ID | Given | Then |
+|---|---|---|
+| NR-15 | ROTATION_90, màn hiện tại 2400×1080, rect `(0,500,80,580)` | `(500,0,580,80)` |
+| NR-16 | ROTATION_270, màn 2400×1080, rect `(2320,500,2400,580)` | `(500,0,580,80)`; ROTATION_180, màn 1080×2400, `(500,2320,580,2400)` → `(500,0,580,80)`; ROTATION_0 → giữ nguyên |
+| NR-17 | `engineRegion`: rotation 1, `landscapeGestures=false` → `null`; `true` → bằng `notchRegion` của snapshot dọc tương ứng |

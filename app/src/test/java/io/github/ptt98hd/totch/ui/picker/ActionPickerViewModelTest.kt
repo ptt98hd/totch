@@ -1,12 +1,14 @@
 package io.github.ptt98hd.totch.ui.picker
 
 import app.cash.turbine.test
+import io.github.ptt98hd.totch.ActivityEntry
 import io.github.ptt98hd.totch.AppInfo
 import io.github.ptt98hd.totch.ShortcutEntry
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DefaultBindings
 import io.github.ptt98hd.totch.core.settings.Settings
+import io.github.ptt98hd.totch.ui.FakeAppActivities
 import io.github.ptt98hd.totch.ui.FakeAppShortcuts
 import io.github.ptt98hd.totch.ui.FakeInstalledApps
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
@@ -32,9 +34,11 @@ class ActionPickerViewModelTest {
 
     private val installed = FakeInstalledApps(apps)
     private val shortcuts = FakeAppShortcuts(listOf(shortcut))
+    private val activity = ActivityEntry("com.b", "Browser", "com.b.Settings", "Browser settings")
+    private val activities = FakeAppActivities(listOf(activity))
 
     private fun vm(repo: FakeSettingsRepository = FakeSettingsRepository(), gesture: Gesture = Gesture.SWIPE_RIGHT) =
-        ActionPickerViewModel(gesture, repo, installed, shortcuts, main.dispatcher)
+        ActionPickerViewModel(gesture, repo, installed, shortcuts, activities, main.dispatcher)
 
     private fun bound(action: Action) = FakeSettingsRepository(Settings(bindings = DefaultBindings + (Gesture.TAP to action)))
 
@@ -44,6 +48,8 @@ class ActionPickerViewModelTest {
         assertEquals(PickerTab.APPS, vm(bound(Action.LaunchApp("com.a")), Gesture.TAP).state.value.tab)
         val sc = Action.LaunchShortcut("com.b", "new_tab", "New tab", "intent:#Intent;end")
         assertEquals(PickerTab.SHORTCUTS, vm(bound(sc), Gesture.TAP).state.value.tab)
+        val act = Action.LaunchActivity("com.b", "com.b.Settings", "Browser settings")
+        assertEquals(PickerTab.ACTIVITIES, vm(bound(act), Gesture.TAP).state.value.tab)
     }
 
     @Test
@@ -158,5 +164,35 @@ class ActionPickerViewModelTest {
         vm(bound(Action.Home), Gesture.TAP).state.test {
             assertEquals(Action.Home, expectMostRecentItem().current)
         }
+    }
+
+    @Test
+    fun `UI-27 activities load once, expand per app and are saved as LaunchActivity`() = runTest {
+        val repo = FakeSettingsRepository()
+        val vm = vm(repo)
+        vm.state.test {
+            expectMostRecentItem()
+            assertEquals(0, activities.loads)
+            vm.selectTab(PickerTab.ACTIVITIES)
+            val state = expectMostRecentItem()
+            assertFalse(state.activitiesLoading)
+            assertEquals(listOf("com.b"), state.activityGroups.map { it.packageName })
+            assertFalse(state.isActivityAppExpanded("com.b"))
+            vm.toggleActivityApp("com.b")
+            val expanded = expectMostRecentItem()
+            assertTrue(expanded.isActivityAppExpanded("com.b"))
+            assertFalse(expanded.isExpanded("com.b")) // Shortcuts keep their own state
+            vm.selectTab(PickerTab.SYSTEM)
+            vm.selectTab(PickerTab.ACTIVITIES)
+            vm.setActivityQuery("zzz")
+            assertTrue(expectMostRecentItem().activityGroups.isEmpty())
+            assertEquals(1, activities.loads)
+            vm.selectActivity(activity)
+            assertTrue(expectMostRecentItem().finished)
+        }
+        assertEquals(
+            Action.LaunchActivity("com.b", "com.b.Settings", "Browser settings"),
+            repo.current.bindings[Gesture.SWIPE_RIGHT],
+        )
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="accessibility_service_label">Cử chỉ notch Totch</string>
-    <string name="accessibility_service_description">Tuỳ chọn. Thực hiện các hành động hệ thống bạn gán cho cử chỉ notch (Quay lại, Màn hình chính, khóa màn hình…) và mở ứng dụng từ nền. Totch không đọc bất kỳ nội dung nào trên màn hình.</string>
+    <string name="accessibility_service_description">Tuỳ chọn. Thực hiện các hành động hệ thống bạn gán cho cử chỉ notch (Quay lại, Màn hình chính, khóa màn hình…) mở ứng dụng từ nền, và chặn chạm tại notch để vuốt xuống ở đó không kéo thanh thông báo. Totch không đọc bất kỳ nội dung nào trên màn hình.</string>
 
     <string name="platform_channel_name">Dịch vụ cử chỉ</string>
     <string name="platform_channel_description">Hiển thị khi Totch nhận cử chỉ notch qua Shizuku</string>
@@ -34,5 +34,6 @@
     <string name="platform_action_launch_app">Mở ứng dụng</string>
     <string name="platform_action_assistant">Trợ lý</string>
     <string name="platform_action_shortcut">Mở shortcut</string>
+    <string name="platform_action_activity">Mở activity</string>
     <string name="media_listener_label">Totch điều khiển media</string>
 </resources>

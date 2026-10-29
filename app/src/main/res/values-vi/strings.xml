@@ -34,6 +34,9 @@
     <string name="permission_battery">Pin không giới hạn</string>
     <string name="permission_granted">Đã cấp</string>
     <string name="permission_not_granted">Chưa cấp</string>
+    <string name="revoke_notifications_title">Tắt thông báo?</string>
+    <string name="revoke_notifications_text">Android luôn đóng ứng dụng khi thu hồi một quyền của nó. Totch sẽ đóng rồi tự mở lại; cử chỉ vẫn hoạt động.</string>
+    <string name="revoke_notifications_confirm">Tắt</string>
 
     <!-- Gestures -->
     <string name="gesture_tap">Chạm</string>
@@ -50,7 +53,7 @@
     <string name="group_swipe">Vuốt</string>
     <string name="group_swipe_hold">Vuốt và giữ</string>
     <string name="gesture_switch_cd">Bật hoặc tắt %1$s</string>
-    <string name="gesture_unavailable">Không khả dụng: hệ thống luôn kéo thanh thông báo</string>
+    <string name="gesture_unavailable">Cần quyền Trợ năng (bật ở Trang chủ)</string>
     <string name="action_none">Không làm gì</string>
     <string name="action_back">Quay lại</string>
     <string name="action_home">Màn hình chính</string>
@@ -71,6 +74,7 @@
     <string name="action_assistant">Gọi trợ lý</string>
     <string name="action_open_shortcut">Mở shortcut…</string>
     <string name="action_launch_shortcut">%1$s: %2$s</string>
+    <string name="action_open_activity">Mở activity…</string>
     <string name="app_not_installed">Chưa cài đặt</string>
     <string name="group_system">Hệ thống</string>
     <string name="group_media">Media</string>
@@ -83,6 +87,10 @@
     <string name="tab_system">Hệ thống</string>
     <string name="tab_apps">Ứng dụng</string>
     <string name="tab_shortcuts">Shortcut</string>
+    <string name="tab_activities">Activity</string>
+    <string name="activity_search">Tìm activity</string>
+    <string name="activity_empty">Không có activity nào khớp “%1$s”</string>
+    <string name="activity_none">Không tìm thấy activity nào</string>
     <string name="shortcut_search">Tìm shortcut</string>
     <string name="shortcut_empty">Không có shortcut nào khớp “%1$s”</string>
     <string name="shortcut_none">Không tìm thấy shortcut</string>
@@ -100,7 +108,6 @@
     <string name="unit_ms">%1$d ms</string>
     <string name="unit_dp">%1$d dp</string>
     <string name="unit_percent">%1$d%%</string>
-    <string name="section_feedback">Phản hồi</string>
     <string name="setting_haptics">Rung phản hồi</string>
     <string name="section_position">Vị trí</string>
     <string name="section_size">Kích thước</string>
@@ -116,11 +123,13 @@
     <string name="theme_system">Hệ thống</string>
     <string name="theme_light">Sáng</string>
     <string name="theme_dark">Tối</string>
-    <string name="setting_amoled">Đen AMOLED</string>
+    <string name="setting_amoled">Đen Amoled</string>
+    <string name="setting_amoled_summary">Nền đen tuyệt đối khi tối</string>
     <string name="setting_language">Ngôn ngữ</string>
     <string name="language_system">Theo hệ thống</string>
     <string name="section_system">Hệ thống</string>
     <string name="setting_start_on_boot">Khởi động cùng máy</string>
+    <string name="setting_landscape">Nhận cử chỉ khi xoay ngang</string>
     <string name="section_about">Giới thiệu</string>
 
     <!-- About (last section of Settings) -->
@@ -128,5 +137,5 @@
     <string name="about_license_title">Giấy phép</string>
     <string name="about_source_title">Mã nguồn</string>
     <string name="about_credits_title">Ghi công</string>
-    <string name="about_shizuku_credit">Shizuku của RikkaApps, cho quyền truy cập đầu vào đặc quyền</string>
+    <string name="about_shizuku_credit">Shizuku của RikkaApps</string>
 </resources>

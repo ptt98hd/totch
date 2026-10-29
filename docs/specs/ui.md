@@ -1,6 +1,6 @@
 # Spec: Giao diện (Material 3)
 
-Yêu cầu: FR-U1…FR-U22, FR-G12, FR-G13, FR-S6…FR-S9, FR-R5…FR-R7, FR-D9 · Module: `:app` · Package: `io.github.ptt98hd.totch.ui`
+Yêu cầu: FR-U1…FR-U23, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S6…FR-S9, FR-R5…FR-R7, FR-D9 · Module: `:app` · Package: `io.github.ptt98hd.totch.ui`
 
 ## 1. Nguyên tắc
 - Jetpack Compose + Material 3, `dynamicLightColorScheme/dynamicDarkColorScheme`, edge-to-edge.
@@ -71,6 +71,7 @@ Yêu cầu: FR-U1…FR-U22, FR-G12, FR-G13, FR-S6…FR-S9, FR-R5…FR-R7, FR-D9 
 | UI-50 | `HomeUiState.shizuku`: chưa chạy → NOT_RUNNING; chạy, chưa cấp quyền → PERMISSION_REQUIRED; còn lại READY |
 | UI-51 | `permissions` = Accessibility, Notifications (chỉ Android 13+), Media control, Battery, theo thứ tự, `granted` từ `Requirements` |
 | UI-52 | `setPermission(p, on)` gọi `SystemStatus.setPermission(p, on)`; kết quả false → gọi fallback (mở trang hệ thống) |
+| UI-53 | (v1.5, FR-D10) Tắt switch Thông báo → hộp thoại xác nhận "Totch sẽ khởi động lại"; chỉ khi đồng ý mới gọi `setPermission(NOTIFICATIONS, false)` |
 | ~~UI-3, UI-4~~ | Bỏ ở v1.4: quyền media / pin luôn nằm trong Permissions |
 
 ### Gestures (FR-U2, FR-G8, FR-G10, FR-G12)
@@ -91,16 +92,17 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
   - Bật switch: có hành động đã nhớ → bỏ g khỏi `disabledGestures`; chưa có (`None`) → mở picker, chỉ bật khi
     đã chọn hành động (đóng sheet không chọn → vẫn tắt). Tắt switch → thêm g vào `disabledGestures`, binding giữ nguyên.
 - v1.3: bỏ nút **Lặp lại** (FR-G11).
-- Swipe down, Swipe down & hold luôn bị vô hiệu (mờ, không bấm được, switch **tắt** + disabled) với nhãn "Không khả
-  dụng: hệ thống luôn kéo thanh thông báo".
-- Picker mở ra như sheet **trong vùng nội dung** của màn Gestures (giữa top bar và bottom bar), trượt lên từ dưới.
+- Swipe down, Swipe down & hold bị vô hiệu (mờ, không bấm được, switch **tắt** + disabled) với nhãn "Cần quyền Trợ năng
+  (bật ở Home)" khi Trợ năng **chưa** bật; Trợ năng đang bật → dùng như mọi cử chỉ khác (v1.5, FR-G14).
+- Picker mở ra như sheet **trong vùng nội dung** của màn Gestures (giữa top bar và bottom bar), trượt lên từ dưới; mép
+  trên của sheet chạm sát mép dưới top bar (v1.5, FR-U25).
 - Không có nút Reset gestures (FR-S9).
 
 | ID | Tiêu chí |
 |---|---|
 | UI-12 | LaunchApp hiển thị tên app (đã gỡ: package + "Not installed"); LaunchShortcut hiển thị "<app>: <nhãn>" (đã gỡ app: thêm "Not installed") |
 | UI-13 | `GesturesUiState.groups` đúng 4 nhóm theo bảng trên, đúng thứ tự |
-| UI-14 | Dòng `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` có `enabled=false` và `on=false` (dù đã gán); mọi dòng khác `enabled=true` |
+| UI-14 | Trợ năng chưa bật: dòng `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` có `enabled=false` và `on=false` (dù đã gán); mọi dòng khác `enabled=true`. Trợ năng đang bật (`Requirements.accessibilityEnabled`): mọi dòng `enabled=true`, `on = isGestureOn(g, true)` |
 | UI-15 | ~~Nút Lặp lại cho cử chỉ giữ~~ — bỏ ở v1.3 (FR-G11) |
 | UI-16 | `GestureRow.on = isGestureOn(g)`; `setOn(g, false)` thêm g vào `disabledGestures`, binding giữ nguyên; `setOn(g, true)` với binding ≠ None bỏ g khỏi `disabledGestures` |
 | UI-17 | `setOn(g, true)` với binding `None` → không lưu gì, `picking = g`; `openPicker(g)` chỉ đặt `picking` khi `on`; `closePicker()` → `picking = null` |
@@ -108,14 +110,16 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
 ### Action picker (FR-U9, FR-U16, FR-U20, FR-A11…FR-A13)
 Sheet (`Surface` bo 2 góc trên 28 dp) chiếm vùng nội dung của màn Gestures — **không** che top bar và bottom bar, hai
 thanh này vẫn bấm được (chuyển tab → đóng picker). **Không** kéo xuống để ẩn; hàng tiêu đề = tên cử chỉ + nút **đóng**
-(✕) bên phải; nút Back hệ thống cũng đóng. Bên dưới là `SingleChoiceSegmentedButtonRow` 3 mục, nội dung đổi tab có
-fade:
+(✕) bên phải; nút Back hệ thống cũng đóng. Bên dưới là **hàng chip cuộn ngang** (`LazyRow` của `FilterChip`, mỗi chip có
+icon + nhãn, chip đang chọn được tô màu và luôn được cuộn vào tầm nhìn — v1.5, FR-U25; thay segmented button để thêm
+mục mới như Intents, Settings… mà nhãn không bị hẹp lại). Nội dung đổi mục có fade:
 
 | Mục | Nội dung |
 |---|---|
 | System | Nhóm System (Back, Home, Recents, Lock, Screenshot, Notifications, Quick settings, Assistant, Torch) và Media (Play/pause, Previous, Next, Volume up/down, Volume panel). **Không** có ô tìm kiếm (v1.4), không có "Không làm gì" |
 | Applications | Ô tìm kiếm + danh sách app (icon, tên, radio) |
 | Shortcuts | Ô tìm kiếm + danh sách **app** như tab Applications; chạm app → mở rộng/thu gọn, shortcut của app hiện ngay bên dưới (thụt vào, icon `SubdirectoryArrowRight`, nhãn, radio). Mặc định thu gọn tất cả; khi đang tìm kiếm, mọi app khớp đều mở rộng |
+| Activities | (v1.5, FR-A14) Giống hệt Shortcuts nhưng dòng con là activity: icon activity, nhãn + dòng phụ tên lớp rút gọn, radio. Trạng thái mở rộng riêng (`expandedActivities`) |
 
 Mỗi nhóm (System, Media, danh sách app, danh sách app + shortcut) hiển thị như nhóm cử chỉ: **một card bo góc**, các
 dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọn → lưu binding, **bật** cử chỉ (`withBinding`) và
@@ -125,20 +129,21 @@ dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọ
 |---|---|
 | UI-10 | Chọn hành động (bất kỳ tab) → `SettingsRepository.update` với binding mới và g bị bỏ khỏi `disabledGestures`, `finished=true` |
 | UI-11 | Tab Ứng dụng lọc không phân biệt hoa thường theo tên/package, sắp xếp theo tên |
-| UI-20 | Tab ban đầu = tab chứa hành động hiện tại (LaunchApp → Applications, LaunchShortcut → Shortcuts, còn lại → System) |
+| UI-20 | Tab ban đầu = tab chứa hành động hiện tại (LaunchApp → Applications, LaunchShortcut → Shortcuts, LaunchActivity → Activities, còn lại → System) |
 | UI-21 | Tab Shortcut dùng `groupShortcuts` (SH-1, SH-2); chọn → `LaunchShortcut(pkg, id, label, intentUri)` |
 | UI-22 | App và shortcut chỉ được tải lần đầu mở tab tương ứng (hoặc tab ban đầu) |
 | UI-23 | `ActionCatalog.groups` không chứa `None`; nhóm Media có `VolumePanel` sau `VolumeDown` |
 | ~~UI-24~~ | Bỏ ở v1.4: không còn tìm kiếm hành động |
 | UI-25 | `expanded` ban đầu rỗng; `toggleExpanded(pkg)` thêm/bớt pkg; `isExpanded(pkg)` = đang tìm kiếm (query không rỗng) hoặc pkg ∈ `expanded` |
+| UI-27 | (v1.5) Tab Activities dùng `groupActivities` (AC-1, AC-2), tải lần đầu mở tab (như UI-22); `toggleActivityApp(pkg)`/`isActivityAppExpanded(pkg)` như UI-25; chọn → `LaunchActivity(pkg, activity, label)` |
 | UI-26 | Mỗi nhóm là một card bo góc (`Modifier.groupItem(index, count)`: bo góc trên ở dòng đầu, góc dưới ở dòng cuối, đường kẻ trên mỗi dòng trừ dòng đầu) |
 
 ### Notch (FR-U12, FR-U17, FR-U18, FR-S9, FR-R5…FR-R7) — tab thứ 3
-v1.4: đổi tên màn **Preferences** thành **Notch** (tiêu đề và nhãn tab). Các section, theo thứ tự:
-1. **Phản hồi**: Haptic feedback (switch).
-2. **Độ nhạy**: Double tap, Long press, Swipe.
-3. **Vị trí**: Horizontal (%), Vertical (dp, tính từ cạnh trên).
-4. **Kích thước**: Width (dp), Height (dp), Padding (dp).
+v1.4: đổi tên màn **Preferences** thành **Notch** (tiêu đề và nhãn tab). Các section, theo thứ tự (v1.5: Haptic feedback
+chuyển sang Settings, bỏ section Phản hồi):
+1. **Độ nhạy**: Double tap, Long press, Swipe.
+2. **Vị trí**: Horizontal (%), Vertical (dp, tính từ cạnh trên).
+3. **Kích thước**: Width (dp), Height (dp), Padding (dp).
 
 Mỗi slider (FR-U18): hàng 1 là nhãn ngắn + giá trị; hàng 2 là nút **−**, thanh slider, nút **+**, nút reset. Kéo
 slider bắt vào nấc (bội số của bước, UI-35) nhưng **không vẽ vạch**; nút − / + đổi đúng một đơn vị (UI-36), lưu ngay,
@@ -171,22 +176,29 @@ Giá trị đã lưu lệch nấc (vd. vùng tự phát hiện rộng 87 dp) v�
 | UI-30 | `NotchSetting` gồm đúng các slider (v1.3: bỏ REPEAT_INTERVAL): DOUBLE_TAP, LONG_PRESS, SWIPE_DISTANCE, AREA_X, AREA_Y, AREA_WIDTH, AREA_HEIGHT, PADDING. `reset(item, s, auto)` đặt đúng field đó về mặc định (`Settings()` hoặc `auto` cho vùng chạm), field khác giữ nguyên; `isDefault(item, s, auto)` đúng khi bằng mặc định |
 | UI-31 | Reset slider vùng chạm khi mọi field khác đã bằng `auto` → `manualRegion = null`; khi `manualRegion = null` mọi slider vùng chạm `isDefault` |
 | UI-33 | `NotchSettingsUiState.area` = `manualRegion ?: detectedRegion ?: ManualRegionDp()`; `setArea(region)` lưu `manualRegion` (mọi slider, kể cả vị trí dọc) |
-| UI-34 | Setter độ nhạy / padding / haptics lưu đúng field (kẹp bởi repository) |
+| UI-34 | Setter độ nhạy / padding lưu đúng field (kẹp bởi repository) |
 | UI-35 | `snapToStep(v, range, step)` = `round(v/step)·step`, kẹp trong `range` (hai đầu thang luôn chọn được, vd. padding 1, 5, 10) |
 | UI-36 | `stepBy(v, delta, range)` = `v + delta` kẹp trong `range` |
 
-### Cài đặt ứng dụng (FR-U12, FR-U14, FR-S6…FR-S8) — tab thứ 4 "Settings" (v1.4)
-Các section, theo thứ tự:
-1. **Giao diện**: Theme (System / Light / Dark — **dialog chọn** như Ngôn ngữ), AMOLED black (switch),
-   Ngôn ngữ (System / English / Tiếng Việt — dialog chọn). Theme và Ngôn ngữ có **chevron** (›) ở cuối dòng.
-2. **Hệ thống**: Start on boot.
-3. **Giới thiệu** (cuối cùng): phiên bản, license, mã nguồn, credit Shizuku.
+### Cài đặt ứng dụng (FR-U12, FR-U14, FR-S6…FR-S8, FR-U23) — tab thứ 4 "Settings" (v1.4)
+Các section, theo thứ tự (v1.5):
+1. **Hệ thống**: Start on boot (icon nguồn), Haptic feedback (icon rung), Gestures in landscape (icon xoay màn hình —
+   FR-R8) — đều là switch (thứ tự FR-U24).
+2. **Giao diện**: Theme (icon bảng màu; System / Light / Dark — **dialog chọn** như Ngôn ngữ), Amoled black (icon độ
+   tương phản, switch, mô tả "Pure black dark theme"), Ngôn ngữ (icon ngôn ngữ; System / English / Tiếng Việt — dialog
+   chọn). Theme và Ngôn ngữ có **chevron** (›) ở cuối dòng.
+3. **Giới thiệu** (cuối cùng): phiên bản, license, mã nguồn (`github.com/ptt98hd/totch`), credit ("Shizuku by
+   RikkaApps"). Dòng mở link có **chevron** (›) ở cuối.
 
+- Mọi mô tả (dòng phụ) chỉ một dòng (`maxLines = 1`, cắt bằng "…" nếu vẫn quá dài).
+
+- Mọi dòng có icon trong box tonal bên trái (`TonalIcon`, như Giới thiệu); các dòng trong một section ngăn bằng
+  `HorizontalDivider` (thụt lề hai bên như Giới thiệu).
 - Không có nút reset nào (FR-S9).
 
 | ID | Tiêu chí |
 |---|---|
-| UI-32 | Setter theme / amoled / language / startOnBoot lưu đúng field |
+| UI-32 | Setter theme / amoled / language / startOnBoot / haptics / landscapeGestures lưu đúng field |
 
 ### Giao diện & ngôn ngữ (FR-S6, FR-S7)
 | ID | Tiêu chí |
