@@ -10,6 +10,8 @@ import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DefaultBindings
 import io.github.ptt98hd.totch.core.settings.Settings
+import io.github.ptt98hd.totch.core.settings.isGestureOn
+import io.github.ptt98hd.totch.ui.common.Need
 import io.github.ptt98hd.totch.ui.FakeAppActivities
 import io.github.ptt98hd.totch.ui.FakeAppShortcuts
 import io.github.ptt98hd.totch.ui.FakeInstalledApps
@@ -22,6 +24,7 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ActionPickerViewModelTest {
@@ -43,7 +46,8 @@ class ActionPickerViewModelTest {
     private val tile = TileEntry("com.notes", "Notes", "com.notes.QuickNote", "Quick note")
     private val tiles = FakeQuickSettingsTiles(listOf(tile))
 
-    private val requirements = MutableStateFlow(Requirements())
+    private val ready = Requirements(shizukuRunning = true, shizukuGranted = true, accessibilityEnabled = true, dndAccessGranted = true)
+    private val requirements = MutableStateFlow(ready)
 
     private fun vm(repo: FakeSettingsRepository = FakeSettingsRepository(), gesture: Gesture = Gesture.SWIPE_RIGHT) =
         ActionPickerViewModel(gesture, repo, installed, shortcuts, activities, tiles, requirements, main.dispatcher)
@@ -232,41 +236,62 @@ class ActionPickerViewModelTest {
 
     @Test
     fun `UI-29 system search query and Do Not Disturb hint`() = runTest {
+        requirements.value = Requirements(accessibilityEnabled = true)
         val vm = vm(bound(Action.Back), Gesture.TAP)
         vm.state.test {
             assertEquals("", expectMostRecentItem().systemQuery)
             vm.setSystemQuery("wifi")
             val withoutAccess = expectMostRecentItem()
             assertEquals("wifi", withoutAccess.systemQuery)
-            assertTrue(withoutAccess.needsDndAccess(Action.RingerSilent))
-            assertTrue(withoutAccess.needsDndAccess(Action.ToggleDnd))
-            assertFalse(withoutAccess.needsDndAccess(Action.VolumeUp))
-            assertFalse(withoutAccess.needsDndAccess(Action.ToggleWifi))
+            assertEquals(Need.DND, withoutAccess.need(Action.RingerSilent))
+            assertEquals(Need.DND, withoutAccess.need(Action.ToggleDnd))
+            assertNull(withoutAccess.need(Action.VolumeUp))
 
-            requirements.value = Requirements(dndAccessGranted = true)
-            assertFalse(expectMostRecentItem().needsDndAccess(Action.RingerSilent))
+            requirements.value = Requirements(accessibilityEnabled = true, dndAccessGranted = true)
+            assertNull(expectMostRecentItem().need(Action.RingerSilent))
         }
     }
 
     @Test
-    fun `AR-10 UI-29b Shizuku-only actions are flagged while Shizuku is not ready`() = runTest {
-        val vm = vm(bound(Action.Back), Gesture.TAP)
+    fun `AR-10 UI-29b UI-62 unavailable actions are flagged and cannot be chosen`() = runTest {
+        requirements.value = Requirements(accessibilityEnabled = true)
+        val repo = bound(Action.Back)
+        val vm = vm(repo, Gesture.TAP)
         vm.state.test {
             val without = expectMostRecentItem()
-            assertFalse(without.shizukuReady)
-            assertTrue(without.needsShizuku(Action.ToggleWifi))
-            assertTrue(without.needsShizuku(Action.OneHandedMode))
-            assertTrue(without.needsShizuku(Action.ClickTile("com.notes", "com.notes.QuickNote", "Quick note")))
-            assertFalse(without.needsShizuku(Action.Back)) // Accessibility can run it
-            assertFalse(without.needsShizuku(Action.ToggleTorch)) // local
+            assertEquals(Need.SHIZUKU, without.need(Action.ToggleWifi))
+            assertEquals(Need.SHIZUKU, without.need(Action.OneHandedMode))
+            assertEquals(Need.SHIZUKU, without.need(Action.ClickTile("com.notes", "com.notes.QuickNote", "Quick note")))
+            assertNull(without.need(Action.Back)) // Accessibility can run it
+            assertNull(without.need(Action.ToggleTorch)) // local
 
-            requirements.value = Requirements(shizukuRunning = true, shizukuGranted = false) // still not ready: no new state
-            assertTrue(vm.state.value.needsShizuku(Action.ToggleWifi))
+            vm.select(Action.ToggleWifi)
+            assertEquals(Action.Back, repo.current.bindings[Gesture.TAP])
+            assertFalse(vm.state.value.finished)
+
+            requirements.value = Requirements()
+            val nothing = expectMostRecentItem()
+            assertEquals(Need.ACCESS, nothing.need(Action.Back))
+            assertEquals(Need.ACCESS, nothing.need(Action.LaunchApp("com.a")))
+            assertNull(nothing.need(Action.MediaNext))
+            assertNull(nothing.need(Action.None))
 
             requirements.value = Requirements(shizukuRunning = true, shizukuGranted = true)
             val ready = expectMostRecentItem()
-            assertTrue(ready.shizukuReady)
-            assertFalse(ready.needsShizuku(Action.ToggleWifi))
+            assertNull(ready.need(Action.ToggleWifi))
+            assertNull(ready.need(Action.Back))
+        }
+    }
+
+    @Test
+    fun `UI-63 choosing Not set clears the binding and switches the gesture off`() = runTest {
+        val repo = bound(Action.Home)
+        val vm = vm(repo, Gesture.TAP)
+        vm.state.test {
+            vm.select(Action.None)
+            assertEquals(Action.None, repo.current.bindings[Gesture.TAP])
+            assertFalse(repo.current.isGestureOn(Gesture.TAP))
+            assertTrue(expectMostRecentItem().finished)
         }
     }
 }

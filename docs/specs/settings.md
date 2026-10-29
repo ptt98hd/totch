@@ -15,7 +15,7 @@ Yêu cầu: FR-S1…FR-S9, FR-G10…FR-G12, FR-R6 · Module: `:core` (model, cod
     // v1.4: bỏ `mode` (FR-D8); JSON cũ có "mode" vẫn đọc được (ST-23)
     val bindings: Map<Gesture, Action> = DefaultBindings,
     val doubleTapMs: Long = 300,
-    val longPressMs: Long = 500,
+    val longPressMs: Long = 300,      // v1.8: 300 ms (FR-S10)
     val swipeMinDistanceDp: Int = 40,
     val paddingDp: Int = 8,
     val manualRegion: ManualRegionDp? = null,
@@ -30,9 +30,9 @@ Yêu cầu: FR-S1…FR-S9, FR-G10…FR-G12, FR-R6 · Module: `:core` (model, cod
     // v1.5
     val landscapeGestures: Boolean = false,           // FR-R8
 )
-val DefaultBindings = mapOf(
-    TAP to None, DOUBLE_TAP to LockScreen, LONG_PRESS to ToggleTorch,
-    SWIPE_DOWN to Notifications, SWIPE_LEFT to MediaPrevious, SWIPE_RIGHT to MediaNext)
+val DefaultBindings = Gesture.entries.associateWith { None }   // v1.8: mọi cử chỉ chưa đặt (FR-S2 sửa)
+// trước v1.8: TAP → None, DOUBLE_TAP → LockScreen, LONG_PRESS → ToggleTorch, SWIPE_DOWN → Notifications,
+//             SWIPE_LEFT → MediaPrevious, SWIPE_RIGHT → MediaNext
 fun Settings.actionFor(g: Gesture): Action = bindings[g] ?: Action.None
 const val TOUCH_SLOP_DP = 12
 fun Settings.toGestureConfig(density: Float): GestureConfig   // touchSlopPx = TOUCH_SLOP_DP × density; doubleTapEnabled = effectiveAction(DOUBLE_TAP) != None
@@ -88,6 +88,7 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ST-27 | (v1.6) `decode(encode(s)) == s` với `ClickTile(pkg, service, label)` và `OneHandedMode` (`"one_handed"`); JSON `{"type":"click_tile",…}` |
 | ST-28 | (v1.6.1) Field mới: `updateOnLaunch = false`, `updateInterval = NEVER` (update §6), `oneHandedMethod = SYSTEM` (actions §10, do executor ghi, không có trên UI). JSON v1.6.0 (không có key) → mặc định; `decode(encode(s)) == s` với `updateOnLaunch=true`, `updateInterval=WEEKLY`, `oneHandedMethod=GESTURE`; JSON `"oneHandedMethod":"gesture"`, `"updateInterval":"weekly"`; giá trị enum lạ → mặc định toàn bộ (ST-5) |
 | ST-29 | (v1.6.3) Hành động mới round-trip với `type` ổn định: `brightness_up`, `brightness_down`, `auto_brightness`, `auto_rotate`, `ringer_normal`, `ringer_vibrate`, `ringer_silent`, `ringer_cycle`, `dnd`, `wifi`, `bluetooth`, `mobile_data`, `airplane`, `location` |
+| ST-30 | (v1.8, FR-S2 sửa, FR-S10) `Settings().bindings` = `None` cho **cả 9** cử chỉ, `isGestureOn(g)` = false với mọi g; `Settings().longPressMs == 300`; JSON đã lưu (có `bindings`, `longPressMs`) giữ nguyên giá trị cũ |
 
 ## 3. `SettingsRepository` (`:app`)
 - DataStore Preferences, key `settings_json`.

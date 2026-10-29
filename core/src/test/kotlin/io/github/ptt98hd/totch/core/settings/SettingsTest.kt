@@ -9,30 +9,36 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class SettingsTest {
+    /** The pre-1.8 default bindings, used where a test needs bound gestures. */
+    private val bound = DefaultBindings + mapOf(
+        Gesture.DOUBLE_TAP to Action.LockScreen, Gesture.LONG_PRESS to Action.ToggleTorch,
+        Gesture.SWIPE_DOWN to Action.Notifications, Gesture.SWIPE_LEFT to Action.MediaPrevious,
+        Gesture.SWIPE_RIGHT to Action.MediaNext,
+    )
+
     @Test fun `ST-1 defaults match FR-S2`() {
         val s = Settings()
-        assertEquals(
-            mapOf(
-                Gesture.TAP to Action.None,
-                Gesture.DOUBLE_TAP to Action.LockScreen,
-                Gesture.LONG_PRESS to Action.ToggleTorch,
-                Gesture.SWIPE_DOWN to Action.Notifications,
-                Gesture.SWIPE_LEFT to Action.MediaPrevious,
-                Gesture.SWIPE_RIGHT to Action.MediaNext,
-                Gesture.SWIPE_DOWN_HOLD to Action.None,
-                Gesture.SWIPE_LEFT_HOLD to Action.None,
-                Gesture.SWIPE_RIGHT_HOLD to Action.None,
-            ),
-            s.bindings,
-        )
+        assertEquals(Gesture.entries.associateWith { Action.None }, s.bindings)
         assertFalse(s.enabled)
         assertEquals(300, s.doubleTapMs)
-        assertEquals(500, s.longPressMs)
+        assertEquals(300, s.longPressMs)
         assertEquals(40, s.swipeMinDistanceDp)
         assertEquals(8, s.paddingDp)
         assertEquals(null, s.manualRegion)
         assertTrue(s.haptics)
         assertEquals(s, s.sanitized())
+    }
+
+    @Test fun `ST-30 every gesture starts not set and off, long press 300 ms, saved values kept`() {
+        val s = Settings()
+        Gesture.entries.forEach {
+            assertEquals(Action.None, s.actionFor(it))
+            assertFalse(s.isGestureOn(it, canBlockTouches = true))
+        }
+        assertEquals(300, s.longPressMs)
+        val saved = SettingsCodec.decode("""{"bindings":{"DOUBLE_TAP":{"type":"lock"}},"longPressMs":500}""")
+        assertEquals(Action.LockScreen, saved.actionFor(Gesture.DOUBLE_TAP))
+        assertEquals(500, saved.longPressMs)
     }
 
     @Test fun `ST-2 sanitized clamps numeric values`() {
@@ -68,7 +74,7 @@ class SettingsTest {
     }
 
     @Test fun `ST-7 toGestureConfig converts dp and derives doubleTapEnabled`() {
-        val s = Settings(doubleTapMs = 250, longPressMs = 700)
+        val s = Settings(bindings = bound, doubleTapMs = 250, longPressMs = 700)
         assertEquals(
             GestureConfig(doubleTapMs = 250, longPressMs = 700, touchSlopPx = 24f, swipeMinDistancePx = 80f, doubleTapEnabled = true),
             s.toGestureConfig(density = 2f),
@@ -100,7 +106,7 @@ class SettingsTest {
 
     @Test fun `ST-12 swipe down gestures are unavailable`() {
         val s = Settings(
-            bindings = DefaultBindings + mapOf(Gesture.SWIPE_DOWN to Action.Home, Gesture.SWIPE_DOWN_HOLD to Action.VolumeUp),
+            bindings = bound + mapOf(Gesture.SWIPE_DOWN to Action.Home, Gesture.SWIPE_DOWN_HOLD to Action.VolumeUp),
         )
         assertEquals(Action.None, s.effectiveAction(Gesture.SWIPE_DOWN))
         assertEquals(Action.None, s.effectiveAction(Gesture.SWIPE_DOWN_HOLD))
@@ -112,7 +118,7 @@ class SettingsTest {
     }
 
     @Test fun `ST-22 unavailable gestures are switched off`() {
-        val s = Settings(bindings = DefaultBindings + (Gesture.SWIPE_DOWN to Action.Home))
+        val s = Settings(bindings = bound + (Gesture.SWIPE_DOWN to Action.Home))
         assertFalse(s.isGestureOn(Gesture.SWIPE_DOWN))
         assertFalse(s.isGestureOn(Gesture.SWIPE_DOWN_HOLD))
         assertTrue(s.isGestureOn(Gesture.SWIPE_RIGHT))
@@ -130,7 +136,7 @@ class SettingsTest {
 
     @Test fun `ST-19 disabled gestures keep their binding but do nothing`() {
         val s = Settings(
-            bindings = DefaultBindings + (Gesture.SWIPE_LEFT_HOLD to Action.VolumeDown),
+            bindings = bound + (Gesture.SWIPE_LEFT_HOLD to Action.VolumeDown),
             disabledGestures = setOf(Gesture.DOUBLE_TAP, Gesture.SWIPE_LEFT_HOLD),
         )
         assertEquals(Action.None, s.effectiveAction(Gesture.DOUBLE_TAP))
@@ -143,7 +149,7 @@ class SettingsTest {
     }
 
     @Test fun `ST-20 switching a gesture off and on keeps its action`() {
-        val s = Settings()
+        val s = Settings(bindings = bound)
         assertTrue(s.isGestureOn(Gesture.DOUBLE_TAP))
         assertFalse(s.isGestureOn(Gesture.TAP)) // bound to None
         val off = s.withGestureOn(Gesture.DOUBLE_TAP, false)
@@ -180,7 +186,7 @@ class SettingsTest {
     }
 
     @Test fun `ST-26 touch blocking is needed only for switched on swipe down gestures`() {
-        val on = Settings(enabled = true)
+        val on = Settings(enabled = true, bindings = bound)
         assertTrue(on.needsTouchBlocking()) // SWIPE_DOWN → Notifications by default
         assertFalse(on.copy(enabled = false).needsTouchBlocking())
         assertFalse(on.withGestureOn(Gesture.SWIPE_DOWN, false).needsTouchBlocking())

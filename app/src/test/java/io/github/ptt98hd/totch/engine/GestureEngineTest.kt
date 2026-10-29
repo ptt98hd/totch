@@ -6,7 +6,7 @@ import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.model.TouchAction
 import io.github.ptt98hd.totch.core.model.TouchEvent
-import io.github.ptt98hd.totch.core.settings.DefaultBindings
+import io.github.ptt98hd.totch.ui.LegacyBindings
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +19,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class GestureEngineTest {
+    /** Bound gestures and the 500 ms long press these tests were written for. */
+    private val base = Settings(enabled = true, bindings = LegacyBindings, longPressMs = 500)
     private val region = Rect(400, 0, 600, 80)
     private val dispatched = mutableListOf<Action>()
     private var result: DispatchResult = DispatchResult.Ok
@@ -31,7 +33,7 @@ class GestureEngineTest {
     }
 
     private fun TestScope.engine(
-        settings: Settings = Settings(enabled = true),
+        settings: Settings = base,
         scope: CoroutineScope = backgroundScope,
         clock: () -> Long = { testScheduler.currentTime },
     ) = GestureEngine(
@@ -46,14 +48,14 @@ class GestureEngineTest {
     }
 
     private fun Settings.bind(vararg pairs: Pair<Gesture, Action>) =
-        copy(bindings = DefaultBindings + pairs.toMap())
+        copy(bindings = bindings + pairs.toMap())
 
     private fun down(t: Long, x: Float = 500f, y: Float = 40f) = TouchEvent(TouchAction.DOWN, x, y, t)
     private fun up(t: Long, x: Float = 500f, y: Float = 40f) = TouchEvent(TouchAction.UP, x, y, t)
 
     @Test
     fun `EN-1 TAP bound to Home dispatches Home`() = runTest {
-        val e = engine(Settings(enabled = true).bind(Gesture.TAP to Action.Home, Gesture.DOUBLE_TAP to Action.None))
+        val e = engine(base.bind(Gesture.TAP to Action.Home, Gesture.DOUBLE_TAP to Action.None))
         e.onTouch(down(0))
         e.onTouch(up(50))
         runCurrent()
@@ -63,7 +65,7 @@ class GestureEngineTest {
 
     @Test
     fun `EN-1 TAP is dispatched after the double-tap timeout when DOUBLE_TAP is bound`() = runTest {
-        val e = engine(Settings(enabled = true).bind(Gesture.TAP to Action.Home))
+        val e = engine(base.bind(Gesture.TAP to Action.Home))
         e.onTouch(down(0))
         e.onTouch(up(50))
         advanceTimeBy(300)
@@ -76,7 +78,7 @@ class GestureEngineTest {
 
     @Test
     fun `EN-2 gesture bound to None does not dispatch nor vibrate`() = runTest {
-        val e = engine(Settings(enabled = true).bind(Gesture.TAP to Action.None, Gesture.DOUBLE_TAP to Action.None))
+        val e = engine(base.bind(Gesture.TAP to Action.None, Gesture.DOUBLE_TAP to Action.None))
         e.onTouch(down(0))
         e.onTouch(up(50))
         advanceTimeBy(5_000)
@@ -92,7 +94,7 @@ class GestureEngineTest {
         assertEquals(1000, e.config.longPressMs)
         assertEquals(400, e.config.doubleTapMs)
         assertEquals(100f, e.config.swipeMinDistancePx)
-        e.updateSettings(Settings(enabled = true).bind(Gesture.DOUBLE_TAP to Action.None))
+        e.updateSettings(base.bind(Gesture.DOUBLE_TAP to Action.None))
         assertEquals(false, e.config.doubleTapEnabled)
     }
 
@@ -143,7 +145,7 @@ class GestureEngineTest {
 
     @Test
     fun `EN-6 no haptics when disabled in settings`() = runTest {
-        val e = engine(Settings(enabled = true, haptics = false))
+        val e = engine(base.copy(haptics = false))
         e.onTouch(down(0))
         advanceTimeBy(500)
         runCurrent()
@@ -166,7 +168,7 @@ class GestureEngineTest {
 
     @Test
     fun `EN-8 gestures are dispatched in order`() = runTest {
-        val e = engine(Settings(enabled = true).bind(Gesture.TAP to Action.Home, Gesture.DOUBLE_TAP to Action.None))
+        val e = engine(base.bind(Gesture.TAP to Action.Home, Gesture.DOUBLE_TAP to Action.None))
         e.onTouch(down(0))
         e.onTouch(up(10))
         e.onTouch(down(20))
@@ -180,7 +182,7 @@ class GestureEngineTest {
 
     @Test
     fun `EN-9 swipe down is never dispatched`() = runTest {
-        val e = engine(Settings(enabled = true).bind(Gesture.SWIPE_DOWN to Action.Notifications))
+        val e = engine(base.bind(Gesture.SWIPE_DOWN to Action.Notifications))
         e.onTouch(down(0, y = 10f))
         e.onTouch(move(50, 500f, 200f))
         e.onTouch(up(100, 500f, 200f))
@@ -192,7 +194,7 @@ class GestureEngineTest {
 
     @Test
     fun `EN-10 swipe right and hold fires once`() = runTest {
-        val e = engine(Settings(enabled = true).bind(Gesture.SWIPE_RIGHT_HOLD to Action.VolumeUp))
+        val e = engine(base.bind(Gesture.SWIPE_RIGHT_HOLD to Action.VolumeUp))
         e.onTouch(down(0, x = 420f))
         e.onTouch(move(50, 560f))
         advanceTimeBy(50 + 500 + 2000)
@@ -207,7 +209,7 @@ class GestureEngineTest {
 
     @Test
     fun `EN-11 a switched off gesture dispatches nothing`() = runTest {
-        val e = engine(Settings(enabled = true, disabledGestures = setOf(Gesture.SWIPE_RIGHT)))
+        val e = engine(base.copy(disabledGestures = setOf(Gesture.SWIPE_RIGHT)))
         e.onTouch(down(0, x = 420f))
         e.onTouch(move(50, 560f))
         e.onTouch(up(100, 560f))
@@ -218,7 +220,7 @@ class GestureEngineTest {
 
     @Test
     fun `EN-12 swipe down is dispatched while touches can be blocked`() = runTest {
-        val e = engine(Settings(enabled = true).bind(Gesture.SWIPE_DOWN to Action.Notifications))
+        val e = engine(base.bind(Gesture.SWIPE_DOWN to Action.Notifications))
         e.canBlockTouches = true
         e.onTouch(down(0, y = 10f))
         e.onTouch(move(50, 500f, 200f))
@@ -244,7 +246,7 @@ class GestureEngineTest {
             dispatch = { dispatched += it; gate.await(); DispatchResult.Ok },
             feedback = feedback,
         ).apply {
-            updateSettings(Settings(enabled = true).bind(Gesture.TAP to Action.Home, Gesture.DOUBLE_TAP to Action.None))
+            updateSettings(base.bind(Gesture.TAP to Action.Home, Gesture.DOUBLE_TAP to Action.None))
             region = this@GestureEngineTest.region
         }
         e.onTouch(down(0))

@@ -82,6 +82,7 @@ import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.ui.common.ActionCatalog
 import io.github.ptt98hd.totch.ui.common.ActionGroup
 import io.github.ptt98hd.totch.ui.common.filterCatalog
+import io.github.ptt98hd.totch.ui.common.searchKey
 import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.SectionHeader
 import io.github.ptt98hd.totch.ui.common.TonalIcon
@@ -250,14 +251,18 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                                 groupLabel = { resources.getString(it.labelRes()) },
                             )
                         }
+                        // FR-U43: "Not set" leads the list, hidden by a query that does not match it.
+                        val showNotSet = remember(state.systemQuery, resources) {
+                            searchKey(state.systemQuery) in searchKey(resources.getString(Action.None.labelRes))
+                        }
                         SearchableList(
                             query = state.systemQuery,
                             onQuery = callbacks.onSystemQuery,
                             placeholder = stringResource(R.string.action_search),
                             loading = false,
-                            empty = groups.isEmpty(),
+                            empty = groups.isEmpty() && !showNotSet,
                             emptyText = stringResource(R.string.action_search_empty, state.systemQuery.trim()),
-                        ) { systemTab(groups, state, callbacks.onSelect) }
+                        ) { systemTab(groups, showNotSet, state, callbacks.onSelect) }
                     }
                     PickerTab.APPS -> SearchableList(
                         query = state.appQuery,
@@ -313,25 +318,44 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
     }
 }
 
+private const val DisabledAlpha = 0.38f
+
 private val listPadding = PaddingValues(start = Gutter, end = Gutter, bottom = 24.dp)
 
-/** UI-26: each group is one rounded card of rows (icon, name, radio) separated by dividers; FR-U35 groups. */
-private fun LazyListScope.systemTab(groups: List<ActionGroup>, state: ActionPickerUiState, onSelect: (Action) -> Unit) {
+/**
+ * UI-26: each group is one rounded card of rows (icon, name, radio) separated by dividers; FR-U35 groups. FR-U43: the
+ * "Not set" card comes first. FR-U44: actions that cannot run are disabled and say why.
+ */
+private fun LazyListScope.systemTab(
+    groups: List<ActionGroup>,
+    showNotSet: Boolean,
+    state: ActionPickerUiState,
+    onSelect: (Action) -> Unit,
+) {
+    if (showNotSet) {
+        item(key = "action-none") {
+            Choice(
+                selected = state.current == Action.None,
+                onClick = { onSelect(Action.None) },
+                leading = { TonalIcon(Action.None.icon) },
+                title = stringResource(Action.None.labelRes),
+                modifier = Modifier.padding(top = 8.dp).groupItem(0, 1),
+            )
+        }
+    }
     groups.forEach { group ->
         item(key = "header-${group.id}") {
             SectionHeader(stringResource(group.id.labelRes()), Modifier.padding(top = 8.dp, bottom = 8.dp))
         }
         itemsIndexed(group.actions, key = { _, action -> "action-$action" }) { index, action ->
+            val need = state.need(action)
             Choice(
                 selected = action == state.current,
                 onClick = { onSelect(action) },
                 leading = { TonalIcon(action.icon) },
                 title = stringResource(action.labelRes),
-                supporting = when {
-                    state.needsShizuku(action) -> stringResource(R.string.action_needs_shizuku) // FR-A20
-                    state.needsDndAccess(action) -> stringResource(R.string.action_needs_dnd)
-                    else -> null
-                },
+                supporting = need?.let { stringResource(it.labelRes) },
+                enabled = need == null,
                 modifier = Modifier.groupItem(index, group.actions.size),
             )
         }
@@ -341,11 +365,14 @@ private fun LazyListScope.systemTab(groups: List<ActionGroup>, state: ActionPick
 private fun LazyListScope.appsTab(state: ActionPickerUiState, onSelectApp: (AppInfo) -> Unit) {
     val current = (state.current as? Action.LaunchApp)?.packageName
     itemsIndexed(state.apps, key = { _, app -> app.packageName }) { index, app ->
+        val need = state.need(Action.LaunchApp(app.packageName))
         Choice(
             selected = app.packageName == current,
             onClick = { onSelectApp(app) },
             leading = { AppIcon(app.packageName) },
             title = app.label,
+            supporting = need?.let { stringResource(it.labelRes) },
+            enabled = need == null,
             modifier = Modifier.groupItem(index, state.apps.size),
         )
     }
@@ -362,13 +389,18 @@ private fun LazyListScope.shortcutsTab(state: ActionPickerUiState, callbacks: Pi
     expandableRows(rows) { row, modifier ->
         when (row) {
             is ExpandableRow.App -> AppHeader(row, modifier, onClick = { callbacks.onToggleApp(row.packageName) })
-            is ExpandableRow.Shortcut -> Choice(
-                selected = current?.packageName == row.entry.packageName && current.shortcutId == row.entry.id,
-                onClick = { callbacks.onSelectShortcut(row.entry) },
-                leading = { TonalIcon(ShortcutIcon) },
-                title = row.entry.label,
-                modifier = modifier.padding(start = 24.dp),
-            )
+            is ExpandableRow.Shortcut -> {
+                val need = state.need(ShortcutAction)
+                Choice(
+                    selected = current?.packageName == row.entry.packageName && current.shortcutId == row.entry.id,
+                    onClick = { callbacks.onSelectShortcut(row.entry) },
+                    leading = { TonalIcon(ShortcutIcon) },
+                    title = row.entry.label,
+                    supporting = need?.let { stringResource(it.labelRes) },
+                    enabled = need == null,
+                    modifier = modifier.padding(start = 24.dp),
+                )
+            }
             is ExpandableRow.Activity -> Unit
         }
     }
@@ -385,14 +417,18 @@ private fun LazyListScope.activitiesTab(state: ActionPickerUiState, callbacks: P
     expandableRows(rows) { row, modifier ->
         when (row) {
             is ExpandableRow.App -> AppHeader(row, modifier, onClick = { callbacks.onToggleActivityApp(row.packageName) })
-            is ExpandableRow.Activity -> Choice(
-                selected = current?.packageName == row.entry.packageName && current.activityName == row.entry.name,
-                onClick = { callbacks.onSelectActivity(row.entry) },
-                leading = { TonalIcon(ActivityIcon) },
-                title = row.entry.label,
-                supporting = shortActivityName(row.entry.packageName, row.entry.name),
-                modifier = modifier.padding(start = 24.dp),
-            )
+            is ExpandableRow.Activity -> {
+                val need = state.need(ActivityAction)
+                Choice(
+                    selected = current?.packageName == row.entry.packageName && current.activityName == row.entry.name,
+                    onClick = { callbacks.onSelectActivity(row.entry) },
+                    leading = { TonalIcon(ActivityIcon) },
+                    title = row.entry.label,
+                    supporting = need?.let { stringResource(it.labelRes) } ?: shortActivityName(row.entry.packageName, row.entry.name),
+                    enabled = need == null,
+                    modifier = modifier.padding(start = 24.dp),
+                )
+            }
             is ExpandableRow.Shortcut -> Unit
         }
     }
@@ -402,13 +438,14 @@ private fun LazyListScope.activitiesTab(state: ActionPickerUiState, callbacks: P
 private fun LazyListScope.tilesTab(state: ActionPickerUiState, onSelectTile: (TileEntry) -> Unit) {
     val current = state.current as? Action.ClickTile
     itemsIndexed(state.tiles, key = { _, tile -> "${tile.packageName}/${tile.name}" }) { index, tile ->
-        val action = Action.ClickTile(tile.packageName, tile.name, tile.label)
+        val need = state.need(Action.ClickTile(tile.packageName, tile.name, tile.label))
         Choice(
             selected = current?.packageName == tile.packageName && current.serviceName == tile.name,
             onClick = { onSelectTile(tile) },
             leading = { AppIcon(tile.packageName) },
             title = tile.label,
-            supporting = if (state.needsShizuku(action)) stringResource(R.string.tile_needs_shizuku, tile.appLabel) else tile.appLabel,
+            supporting = need?.let { "${tile.appLabel} · ${stringResource(it.labelRes)}" } ?: tile.appLabel,
+            enabled = need == null,
             modifier = Modifier.groupItem(index, state.tiles.size),
         )
     }
@@ -424,8 +461,10 @@ private fun LazyListScope.expandableRows(
     }
 }
 
-private val ShortcutIcon = Action.LaunchShortcut("", "", "", "").icon
-private val ActivityIcon = Action.LaunchActivity("", "", "").icon
+private val ShortcutAction = Action.LaunchShortcut("", "", "", "")
+private val ActivityAction = Action.LaunchActivity("", "", "")
+private val ShortcutIcon = ShortcutAction.icon
+private val ActivityIcon = ActivityAction.icon
 private val TileIcon = Action.ClickTile("", "", "").icon
 
 @Composable
@@ -451,14 +490,17 @@ private fun Choice(
     title: String,
     modifier: Modifier = Modifier,
     supporting: String? = null,
+    /** FR-U44: false for an action that cannot run; the row is dimmed and cannot be chosen. */
+    enabled: Boolean = true,
 ) {
     TotchListItem(
         headline = title,
-        modifier = modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+        modifier = modifier.selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick),
         supporting = supporting,
         leading = leading,
-        trailing = { RadioButton(selected = selected, onClick = null) },
+        trailing = { RadioButton(selected = selected, onClick = null, enabled = enabled) },
         containerColor = Color.Transparent,
+        contentAlpha = if (enabled) 1f else DisabledAlpha,
     )
 }
 

@@ -9,7 +9,7 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers. The network is use
 
 ## Features
 
-- **9 gestures** on the notch area: tap, double tap, long press, swipe down / left / right, and swipe down / left / right **& hold**. Each gesture has its own on/off switch that keeps the assigned action.
+- **9 gestures** on the notch area: tap, double tap, long press, swipe down / left / right, and swipe down / left / right **& hold**. Each gesture has its own on/off switch that keeps the assigned action. All gestures start **not set** (off); gestures and actions that cannot run with the current permissions are greyed out with the reason.
 - **Actions** (one per gesture):
   - System: Back, Home, Recents, Lock screen, Screenshot, Notification shade, Quick Settings, Assistant
   - Flashlight toggle; media Play/Pause, Next, Previous; Volume up/down; show the volume panel

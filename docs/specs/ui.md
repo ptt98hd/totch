@@ -97,7 +97,8 @@ development" / "Ủng hộ phát triển Totch", chevron (›).
 | UI-51 | `permissions` = Accessibility, Notifications (chỉ Android 13+), Media control, Do Not Disturb (v1.6.3), Battery, Install updates (v1.6.1), theo thứ tự, `granted` từ `Requirements` |
 | UI-52 | `setPermission(p, on)` gọi `SystemStatus.setPermission(p, on)`; kết quả false → gọi fallback (mở trang hệ thống) |
 | UI-54 | (v1.7) Thứ tự Home: thẻ Totch, Permissions, Advanced (Shizuku), Support (Buy me a coffee) |
-| UI-55 | (v1.7) Thẻ Totch khi `NeedsAccess`: "Turn on Accessibility or Shizuku" / "Bật Trợ năng hoặc Shizuku" (UI-2) |
+| UI-55 | (v1.7) Thẻ Totch khi `NeedsAccess`: "Turn on Accessibility or Shizuku" / "Bật Trợ năng hoặc Shizuku" (UI-2). v1.8: "Needs Accessibility or Shizuku" / "Cần Trợ năng hoặc Shizuku" |
+| UI-56 | (v1.8, FR-U45) Mô tả trạng thái thẻ Totch một dòng (`maxLines = 1`, "…"); chuỗi ngắn: Gestures are off / on, Turning on… / off…, Paused in landscape, Stopped: %s — vi: Cử chỉ đang tắt / bật, Đang bật… / Đang tắt…, Tạm dừng khi xoay ngang, Đã dừng: %s |
 | UI-53 | (v1.5, FR-D10) Tắt switch Thông báo → hộp thoại xác nhận "Totch sẽ khởi động lại"; chỉ khi đồng ý mới gọi `setPermission(NOTIFICATIONS, false)`. v1.6.1: tắt **Install updates** cũng hỏi như vậy (FR-D11); bật / các quyền khác không hỏi |
 | ~~UI-3, UI-4~~ | Bỏ ở v1.4: quyền media / pin luôn nằm trong Permissions |
 
@@ -113,7 +114,8 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
 
 - Mỗi dòng: icon cử chỉ, tên, hành động đang gán, **switch** ở cuối dòng (v1.3, FR-G12). v1.4 (FR-G13): dòng có
   switch tắt (kể cả cử chỉ không khả dụng) bị **làm mờ** (icon, tên, mô tả alpha 50%). Không còn hiển thị
-  "Không làm gì": cử chỉ chưa gán / đã tắt chỉ có switch tắt.
+  "Không làm gì": cử chỉ chưa gán / đã tắt chỉ có switch tắt. v1.8 (FR-U43): cử chỉ chưa gán hiện mô tả "Not set" /
+  "Chưa đặt".
   - Switch bật (`on = isGestureOn(g)`): chạm dòng → mở **Action picker** (bottom sheet); dòng hiện tên hành động.
   - Switch tắt: chạm dòng **không** mở picker; nếu có hành động đã nhớ, dòng hiện tên đó mờ đi.
   - Bật switch: có hành động đã nhớ → bỏ g khỏi `disabledGestures`; chưa có (`None`) → mở picker, chỉ bật khi
@@ -121,6 +123,10 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
 - v1.3: bỏ nút **Lặp lại** (FR-G11).
 - Swipe down, Swipe down & hold bị vô hiệu (mờ, không bấm được, switch **tắt** + disabled) với nhãn "Cần quyền Trợ năng
   (bật ở Home)" khi Trợ năng **chưa** bật; Trợ năng đang bật → dùng như mọi cử chỉ khác (v1.5, FR-G14).
+- v1.8 (FR-U44): không có Trợ năng lẫn Shizuku → **mọi** cử chỉ vô hiệu như trên, nhãn "Requires Accessibility or
+  Shizuku" / "Cần Trợ năng hoặc Shizuku". Cử chỉ có hành động đã gán mà hành động không khả dụng (`Capabilities.need`,
+  bảng dưới) → switch **tắt** + disabled, mô tả "<hành động> · <lý do>" màu lỗi; dòng vẫn chạm được để mở picker chọn
+  hành động khác.
 - ~~Picker mở ra như sheet **trong vùng nội dung** của màn Gestures (giữa top bar và bottom bar), trượt lên từ dưới; mép
   trên của sheet chạm sát mép dưới top bar (v1.5, FR-U25).~~ v1.7 (FR-U37): màn Gestures là một `BottomSheetScaffold`
   (top bar trong slot `topBar`, danh sách là `content`, picker là `sheetContent`); sheet mở ra cao **toàn màn Gestures**
@@ -134,7 +140,9 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
 | UI-14 | Trợ năng chưa bật: dòng `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` có `enabled=false` và `on=false` (dù đã gán); mọi dòng khác `enabled=true`. Trợ năng đang bật (`Requirements.accessibilityEnabled`): mọi dòng `enabled=true`, `on = isGestureOn(g, true)` |
 | UI-15 | ~~Nút Lặp lại cho cử chỉ giữ~~ — bỏ ở v1.3 (FR-G11) |
 | UI-16 | `GestureRow.on = isGestureOn(g)`; `setOn(g, false)` thêm g vào `disabledGestures`, binding giữ nguyên; `setOn(g, true)` với binding ≠ None bỏ g khỏi `disabledGestures` |
-| UI-17 | `setOn(g, true)` với binding `None` → không lưu gì, `picking = g`; `openPicker(g)` chỉ đặt `picking` khi `on`; `closePicker()` → `picking = null` |
+| UI-17 | `setOn(g, true)` với binding `None` → không lưu gì, `picking = g`; `openPicker(g)` chỉ đặt `picking` khi `on` (v1.8: hoặc khi `enabled` và hành động không khả dụng, UI-61); `closePicker()` → `picking = null` |
+| UI-60 | (v1.8, FR-U44) `Capabilities(accessibility=false, shizuku=false)` → mọi dòng `enabled=false`, `on=false`, `need=ACCESS`. Chỉ Shizuku → vuốt xuống `need=ACCESSIBILITY`, các dòng khác `enabled=true` |
+| UI-61 | (v1.8, FR-U44) Dòng có hành động không khả dụng (ví dụ `ToggleWifi` khi Shizuku chưa sẵn sàng, `RingerSilent` khi thiếu quyền Không làm phiền): `enabled=true`, `on=false`, `need` = lý do; `setOn(g, true)` không lưu gì; `openPicker(g)` đặt `picking = g` |
 
 ### Action picker (FR-U9, FR-U16, FR-U20, FR-A11…FR-A13)
 v1.7 (FR-U37): sheet **native** của `BottomSheetScaffold` (Material 3), thay `Surface` + `AnimatedVisibility` tự vẽ:
@@ -154,7 +162,7 @@ mục mới như Intents, Settings… mà nhãn không bị hẹp lại). Nội 
 
 | Mục | Nội dung |
 |---|---|
-| System | v1.6.3 (FR-U34, FR-U35): ô tìm kiếm như tab Applications, rồi 6 nhóm (bảng dưới). Không có "Không làm gì". Hành động âm thanh (trừ âm lượng) có dòng phụ "Requires Do Not Disturb access" khi chưa có quyền (FR-A18) |
+| System | v1.6.3 (FR-U34, FR-U35): ô tìm kiếm như tab Applications, rồi 6 nhóm (bảng dưới). ~~Không có "Không làm gì".~~ v1.8 (FR-U43): dòng **Not set** / **Chưa đặt** (icon `Block`, một card riêng không tiêu đề) ở đầu danh sách, ẩn khi query không khớp tên của nó. Hành động âm thanh (trừ âm lượng) có dòng phụ "Requires Do Not Disturb access" khi chưa có quyền (FR-A18) |
 | Applications | Ô tìm kiếm + danh sách app (icon, tên, radio) |
 
 Ô tìm kiếm (v1.7, FR-U38): `CompactSearchField` cao 44 dp (thay `SearchBar` 56 dp), bo tròn hoàn toàn, nền
@@ -162,6 +170,20 @@ mục mới như Intents, Settings… mà nhãn không bị hẹp lại). Nội 
 
 Hành động chỉ chạy qua Shizuku (v1.7, FR-A20 — actions §14) có dòng phụ "Requires Shizuku" / "Cần Shizuku" khi Shizuku
 chưa sẵn sàng; ở tab Tiles dòng phụ thành "<tên app> · Requires Shizuku".
+
+Khả dụng (v1.8, FR-U44 — `Capabilities` từ `Requirements`: `accessibility`, `shizuku` = running && granted,
+`dndAccess`). `Capabilities.need(action)`:
+
+| Hành động (`ActionRequirements.of`) | Không khả dụng khi | `Need` | Lý do (en / vi) |
+|---|---|---|---|
+| `None` | không bao giờ | — | — |
+| LOCAL, trong `ActionCatalog.needsDndAccess` | `!dndAccess` | `DND` | Requires Do Not Disturb access / Cần quyền Không làm phiền |
+| LOCAL khác | không bao giờ | — | — |
+| {ACCESSIBILITY, SHIZUKU} (điều hướng, khóa, chụp, mở app / shortcut / activity…) | `!accessibility && !shizuku` | `ACCESS` | Requires Accessibility or Shizuku / Cần Trợ năng hoặc Shizuku |
+| {SHIZUKU} (FR-A20) | `!shizuku` | `SHIZUKU` | Requires Shizuku / Cần Shizuku |
+
+Dòng không khả dụng ở mọi tab: **vô hiệu** (mờ 38%, radio disabled, không chọn được), dòng phụ = lý do (tab Tiles:
+"<tên app> · <lý do>"). `select(action)` bỏ qua hành động không khả dụng.
 | Shortcuts | Ô tìm kiếm + danh sách **app** như tab Applications; chạm app → mở rộng/thu gọn, shortcut của app hiện ngay bên dưới (thụt vào, icon `SubdirectoryArrowRight`, nhãn, radio). Mặc định thu gọn tất cả; khi đang tìm kiếm, mọi app khớp đều mở rộng |
 | Activities | (v1.5, FR-A14) Giống hệt Shortcuts nhưng dòng con là activity: icon activity, nhãn + dòng phụ tên lớp rút gọn, radio. Trạng thái mở rộng riêng (`expandedActivities`) |
 | Tiles | (v1.6, FR-A15) Ô tìm kiếm + gợi ý một dòng "Chỉ ô đã thêm vào Cài đặt nhanh mới phản hồi" + danh sách phẳng các ô (icon app, nhãn ô + dòng phụ tên app, radio), một card (UI-26) |
@@ -198,7 +220,9 @@ dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọ
 | UI-25 | `expanded` ban đầu rỗng; `toggleExpanded(pkg)` thêm/bớt pkg; `isExpanded(pkg)` = đang tìm kiếm (query không rỗng) hoặc pkg ∈ `expanded` |
 | UI-27 | (v1.5) Tab Activities dùng `groupActivities` (AC-1, AC-2), tải lần đầu mở tab (như UI-22); `toggleActivityApp(pkg)`/`isActivityAppExpanded(pkg)` như UI-25; chọn → `LaunchActivity(pkg, activity, label)` |
 | UI-28 | (v1.6) Tab Tiles dùng `filterTiles` (QT-1), tải lần đầu mở tab (như UI-22); chọn → `ClickTile(pkg, service, label)` |
-| UI-29b | (v1.7) `ActionPickerUiState.shizukuReady` = `Requirements.shizukuRunning && shizukuGranted`; `needsShizuku` theo AR-10 |
+| UI-29b | (v1.7) `ActionPickerUiState.shizukuReady` = `Requirements.shizukuRunning && shizukuGranted`; `needsShizuku` theo AR-10. v1.8: thay bằng `capabilities` + `need(action)` (UI-62) |
+| UI-62 | (v1.8, FR-U44) `Capabilities.need` theo bảng Khả dụng; `ActionPickerUiState.need(action)` dùng `Requirements` hiện tại; `select` một hành động có `need ≠ null` → không lưu, `finished=false` |
+| UI-63 | (v1.8, FR-U43) `select(None)` → binding `None`, `finished=true`, cử chỉ tắt (`isGestureOn = false`) |
 | UI-26 | Mỗi nhóm là một card bo góc (`Modifier.groupItem(index, count)`: bo góc trên ở dòng đầu, góc dưới ở dòng cuối, đường kẻ trên mỗi dòng trừ dòng đầu) |
 
 ### Notch (FR-U12, FR-U17, FR-U18, FR-S9, FR-R5…FR-R7) — tab thứ 3

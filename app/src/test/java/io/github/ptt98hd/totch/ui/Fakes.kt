@@ -19,6 +19,9 @@ import io.github.ptt98hd.totch.core.update.Release
 import kotlinx.coroutines.CompletableDeferred
 import io.github.ptt98hd.totch.TouchArea
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
+import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.model.Gesture
+import io.github.ptt98hd.totch.core.settings.DefaultBindings
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,6 +33,13 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+
+/** The pre-1.8 default bindings (FR-S2 before v1.8), for tests that need bound gestures. */
+val LegacyBindings: Map<Gesture, Action> = DefaultBindings + mapOf(
+    Gesture.DOUBLE_TAP to Action.LockScreen, Gesture.LONG_PRESS to Action.ToggleTorch,
+    Gesture.SWIPE_DOWN to Action.Notifications, Gesture.SWIPE_LEFT to Action.MediaPrevious,
+    Gesture.SWIPE_RIGHT to Action.MediaNext,
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainDispatcherRule(val dispatcher: TestDispatcher = UnconfinedTestDispatcher()) : TestWatcher() {
