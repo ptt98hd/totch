@@ -7,6 +7,7 @@ import android.content.pm.PackageInstaller
 import android.util.Log
 import io.github.ptt98hd.totch.AppUpdater
 import io.github.ptt98hd.totch.BuildConfig
+import io.github.ptt98hd.totch.InstallResult
 import io.github.ptt98hd.totch.core.update.Release
 import io.github.ptt98hd.totch.core.update.Releases
 import kotlinx.coroutines.CancellationException
@@ -20,8 +21,14 @@ import java.net.URL
 import java.security.MessageDigest
 import kotlin.coroutines.coroutineContext
 
-/** Self-update from the GitHub release of the latest tag (update spec §4); network only on request. */
-class GitHubAppUpdater(private val context: Context) : AppUpdater {
+/**
+ * Self-update from the GitHub release of the latest tag (update spec §4); network only on request. The verified APK
+ * goes to [shizukuInstall] first, then to the system installer (§7).
+ */
+class GitHubAppUpdater(
+    private val context: Context,
+    private val shizukuInstall: suspend (File) -> Boolean,
+) : AppUpdater {
 
     override suspend fun latestRelease(): Release? = withContext(Dispatchers.IO) {
         val connection = open(Releases.LATEST_URL).apply { setRequestProperty("Accept", "application/vnd.github+json") }
@@ -36,19 +43,23 @@ class GitHubAppUpdater(private val context: Context) : AppUpdater {
         }
     }
 
-    override suspend fun downloadAndInstall(release: Release, onProgress: (Float) -> Unit): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun downloadAndInstall(release: Release, onProgress: (Float) -> Unit): InstallResult = withContext(Dispatchers.IO) {
         val dir = File(context.cacheDir, "updates").apply { deleteRecursively(); mkdirs() }
         val apk = File(dir, "totch-${release.version}.apk")
         try {
             download(release, apk, onProgress)
             check(isExpectedPackage(apk)) { "unexpected package" }
-            install(apk)
-            true
+            if (shizukuInstall(apk)) {
+                InstallResult.SHIZUKU
+            } else {
+                install(apk)
+                InstallResult.SYSTEM_INSTALLER
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) { // network, verification, installer session
             Log.w(TAG, "Update failed", e)
-            false
+            InstallResult.FAILED
         } finally {
             apk.delete()
         }

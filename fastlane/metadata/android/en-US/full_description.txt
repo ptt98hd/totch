@@ -8,6 +8,9 @@
 <li>Open notification shade or Quick Settings</li>
 <li>Toggle flashlight</li>
 <li>Media Play/Pause, Next, Previous; Volume up/down; volume panel</li>
+<li>Sound mode (ring, vibrate, silent) and Do Not Disturb</li>
+<li>Brightness up/down, auto brightness, auto-rotate</li>
+<li>Toggle Wi-Fi, Bluetooth, mobile data, airplane mode, location</li>
 <li>Launch any installed app</li>
 <li>Tap an app's Quick Settings tile</li>
 <li>One-handed mode</li>

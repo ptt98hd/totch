@@ -40,5 +40,19 @@
     <string name="platform_action_shortcut">Open shortcut</string>
     <string name="platform_action_activity">Open activity</string>
     <string name="platform_action_tile">Tap Quick Settings tile</string>
+    <string name="platform_action_brightness_up">Brightness up</string>
+    <string name="platform_action_brightness_down">Brightness down</string>
+    <string name="platform_action_auto_brightness">Toggle auto brightness</string>
+    <string name="platform_action_auto_rotate">Toggle auto-rotate</string>
+    <string name="platform_action_ringer_normal">Sound mode: ring</string>
+    <string name="platform_action_ringer_vibrate">Sound mode: vibrate</string>
+    <string name="platform_action_ringer_silent">Sound mode: silent</string>
+    <string name="platform_action_ringer_cycle">Cycle sound mode</string>
+    <string name="platform_action_dnd">Toggle Do Not Disturb</string>
+    <string name="platform_action_wifi">Toggle Wi-Fi</string>
+    <string name="platform_action_bluetooth">Toggle Bluetooth</string>
+    <string name="platform_action_mobile_data">Toggle mobile data</string>
+    <string name="platform_action_airplane">Toggle airplane mode</string>
+    <string name="platform_action_location">Toggle location</string>
     <string name="media_listener_label">Totch media control</string>
 </resources>

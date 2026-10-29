@@ -6,17 +6,29 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.VolumeDown
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.AdsClick
+import androidx.compose.material.icons.outlined.AirplanemodeActive
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Assistant
+import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Bluetooth
+import androidx.compose.material.icons.outlined.BrightnessAuto
+import androidx.compose.material.icons.outlined.BrightnessHigh
+import androidx.compose.material.icons.outlined.BrightnessLow
+import androidx.compose.material.icons.outlined.DoNotDisturbOn
 import androidx.compose.material.icons.outlined.FlashlightOn
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.PanTool
 import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.ScreenRotation
 import androidx.compose.material.icons.outlined.Screenshot
+import androidx.compose.material.icons.outlined.SignalCellularAlt
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material.icons.outlined.Speaker
@@ -28,10 +40,12 @@ import androidx.compose.material.icons.outlined.SwipeLeftAlt
 import androidx.compose.material.icons.outlined.SwipeRight
 import androidx.compose.material.icons.outlined.SwipeRightAlt
 import androidx.compose.material.icons.outlined.TouchApp
-import androidx.compose.material.icons.outlined.VerticalAlignBottom
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.VerticalAlignBottom
+import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material.icons.outlined.WebAsset
+import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -91,6 +105,20 @@ val Action.labelRes: Int
         is Action.LaunchShortcut -> R.string.action_open_shortcut
         is Action.LaunchActivity -> R.string.action_open_activity
         is Action.ClickTile -> R.string.action_click_tile
+        Action.BrightnessUp -> R.string.action_brightness_up
+        Action.BrightnessDown -> R.string.action_brightness_down
+        Action.ToggleAutoBrightness -> R.string.action_auto_brightness
+        Action.ToggleAutoRotate -> R.string.action_auto_rotate
+        Action.RingerNormal -> R.string.action_ringer_normal
+        Action.RingerVibrate -> R.string.action_ringer_vibrate
+        Action.RingerSilent -> R.string.action_ringer_silent
+        Action.CycleRingerMode -> R.string.action_ringer_cycle
+        Action.ToggleDnd -> R.string.action_dnd
+        Action.ToggleWifi -> R.string.action_wifi
+        Action.ToggleBluetooth -> R.string.action_bluetooth
+        Action.ToggleMobileData -> R.string.action_mobile_data
+        Action.ToggleAirplaneMode -> R.string.action_airplane
+        Action.ToggleLocation -> R.string.action_location
     }
 
 val Action.icon: ImageVector
@@ -116,12 +144,30 @@ val Action.icon: ImageVector
         is Action.LaunchShortcut -> Icons.Outlined.SubdirectoryArrowRight
         is Action.LaunchActivity -> Icons.Outlined.WebAsset
         is Action.ClickTile -> Icons.Outlined.GridView
+        Action.BrightnessUp -> Icons.Outlined.BrightnessHigh
+        Action.BrightnessDown -> Icons.Outlined.BrightnessLow
+        Action.ToggleAutoBrightness -> Icons.Outlined.BrightnessAuto
+        Action.ToggleAutoRotate -> Icons.Outlined.ScreenRotation
+        Action.RingerNormal -> Icons.Outlined.NotificationsActive
+        Action.RingerVibrate -> Icons.Outlined.Vibration
+        Action.RingerSilent -> Icons.Outlined.NotificationsOff
+        Action.CycleRingerMode -> Icons.Outlined.Autorenew
+        Action.ToggleDnd -> Icons.Outlined.DoNotDisturbOn
+        Action.ToggleWifi -> Icons.Outlined.Wifi
+        Action.ToggleBluetooth -> Icons.Outlined.Bluetooth
+        Action.ToggleMobileData -> Icons.Outlined.SignalCellularAlt
+        Action.ToggleAirplaneMode -> Icons.Outlined.AirplanemodeActive
+        Action.ToggleLocation -> Icons.Outlined.LocationOn
     }
 
 @StringRes
 fun ActionGroupId.labelRes(): Int = when (this) {
+    ActionGroupId.NAVIGATION -> R.string.group_navigation
     ActionGroupId.SYSTEM -> R.string.group_system
     ActionGroupId.MEDIA -> R.string.group_media
+    ActionGroupId.SOUND -> R.string.group_sound
+    ActionGroupId.DISPLAY -> R.string.group_display
+    ActionGroupId.CONNECTIVITY -> R.string.group_connections
 }
 
 /** Human-readable action name; LaunchApp/LaunchShortcut/LaunchActivity/ClickTile show the app label (UI-12) or the package name. */

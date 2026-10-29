@@ -31,6 +31,10 @@ object PermissionCommands {
     fun notificationListener(component: String, allowed: Boolean): String =
         "cmd notification ${if (allowed) "allow_listener" else "disallow_listener"} ${quote(component)}"
 
+    /** PC-8: Do Not Disturb access, needed by the sound mode actions (FR-D12). */
+    fun dndAccess(packageName: String, allowed: Boolean): String =
+        "cmd notification ${if (allowed) "allow_dnd" else "disallow_dnd"} ${quote(packageName)}"
+
     /** PC-3: battery optimization exemption (device idle whitelist). */
     fun batteryUnrestricted(packageName: String, unrestricted: Boolean): String =
         "cmd deviceidle whitelist ${if (unrestricted) "+" else "-"}${quote(packageName)}"

@@ -1,0 +1,5 @@
+* Search box and new groups in the System actions: Navigation, System, Media, Sound, Display, Connections.
+* New actions: brightness up/down, auto brightness, auto-rotate; sound mode (ring, vibrate, silent, cycle) and Do Not Disturb; Wi-Fi, Bluetooth, mobile data, airplane mode, location.
+* New optional permission: Do Not Disturb access (for the sound mode actions).
+* Updates install through Shizuku when it is running: no confirmation, Totch reopens by itself.
+* App icon: centered black hole with a level disk, colors follow your wallpaper (Material You).

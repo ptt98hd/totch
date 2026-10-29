@@ -3,6 +3,7 @@ package io.github.ptt98hd.totch.ui.picker
 import app.cash.turbine.test
 import io.github.ptt98hd.totch.ActivityEntry
 import io.github.ptt98hd.totch.AppInfo
+import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.ShortcutEntry
 import io.github.ptt98hd.totch.TileEntry
 import io.github.ptt98hd.totch.core.model.Action
@@ -15,6 +16,7 @@ import io.github.ptt98hd.totch.ui.FakeInstalledApps
 import io.github.ptt98hd.totch.ui.FakeQuickSettingsTiles
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
 import io.github.ptt98hd.totch.ui.MainDispatcherRule
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -41,8 +43,10 @@ class ActionPickerViewModelTest {
     private val tile = TileEntry("com.notes", "Notes", "com.notes.QuickNote", "Quick note")
     private val tiles = FakeQuickSettingsTiles(listOf(tile))
 
+    private val requirements = MutableStateFlow(Requirements())
+
     private fun vm(repo: FakeSettingsRepository = FakeSettingsRepository(), gesture: Gesture = Gesture.SWIPE_RIGHT) =
-        ActionPickerViewModel(gesture, repo, installed, shortcuts, activities, tiles, main.dispatcher)
+        ActionPickerViewModel(gesture, repo, installed, shortcuts, activities, tiles, requirements, main.dispatcher)
 
     private fun bound(action: Action) = FakeSettingsRepository(Settings(bindings = DefaultBindings + (Gesture.TAP to action)))
 
@@ -224,5 +228,23 @@ class ActionPickerViewModelTest {
             assertTrue(expectMostRecentItem().finished)
         }
         assertEquals(Action.ClickTile("com.notes", "com.notes.QuickNote", "Quick note"), repo.current.bindings[Gesture.SWIPE_RIGHT])
+    }
+
+    @Test
+    fun `UI-29 system search query and Do Not Disturb hint`() = runTest {
+        val vm = vm(bound(Action.Back), Gesture.TAP)
+        vm.state.test {
+            assertEquals("", expectMostRecentItem().systemQuery)
+            vm.setSystemQuery("wifi")
+            val withoutAccess = expectMostRecentItem()
+            assertEquals("wifi", withoutAccess.systemQuery)
+            assertTrue(withoutAccess.needsDndAccess(Action.RingerSilent))
+            assertTrue(withoutAccess.needsDndAccess(Action.ToggleDnd))
+            assertFalse(withoutAccess.needsDndAccess(Action.VolumeUp))
+            assertFalse(withoutAccess.needsDndAccess(Action.ToggleWifi))
+
+            requirements.value = Requirements(dndAccessGranted = true)
+            assertFalse(expectMostRecentItem().needsDndAccess(Action.RingerSilent))
+        }
     }
 }

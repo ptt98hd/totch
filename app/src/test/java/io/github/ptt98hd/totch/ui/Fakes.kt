@@ -5,6 +5,7 @@ import io.github.ptt98hd.totch.AppActivities
 import io.github.ptt98hd.totch.AppInfo
 import io.github.ptt98hd.totch.HighlightArea
 import io.github.ptt98hd.totch.Permission
+import io.github.ptt98hd.totch.InstallResult
 import io.github.ptt98hd.totch.InstalledApps
 import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.SettingsRepository
@@ -106,13 +107,13 @@ class FakeQuickSettingsTiles(private val entries: List<TileEntry> = emptyList())
 class FakeAppUpdater : AppUpdater {
     var checks = 0
     var latest = CompletableDeferred<Release?>()
-    var install = CompletableDeferred<Boolean>()
+    var install = CompletableDeferred<InstallResult>()
     var progress: (Float) -> Unit = {}
     override suspend fun latestRelease(): Release? {
         checks++
         return latest.await()
     }
-    override suspend fun downloadAndInstall(release: Release, onProgress: (Float) -> Unit): Boolean {
+    override suspend fun downloadAndInstall(release: Release, onProgress: (Float) -> Unit): InstallResult {
         progress = onProgress
         return install.await()
     }

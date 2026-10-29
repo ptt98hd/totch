@@ -259,7 +259,8 @@ private fun updateSummary(update: UpdateState): String = when (update) {
     UpdateState.UpToDate -> stringResource(R.string.update_up_to_date)
     is UpdateState.Available -> stringResource(R.string.update_available, update.release.version.toString())
     is UpdateState.Downloading -> stringResource(R.string.update_downloading, (update.progress * 100).toInt())
-    UpdateState.Installing -> stringResource(R.string.update_installing)
+    is UpdateState.Installing ->
+        stringResource(if (update.viaShizuku) R.string.update_installing_shizuku else R.string.update_installing)
     UpdateState.Failed -> stringResource(R.string.update_failed)
 }
 

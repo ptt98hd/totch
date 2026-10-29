@@ -260,6 +260,27 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-I2 | Bật Themed icons (Android 13+) | Lỗ đen đơn sắc theo theme, rõ nét | [ ] |
 | MT-I3 | Icon thông báo thường trực / thông báo cập nhật | Hình lỗ đen đơn sắc, không phải khối trắng | [ ] |
 
+## 15. v1.6.3 — hành động mới, tìm kiếm System, cài qua Shizuku, icon Monet
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-S1 | Mở picker › System | Ô tìm kiếm trên cùng; 6 nhóm: Điều hướng, Hệ thống, Media, Âm thanh, Màn hình, Kết nối | [ ] |
+| MT-S2 | Gõ "am luong", rồi "ket noi", rồi "xyz" | Chỉ các hành động âm lượng; cả nhóm Kết nối; "Không có hành động nào khớp" | [ ] |
+| MT-D1 | Gán Tăng / Giảm độ sáng, thực hiện cử chỉ | Độ sáng đổi một nấc, hiện thanh độ sáng của hệ thống (độ sáng tự động bị tắt — hành vi hệ thống) | [ ] |
+| MT-D2 | Gán Bật/tắt độ sáng tự động, tự động xoay; thực hiện 2 lần | Công tắc tương ứng trong Cài đặt nhanh đổi trạng thái, rồi trở lại | [ ] |
+| MT-SM1 | Chưa cấp quyền Không làm phiền, mở picker › Âm thanh | 5 hành động chế độ âm thanh có dòng phụ "Cần quyền Không làm phiền"; thực hiện → toast "Không thể thực hiện" | [ ] |
+| MT-SM2 | Home › bật "Quyền Không làm phiền" (có Shizuku / không có Shizuku) | Bật ngay qua Shizuku / mở trang Quyền truy cập Không làm phiền của hệ thống | [ ] |
+| MT-SM3 | Gán lần lượt Đổ chuông, Rung, Im lặng, Đổi chế độ âm thanh | Chế độ chuông đổi đúng; Đổi chế độ đi Đổ chuông → Rung → Im lặng → Đổ chuông | [ ] |
+| MT-SM4 | Gán Bật/tắt Không làm phiền, thực hiện 2 lần | Bật (ưu tiên) rồi tắt Không làm phiền | [ ] |
+| MT-C1 | Gán từng hành động Wi-Fi, Bluetooth, Dữ liệu di động, Máy bay, Vị trí; thực hiện 2 lần mỗi cái | Tắt/bật đúng, trạng thái Cài đặt nhanh khớp; Wi-Fi bật lại được khi đang ở chế độ máy bay | [ ] |
+| MT-C2 | Android 12: Bật/tắt Bluetooth | Vẫn chạy (rơi về `svc bluetooth`) | [ ] |
+| MT-U1 | Shizuku đang chạy, Settings › Kiểm tra cập nhật › Cập nhật (cần bản mới hơn trên GitHub) | Tải xong hiện "Đang cài đặt…", không có hộp thoại hệ thống; Totch đóng rồi tự mở lại ở bản mới | [ ] |
+| MT-U2 | Như MT-U1 nhưng APK cài lỗi (vd. thử với bản ký khác) | Totch mở lại, toast "Cập nhật thất bại", dòng Settings "Không cập nhật được" | [ ] |
+| MT-U3 | Shizuku tắt, cập nhật | Hộp thoại cài đặt của hệ thống như bản 1.6.2 | [ ] |
+| MT-I4 | Icon ở launcher, splash, Cài đặt › Ứng dụng | Vòng sáng và chân trời đồng tâm ở giữa, đĩa nằm ngang hình con thoi, không bị cắt ở mọi mask | [ ] |
+| MT-I5 | Đổi hình nền (màu khác hẳn) | Màu icon đổi theo bảng màu mới (có launcher cần khởi động lại) | [ ] |
+| MT-I6 | Bật Themed icons (Android 13+); xem icon thông báo | Vòng sáng + đĩa đơn sắc, cân giữa | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)

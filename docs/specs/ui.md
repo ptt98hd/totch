@@ -49,6 +49,7 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 │ [♿] Accessibility          [on]  │  Granted / Not granted
 │ [🔔] Notifications         [off] │  (Android 13+)
 │ [♪] Media control          [off] │
+│ [⊖] Do Not Disturb access  [off] │  v1.6.3
 │ [🔋] Unrestricted battery  [on]  │
 │ [⤓] Install updates        [off] │  v1.6.1
 ├──────────────────────────────────┤
@@ -70,7 +71,7 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 | UI-2 | Status text ánh xạ 1-1 từ `EngineStatus` |
 | UI-42 | `masterIcon(status)`: `Running` → ON; `Starting`, `Stopping` → PENDING; còn lại → OFF |
 | UI-50 | `HomeUiState.shizuku`: chưa chạy → NOT_RUNNING; chạy, chưa cấp quyền → PERMISSION_REQUIRED; còn lại READY |
-| UI-51 | `permissions` = Accessibility, Notifications (chỉ Android 13+), Media control, Battery, Install updates (v1.6.1), theo thứ tự, `granted` từ `Requirements` |
+| UI-51 | `permissions` = Accessibility, Notifications (chỉ Android 13+), Media control, Do Not Disturb (v1.6.3), Battery, Install updates (v1.6.1), theo thứ tự, `granted` từ `Requirements` |
 | UI-52 | `setPermission(p, on)` gọi `SystemStatus.setPermission(p, on)`; kết quả false → gọi fallback (mở trang hệ thống) |
 | UI-53 | (v1.5, FR-D10) Tắt switch Thông báo → hộp thoại xác nhận "Totch sẽ khởi động lại"; chỉ khi đồng ý mới gọi `setPermission(NOTIFICATIONS, false)`. v1.6.1: tắt **Install updates** cũng hỏi như vậy (FR-D11); bật / các quyền khác không hỏi |
 | ~~UI-3, UI-4~~ | Bỏ ở v1.4: quyền media / pin luôn nằm trong Permissions |
@@ -117,11 +118,26 @@ mục mới như Intents, Settings… mà nhãn không bị hẹp lại). Nội 
 
 | Mục | Nội dung |
 |---|---|
-| System | Nhóm System (Back, Home, Recents, Lock, Screenshot, Notifications, Quick settings, Assistant, One-handed mode — v1.6, dòng phụ "Needs the One-handed mode shortcut", Torch) và Media (Play/pause, Previous, Next, Volume up/down, Volume panel). **Không** có ô tìm kiếm (v1.4), không có "Không làm gì" |
+| System | v1.6.3 (FR-U34, FR-U35): ô tìm kiếm như tab Applications, rồi 6 nhóm (bảng dưới). Không có "Không làm gì". Hành động âm thanh (trừ âm lượng) có dòng phụ "Requires Do Not Disturb access" khi chưa có quyền (FR-A18) |
 | Applications | Ô tìm kiếm + danh sách app (icon, tên, radio) |
 | Shortcuts | Ô tìm kiếm + danh sách **app** như tab Applications; chạm app → mở rộng/thu gọn, shortcut của app hiện ngay bên dưới (thụt vào, icon `SubdirectoryArrowRight`, nhãn, radio). Mặc định thu gọn tất cả; khi đang tìm kiếm, mọi app khớp đều mở rộng |
 | Activities | (v1.5, FR-A14) Giống hệt Shortcuts nhưng dòng con là activity: icon activity, nhãn + dòng phụ tên lớp rút gọn, radio. Trạng thái mở rộng riêng (`expandedActivities`) |
 | Tiles | (v1.6, FR-A15) Ô tìm kiếm + gợi ý một dòng "Chỉ ô đã thêm vào Cài đặt nhanh mới phản hồi" + danh sách phẳng các ô (icon app, nhãn ô + dòng phụ tên app, radio), một card (UI-26) |
+
+Nhóm của tab System (v1.6.3, `ActionCatalog.groups`, theo thứ tự):
+
+| Nhóm (en / vi) | Hành động |
+|---|---|
+| Navigation / Điều hướng | Back, Home, Recents, Notifications, Quick settings, One-handed mode |
+| System / Hệ thống | Lock screen, Screenshot, Assistant, Torch |
+| Media / Media | Play/pause, Previous, Next |
+| Sound / Âm thanh | Volume up, Volume down, Volume panel, Ring, Vibrate, Silent, Cycle sound mode, Do Not Disturb |
+| Display / Màn hình | Brightness up, Brightness down, Auto brightness, Auto-rotate |
+| Connections / Kết nối | Wi-Fi, Bluetooth, Mobile data, Airplane mode, Location |
+
+Tìm kiếm (`filterCatalog(groups, query, actionLabel, groupLabel)`): so khớp sau khi chuẩn hóa (trim, chữ thường, bỏ dấu
+tiếng Việt — NFD bỏ dấu kết hợp, `đ` → `d`); query khớp **tên nhóm** → giữ cả nhóm; ngược lại giữ các hành động có tên
+khớp; nhóm rỗng bị ẩn; không có kết quả → "No actions match "…"".
 
 Mỗi nhóm (System, Media, danh sách app, danh sách app + shortcut) hiển thị như nhóm cử chỉ: **một card bo góc**, các
 dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọn → lưu binding, **bật** cử chỉ (`withBinding`) và
@@ -134,8 +150,9 @@ dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọ
 | UI-20 | Tab ban đầu = tab chứa hành động hiện tại (LaunchApp → Applications, LaunchShortcut → Shortcuts, LaunchActivity → Activities, ClickTile → Tiles, còn lại → System) |
 | UI-21 | Tab Shortcut dùng `groupShortcuts` (SH-1, SH-2); chọn → `LaunchShortcut(pkg, id, label, intentUri)` |
 | UI-22 | App và shortcut chỉ được tải lần đầu mở tab tương ứng (hoặc tab ban đầu) |
-| UI-23 | `ActionCatalog.groups` không chứa `None`; nhóm Media có `VolumePanel` sau `VolumeDown` |
-| ~~UI-24~~ | Bỏ ở v1.4: không còn tìm kiếm hành động |
+| UI-23 | `ActionCatalog.groups` không chứa `None`, mỗi hành động cố định xuất hiện đúng một lần; v1.6.3: đúng 6 nhóm theo thứ tự NAVIGATION, SYSTEM, MEDIA, SOUND, DISPLAY, CONNECTIVITY với nội dung như bảng trên |
+| UI-24 | (v1.6.3, FR-U34) `filterCatalog`: query rỗng → nguyên danh sách; khớp tên hành động không phân biệt hoa thường / dấu (`"am luong"` khớp "Tăng âm lượng", `"WI-FI"` khớp "Wi-Fi"); khớp tên nhóm → cả nhóm; nhóm không còn hành động bị bỏ; thứ tự nhóm và hành động giữ nguyên |
+| UI-29 | (v1.6.3) `ActionPickerUiState.systemQuery`, `setSystemQuery`; `needsDndAccess(action)` đúng cho RingerNormal/Vibrate/Silent/CycleRingerMode/ToggleDnd khi `Requirements.dndAccessGranted = false` |
 | UI-25 | `expanded` ban đầu rỗng; `toggleExpanded(pkg)` thêm/bớt pkg; `isExpanded(pkg)` = đang tìm kiếm (query không rỗng) hoặc pkg ∈ `expanded` |
 | UI-27 | (v1.5) Tab Activities dùng `groupActivities` (AC-1, AC-2), tải lần đầu mở tab (như UI-22); `toggleActivityApp(pkg)`/`isActivityAppExpanded(pkg)` như UI-25; chọn → `LaunchActivity(pkg, activity, label)` |
 | UI-28 | (v1.6) Tab Tiles dùng `filterTiles` (QT-1), tải lần đầu mở tab (như UI-22); chọn → `ClickTile(pkg, service, label)` |
@@ -227,11 +244,21 @@ Các section, theo thứ tự (v1.5):
 | LG-2 | Android 13+: áp dụng bằng `LocaleManager.setApplicationLocales` (có `locales_config.xml` → hiện trong cài đặt ngôn ngữ app của hệ thống); Android 12: bọc `Context` trong `attachBaseContext` của Activity/Application + `recreate()` |
 | LG-3 | Android 13+: nếu người dùng đổi ngôn ngữ app trong cài đặt hệ thống, lần mở app sau `language` trong Settings được đồng bộ theo hệ thống |
 
-### Icon (v1.6.2 — FR-U32, thay FR-U11)
-Adaptive icon **lỗ đen**: nền `#17153F` (không gian) với vài ngôi sao `#FFB54D`; foreground là chân trời sự kiện
-`#05040F` với vòng sáng thấu kính hấp dẫn và đĩa bồi tụ `#FFB54D` cắt ngang, nghiêng −10°, nằm trong vùng an toàn
-66 dp. Màu cố định (không còn Monet). Layer `monochrome` (vòng sáng + đĩa) cho themed icon Android 13+. Icon thông
-báo `ic_stat_totch` là cùng hình đơn sắc; `fastlane/.../images/icon.png` là bản 512×512. Nguồn SVG ở `scripts/icon/`.
+### Icon (v1.6.3 — FR-U33; v1.6.2 — FR-U32, thay FR-U11)
+Adaptive icon **lỗ đen**, nguồn duy nhất là `scripts/icon/gen.py` (sinh 3 drawable XML + SVG xem trước +
+`fastlane/.../images/icon.png` qua ImageMagick). Hình học (viewport 108):
+- Vòng sáng thấu kính hấp dẫn: vành khuyên tâm **(54, 54)**, bán kính ngoài 20.5, trong 14.5; chân trời sự kiện là
+  hình tròn tâm (54, 54) bán kính 14.5.
+- Đĩa bồi tụ: hình **con thoi** (lens) **nằm ngang**, đối xứng qua y = 54, từ x = 21.6 đến 86.4, dày 5.2 ở giữa (hai
+  cung bán kính lớn). Vòng sáng bị cắt quanh đĩa với khe 1.2 (cung đồng tâm với mép đĩa) nên đĩa tách rõ khỏi vòng.
+- Không xoay. Vài ngôi sao 4 cánh ở nền, nằm trong vùng an toàn 66 dp.
+
+| ID | Tiêu chí |
+|---|---|
+| IC-1 | Mọi vòng tròn tâm (54, 54); đĩa đối xứng qua y = 54 và x = 54; không có `rotation` trong drawable |
+| IC-2 | Màu Monet (Android 12+, minSdk 31): nền `@android:color/system_accent1_800`, sao `system_accent1_200`, vòng sáng `system_accent1_200`, đĩa `system_accent1_100`, chân trời `system_neutral1_1000` → đổi theo hình nền (launcher vẽ lại khi bảng màu đổi) |
+| IC-3 | Layer `monochrome` = vòng sáng + đĩa (cùng hình, alpha) cho themed icon Android 13+; `ic_stat_totch` cùng hình |
+| IC-4 | `icon.png` 512×512 cho F-Droid dùng bảng màu xem trước cố định (tím) |
 
 ### Splash screen (v1.6.1 — FR-U31)
 Splash mặc định của Android 12+ (launcher icon trên nền cửa sổ, không có icon động riêng). `MainActivity` giữ splash

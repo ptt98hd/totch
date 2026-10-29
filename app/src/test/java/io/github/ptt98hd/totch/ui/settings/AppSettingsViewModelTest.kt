@@ -1,5 +1,6 @@
 package io.github.ptt98hd.totch.ui.settings
 
+import io.github.ptt98hd.totch.InstallResult
 import io.github.ptt98hd.totch.core.settings.AppLanguage
 import io.github.ptt98hd.totch.core.settings.ThemeMode
 import io.github.ptt98hd.totch.core.settings.UpdateInterval
@@ -110,11 +111,11 @@ class AppSettingsViewModelTest {
         assertEquals(UpdateState.Downloading(0.5f), vm.state.value.update)
         vm.onUpdateRowClick() // ignored while downloading
         assertEquals(1, updater.checks)
-        updater.install.complete(true)
-        assertEquals(UpdateState.Installing, vm.state.value.update)
+        updater.install.complete(InstallResult.SYSTEM_INSTALLER)
+        assertEquals(UpdateState.Installing(viaShizuku = false), vm.state.value.update)
 
         updater.latest = CompletableDeferred(release)
-        updater.install = CompletableDeferred(false)
+        updater.install = CompletableDeferred(InstallResult.FAILED)
         vm.onUpdateRowClick()
         vm.startUpdate()
         assertEquals(UpdateState.Failed, vm.state.value.update)

@@ -13,14 +13,17 @@ import io.github.ptt98hd.totch.InstalledApps
 import io.github.ptt98hd.totch.SettingsRepository
 import io.github.ptt98hd.totch.ShortcutEntry
 import io.github.ptt98hd.totch.QuickSettingsTiles
+import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.TileEntry
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.settings.actionFor
 import io.github.ptt98hd.totch.core.settings.withBinding
+import io.github.ptt98hd.totch.ui.common.ActionCatalog
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -111,6 +114,9 @@ data class ActionPickerUiState(
     val gesture: Gesture,
     val current: Action = Action.None,
     val tab: PickerTab = PickerTab.SYSTEM,
+    /** Search of the System tab, applied with [filterCatalog] where the labels are known (UI-24, UI-29). */
+    val systemQuery: String = "",
+    val dndAccessGranted: Boolean = true,
     val appQuery: String = "",
     val apps: List<AppInfo> = emptyList(),
     val appsLoading: Boolean = true,
@@ -130,6 +136,9 @@ data class ActionPickerUiState(
     /** True once an action was chosen and saved; the screen should navigate back. */
     val finished: Boolean = false,
 ) {
+    /** UI-29: sound mode actions show a hint while Do Not Disturb access is missing. */
+    fun needsDndAccess(action: Action): Boolean = !dndAccessGranted && action in ActionCatalog.needsDndAccess
+
     /** UI-25: while searching, every matching app is shown expanded. */
     fun isExpanded(packageName: String): Boolean = shortcutQuery.isNotBlank() || packageName in expanded
 
@@ -139,6 +148,7 @@ data class ActionPickerUiState(
 
 private data class Local(
     val tab: PickerTab? = null,
+    val systemQuery: String = "",
     val appQuery: String = "",
     val apps: List<AppInfo>? = null,
     val shortcutQuery: String = "",
@@ -159,6 +169,7 @@ class ActionPickerViewModel(
     private val appShortcuts: AppShortcuts,
     private val appActivities: AppActivities,
     private val quickSettingsTiles: QuickSettingsTiles,
+    requirements: Flow<Requirements>,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val local = MutableStateFlow(Local())
@@ -168,12 +179,14 @@ class ActionPickerViewModel(
     private var tilesRequested = false
 
     val state: StateFlow<ActionPickerUiState> =
-        combine(settingsRepository.settings, local) { settings: Settings, l ->
+        combine(settingsRepository.settings, local, requirements) { settings: Settings, l, r ->
             val current = settings.actionFor(gesture)
             ActionPickerUiState(
                 gesture = gesture,
                 current = current,
                 tab = l.tab ?: initialTab(current),
+                systemQuery = l.systemQuery,
+                dndAccessGranted = r.dndAccessGranted,
                 appQuery = l.appQuery,
                 apps = l.apps?.filterApps(l.appQuery).orEmpty(),
                 appsLoading = l.apps == null,
@@ -235,6 +248,8 @@ class ActionPickerViewModel(
         }
     }
 
+    fun setSystemQuery(value: String) = local.update { it.copy(systemQuery = value) }
+
     fun setAppQuery(value: String) = local.update { it.copy(appQuery = value) }
 
     fun setShortcutQuery(value: String) = local.update { it.copy(shortcutQuery = value) }
@@ -282,6 +297,7 @@ class ActionPickerViewModel(
                     container.appShortcuts,
                     container.appActivities,
                     container.quickSettingsTiles,
+                    container.systemStatus.requirements,
                 )
             }
         }

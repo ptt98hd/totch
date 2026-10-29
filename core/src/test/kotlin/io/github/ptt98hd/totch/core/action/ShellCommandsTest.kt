@@ -4,6 +4,7 @@ import io.github.ptt98hd.totch.core.model.Action
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -117,5 +118,65 @@ class ShellCommandsTest {
 
     @Test fun `SC-9 one-handed mode has no plain shell command`() {
         assertNull(ShellCommands.of(Action.OneHandedMode))
+    }
+
+    @Test fun `SC-10 brightness keys`() {
+        assertEquals("input keyevent 221", ShellCommands.of(Action.BrightnessUp))
+        assertEquals("input keyevent 220", ShellCommands.of(Action.BrightnessDown))
+    }
+
+    /** Key read by each toggle, a value meaning "on", and the switch-on / switch-off calls (actions spec §13). */
+    private val toggles = listOf(
+        Toggle(Action.ToggleAutoBrightness, "screen_brightness_mode", "1", "settings put system screen_brightness_mode 1", "settings put system screen_brightness_mode 0"),
+        Toggle(Action.ToggleAutoRotate, "accelerometer_rotation", "1", "settings put system accelerometer_rotation 1", "settings put system accelerometer_rotation 0"),
+        Toggle(Action.ToggleWifi, "wifi_on", "1", "svc wifi enable", "svc wifi disable"),
+        Toggle(Action.ToggleBluetooth, "bluetooth_on", "1", "cmd bluetooth_manager enable", "cmd bluetooth_manager disable"),
+        Toggle(Action.ToggleMobileData, "mobile_data", "1", "svc data enable", "svc data disable"),
+        Toggle(Action.ToggleAirplaneMode, "airplane_mode_on", "1", "cmd connectivity airplane-mode enable", "cmd connectivity airplane-mode disable"),
+        Toggle(Action.ToggleLocation, "location_mode", "3", "cmd location set-location-enabled true", "cmd location set-location-enabled false"),
+    )
+
+    private data class Toggle(val action: Action, val key: String, val onValue: String, val enable: String, val disable: String)
+
+    /** Calls other than reading the state. */
+    private fun ShellSim.changes() = log.filterNot { it.startsWith("settings get ") }
+
+    @Test fun `SC-11 toggles switch off when on and on otherwise`() {
+        toggles.forEach { t ->
+            val script = assertNotNull(ShellCommands.of(t.action), "${t.action}")
+
+            val on = ShellSim().apply { secure[t.key] = t.onValue }
+            assertEquals(0, on.run(script), "${t.action}")
+            assertEquals(listOf(t.disable), on.changes(), "${t.action} on")
+
+            val off = ShellSim().apply { secure[t.key] = "0" }
+            assertEquals(0, off.run(script))
+            assertEquals(listOf(t.enable), off.changes(), "${t.action} off")
+
+            val unset = ShellSim()
+            assertEquals(0, unset.run(script))
+            assertEquals(listOf(t.enable), unset.changes(), "${t.action} null")
+        }
+        val failing = ShellSim().apply { failing += "svc data" }
+        assertEquals(1, failing.run(ShellCommands.of(Action.ToggleMobileData)!!))
+    }
+
+    @Test fun `SC-12 wifi airplane states and bluetooth fallback`() {
+        val wifi = ShellCommands.of(Action.ToggleWifi)!!
+        val airplaneOn = ShellSim().apply { secure["wifi_on"] = "2" }
+        airplaneOn.run(wifi)
+        assertEquals(listOf("svc wifi disable"), airplaneOn.changes())
+        val airplaneOff = ShellSim().apply { secure["wifi_on"] = "3" }
+        airplaneOff.run(wifi)
+        assertEquals(listOf("svc wifi enable"), airplaneOff.changes())
+
+        val android12 = ShellSim().apply { failing += "cmd bluetooth_manager" }
+        assertEquals(0, android12.run(ShellCommands.of(Action.ToggleBluetooth)!!))
+        assertEquals(listOf("cmd bluetooth_manager enable", "svc bluetooth enable"), android12.changes())
+    }
+
+    @Test fun `SM-3 sound modes are not shell actions`() {
+        listOf(Action.RingerNormal, Action.RingerVibrate, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd)
+            .forEach { assertNull(ShellCommands.of(it), "$it") }
     }
 }

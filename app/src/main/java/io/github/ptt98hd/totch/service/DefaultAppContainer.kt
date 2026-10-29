@@ -19,6 +19,7 @@ import io.github.ptt98hd.totch.action.PackageManagerAppShortcuts
 import io.github.ptt98hd.totch.action.PackageManagerInstalledApps
 import io.github.ptt98hd.totch.action.PackageManagerQuickSettingsTiles
 import io.github.ptt98hd.totch.update.GitHubAppUpdater
+import io.github.ptt98hd.totch.update.ShizukuInstaller
 import io.github.ptt98hd.totch.update.UpdateController
 import io.github.ptt98hd.totch.update.UpdateScheduler
 import io.github.ptt98hd.totch.BuildConfig
@@ -111,7 +112,8 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
         resolveEngineStatus(s, shizukuState, pipelineState, rotation, ::errorMessage)
     }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, EngineStatus.Disabled)
 
-    override val systemStatus: SystemStatus = AndroidSystemStatus(app, shizuku, ShizukuShell(app, shizuku), accessibility, scope)
+    private val shell = ShizukuShell(app, shizuku)
+    override val systemStatus: SystemStatus = AndroidSystemStatus(app, shizuku, shell, accessibility, scope)
     override val touchArea: TouchArea = object : TouchArea {
         override val area: StateFlow<HighlightArea?> = combine(settings, display.state, ::highlightArea)
             .stateIn(scope, SharingStarted.Eagerly, null)
@@ -123,7 +125,7 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     override val appShortcuts: AppShortcuts = PackageManagerAppShortcuts(app.packageManager)
     override val appActivities: AppActivities = PackageManagerAppActivities(app.packageManager)
     override val quickSettingsTiles: QuickSettingsTiles = PackageManagerQuickSettingsTiles(app.packageManager, app.packageName)
-    override val appUpdater: AppUpdater = GitHubAppUpdater(app)
+    override val appUpdater: AppUpdater = GitHubAppUpdater(app, ShizukuInstaller(app, shell)::install)
     override val updates = UpdateController(appUpdater, BuildConfig.VERSION_NAME, scope)
 
     init {

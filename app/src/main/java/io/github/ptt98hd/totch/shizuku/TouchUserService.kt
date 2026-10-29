@@ -1,6 +1,8 @@
 package io.github.ptt98hd.totch.shizuku
 
+import android.os.ParcelFileDescriptor
 import io.github.ptt98hd.totch.core.input.GeteventDeviceParser
+import io.github.ptt98hd.totch.core.update.UpdateCommands
 import io.github.ptt98hd.totch.engine.PipelineError
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -37,6 +39,18 @@ class TouchUserService : ITouchService.Stub() {
             .redirectOutput(DEV_NULL)
             .start()
         if (process.waitFor(EXEC_TIMEOUT_S, TimeUnit.SECONDS)) process.exitValue() else -1.also { process.destroy() }
+    } catch (_: Exception) {
+        -1
+    }
+
+    override fun writeFile(source: ParcelFileDescriptor, path: String): Int = try {
+        if (!UpdateCommands.isSafeApkPath(path)) {
+            -1
+        } else {
+            // Owned by shell like the `pm` that reads it, so no wider permissions are needed.
+            ParcelFileDescriptor.AutoCloseInputStream(source).use { input -> File(path).outputStream().use(input::copyTo) }
+            0
+        }
     } catch (_: Exception) {
         -1
     }

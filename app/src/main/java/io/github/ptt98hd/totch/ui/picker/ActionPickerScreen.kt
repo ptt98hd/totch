@@ -57,6 +57,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.stateDescription
@@ -77,6 +78,8 @@ import io.github.ptt98hd.totch.TileEntry
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.ui.common.ActionCatalog
+import io.github.ptt98hd.totch.ui.common.ActionGroup
+import io.github.ptt98hd.totch.ui.common.filterCatalog
 import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.SectionHeader
 import io.github.ptt98hd.totch.ui.common.TonalIcon
@@ -112,6 +115,7 @@ fun ActionPickerSheet(container: AppContainer, gesture: Gesture, onDismiss: () -
             onClose = onDismiss,
             onTab = vm::selectTab,
             onSelect = vm::select,
+            onSystemQuery = vm::setSystemQuery,
             onSelectApp = vm::selectApp,
             onSelectShortcut = vm::selectShortcut,
             onAppQuery = vm::setAppQuery,
@@ -130,6 +134,7 @@ data class PickerCallbacks(
     val onClose: () -> Unit = {},
     val onTab: (PickerTab) -> Unit = {},
     val onSelect: (Action) -> Unit = {},
+    val onSystemQuery: (String) -> Unit = {},
     val onSelectApp: (AppInfo) -> Unit = {},
     val onSelectShortcut: (ShortcutEntry) -> Unit = {},
     val onAppQuery: (String) -> Unit = {},
@@ -232,7 +237,25 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
         ) { tab ->
             Column(Modifier.fillMaxSize()) {
                 when (tab) {
-                    PickerTab.SYSTEM -> LazyColumn(contentPadding = listPadding) { systemTab(state, callbacks.onSelect) }
+                    PickerTab.SYSTEM -> {
+                        val resources = LocalResources.current
+                        val groups = remember(state.systemQuery, resources) {
+                            filterCatalog(
+                                ActionCatalog.groups,
+                                state.systemQuery,
+                                actionLabel = { resources.getString(it.labelRes) },
+                                groupLabel = { resources.getString(it.labelRes()) },
+                            )
+                        }
+                        SearchableList(
+                            query = state.systemQuery,
+                            onQuery = callbacks.onSystemQuery,
+                            placeholder = stringResource(R.string.action_search),
+                            loading = false,
+                            empty = groups.isEmpty(),
+                            emptyText = stringResource(R.string.action_search_empty, state.systemQuery.trim()),
+                        ) { systemTab(groups, state, callbacks.onSelect) }
+                    }
                     PickerTab.APPS -> SearchableList(
                         query = state.appQuery,
                         onQuery = callbacks.onAppQuery,
@@ -289,9 +312,9 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
 
 private val listPadding = PaddingValues(start = Gutter, end = Gutter, bottom = 24.dp)
 
-/** UI-26: each group is one rounded card of rows (icon, name, radio) separated by dividers. */
-private fun LazyListScope.systemTab(state: ActionPickerUiState, onSelect: (Action) -> Unit) {
-    ActionCatalog.groups.forEach { group ->
+/** UI-26: each group is one rounded card of rows (icon, name, radio) separated by dividers; FR-U35 groups. */
+private fun LazyListScope.systemTab(groups: List<ActionGroup>, state: ActionPickerUiState, onSelect: (Action) -> Unit) {
+    groups.forEach { group ->
         item(key = "header-${group.id}") {
             SectionHeader(stringResource(group.id.labelRes()), Modifier.padding(top = 8.dp, bottom = 8.dp))
         }
@@ -301,6 +324,7 @@ private fun LazyListScope.systemTab(state: ActionPickerUiState, onSelect: (Actio
                 onClick = { onSelect(action) },
                 leading = { TonalIcon(action.icon) },
                 title = stringResource(action.labelRes),
+                supporting = if (state.needsDndAccess(action)) stringResource(R.string.action_needs_dnd) else null,
                 modifier = Modifier.groupItem(index, group.actions.size),
             )
         }

@@ -8,8 +8,8 @@ object ShellCommands {
     private val activityName = Regex("""[A-Za-z0-9_.$]+""")
 
     /**
-     * Command for [action], or `null` if it is not a plain shell action (LOCAL actions, None, LaunchApp, LaunchShortcut,
-     * LaunchActivity, ClickTile, OneHandedMode — see [OneHandedCommands]).
+     * Command or script for [action], or `null` if it is not a plain shell action (LOCAL actions, None, LaunchApp,
+     * LaunchShortcut, LaunchActivity, ClickTile, OneHandedMode — see [OneHandedCommands]).
      */
     fun of(action: Action): String? = when (action) {
         Action.Back -> "input keyevent 4"
@@ -20,8 +20,40 @@ object ShellCommands {
         Action.Notifications -> "cmd statusbar expand-notifications"
         Action.QuickSettings -> "cmd statusbar expand-settings"
         Action.Assistant -> "input keyevent 219" // KEYCODE_ASSIST: the system's default assistant
+        Action.BrightnessUp -> "input keyevent 221" // stepped and shown by the system, like the hardware keys
+        Action.BrightnessDown -> "input keyevent 220"
+        Action.ToggleAutoBrightness -> settingToggle("screen_brightness_mode")
+        Action.ToggleAutoRotate -> settingToggle("accelerometer_rotation")
+        Action.ToggleWifi -> toggle("global wifi_on", listOf("1", "2"), "svc wifi enable", "svc wifi disable")
+        Action.ToggleBluetooth -> toggle(
+            "global bluetooth_on",
+            listOf("1", "2"),
+            "cmd bluetooth_manager enable || svc bluetooth enable", // bluetooth_manager has no shell command before Android 13
+            "cmd bluetooth_manager disable || svc bluetooth disable",
+        )
+        Action.ToggleMobileData -> toggle("global mobile_data", listOf("1"), "svc data enable", "svc data disable")
+        Action.ToggleAirplaneMode -> toggle(
+            "global airplane_mode_on",
+            listOf("1"),
+            "cmd connectivity airplane-mode enable",
+            "cmd connectivity airplane-mode disable",
+        )
+        Action.ToggleLocation -> toggle(
+            "secure location_mode",
+            listOf("1", "2", "3"),
+            "cmd location set-location-enabled true",
+            "cmd location set-location-enabled false",
+        )
         else -> null
     }
+
+    /** Actions spec §13: switches off when the setting holds one of [onValues], on otherwise (also when unset). */
+    private fun toggle(setting: String, onValues: List<String>, enable: String, disable: String): String =
+        "case \"$(settings get $setting)\" in ${onValues.joinToString("|")}) $disable ;; *) $enable ;; esac"
+
+    /** A 0/1 switch in `Settings.System`. */
+    private fun settingToggle(key: String): String =
+        toggle("system $key", listOf("1"), "settings put system $key 1", "settings put system $key 0")
 
     /** `am start` command for an explicit launcher activity; `null` if either name is unsafe (SC-2). */
     fun launch(packageName: String, activityName: String): String? {

@@ -108,4 +108,14 @@ class ActionDispatcherTest {
         assertEquals(DispatchResult.Failed("unavailable"), ActionDispatcher(listOf(a11y)).dispatch(tile))
         assertTrue(a11y.executed.isEmpty())
     }
+
+    @Test fun `AD-12 display and connection actions need Shizuku, sound modes run locally`() {
+        listOf(
+            Action.BrightnessUp, Action.BrightnessDown, Action.ToggleAutoBrightness, Action.ToggleAutoRotate,
+            Action.ToggleWifi, Action.ToggleBluetooth, Action.ToggleMobileData, Action.ToggleAirplaneMode,
+            Action.ToggleLocation,
+        ).forEach { assertEquals(setOf(Capability.SHIZUKU), ActionRequirements.of(it), "$it") }
+        listOf(Action.RingerNormal, Action.RingerVibrate, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd)
+            .forEach { assertEquals(setOf(Capability.LOCAL), ActionRequirements.of(it), "$it") }
+    }
 }

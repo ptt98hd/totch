@@ -8,6 +8,9 @@
 <li>Mở thanh thông báo hoặc Quick Settings</li>
 <li>Bật/tắt đèn pin</li>
 <li>Phát/Tạm dừng, Bài tiếp, Bài trước; Tăng/Giảm âm lượng; bảng âm lượng</li>
+<li>Chế độ âm thanh (đổ chuông, rung, im lặng) và Không làm phiền</li>
+<li>Tăng/giảm độ sáng, độ sáng tự động, tự động xoay</li>
+<li>Bật/tắt Wi-Fi, Bluetooth, dữ liệu di động, chế độ máy bay, vị trí</li>
 <li>Mở một ứng dụng bất kỳ đã cài</li>
 <li>Bấm ô Cài đặt nhanh của ứng dụng</li>
 <li>Chế độ một tay</li>

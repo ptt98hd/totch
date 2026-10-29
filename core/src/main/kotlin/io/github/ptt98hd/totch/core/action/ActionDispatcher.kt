@@ -24,8 +24,12 @@ object ActionRequirements {
         Action.Notifications, Action.QuickSettings, is Action.LaunchApp, Action.Assistant,
         is Action.LaunchShortcut, is Action.LaunchActivity -> system
         Action.ToggleTorch, Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious,
-        Action.VolumeUp, Action.VolumeDown, Action.VolumePanel -> local
-        is Action.ClickTile, Action.OneHandedMode -> shizuku
+        Action.VolumeUp, Action.VolumeDown, Action.VolumePanel,
+        Action.RingerNormal, Action.RingerVibrate, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd -> local
+        is Action.ClickTile, Action.OneHandedMode,
+        Action.BrightnessUp, Action.BrightnessDown, Action.ToggleAutoBrightness, Action.ToggleAutoRotate,
+        Action.ToggleWifi, Action.ToggleBluetooth, Action.ToggleMobileData, Action.ToggleAirplaneMode,
+        Action.ToggleLocation -> shizuku
     }
 }
 

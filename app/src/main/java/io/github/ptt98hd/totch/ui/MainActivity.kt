@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.TotchApp
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.locale.AppLocales
@@ -52,6 +54,7 @@ class MainActivity : ComponentActivity() {
         val container = (application as TotchApp).container
         keepSplashUntilReady()
         if (savedInstanceState == null) {
+            if (intent?.action == updateFailedAction) onUpdateFailed() // UP-17
             lifecycleScope.launch {
                 // FR-U29, UP-9: silent check when the app opens, or from the update notification.
                 if (intent?.action == ACTION_SHOW_UPDATE || container.settingsRepository.settings.first().updateOnLaunch) {
@@ -94,9 +97,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Sent by the detached `pm install` when it fails (update spec §7); built from the package like the script. */
+    private val updateFailedAction get() = "$packageName.action.UPDATE_FAILED"
+
+    private fun onUpdateFailed() {
+        (application as TotchApp).container.updates.installFailed()
+        Toast.makeText(this, R.string.update_install_failed, Toast.LENGTH_SHORT).show()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.action == ACTION_SHOW_UPDATE) (application as TotchApp).container.updates.check(silent = true)
+        val updates = (application as TotchApp).container.updates
+        if (intent.action == ACTION_SHOW_UPDATE) updates.check(silent = true)
+        if (intent.action == updateFailedAction) onUpdateFailed()
     }
 
     private fun keepSplashUntilReady() {

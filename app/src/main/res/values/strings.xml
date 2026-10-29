@@ -31,6 +31,7 @@
     <string name="permission_accessibility">Accessibility</string>
     <string name="permission_notifications">Notifications</string>
     <string name="permission_media">Media control</string>
+    <string name="permission_dnd">Do Not Disturb access</string>
     <string name="permission_battery">Unrestricted battery</string>
     <string name="permission_install_updates">Install updates</string>
     <string name="permission_granted">Granted</string>
@@ -79,9 +80,28 @@
     <string name="action_launch_shortcut">%1$s: %2$s</string>
     <string name="action_open_activity">Open activity…</string>
     <string name="action_click_tile">Tap Quick Settings tile…</string>
+    <string name="action_brightness_up">Brightness up</string>
+    <string name="action_brightness_down">Brightness down</string>
+    <string name="action_auto_brightness">Toggle auto brightness</string>
+    <string name="action_auto_rotate">Toggle auto-rotate</string>
+    <string name="action_ringer_normal">Sound mode: ring</string>
+    <string name="action_ringer_vibrate">Sound mode: vibrate</string>
+    <string name="action_ringer_silent">Sound mode: silent</string>
+    <string name="action_ringer_cycle">Cycle sound mode</string>
+    <string name="action_dnd">Toggle Do Not Disturb</string>
+    <string name="action_wifi">Toggle Wi-Fi</string>
+    <string name="action_bluetooth">Toggle Bluetooth</string>
+    <string name="action_mobile_data">Toggle mobile data</string>
+    <string name="action_airplane">Toggle airplane mode</string>
+    <string name="action_location">Toggle location</string>
+    <string name="action_needs_dnd">Requires Do Not Disturb access</string>
     <string name="app_not_installed">Not installed</string>
     <string name="group_system">System</string>
     <string name="group_media">Media</string>
+    <string name="group_navigation">Navigation</string>
+    <string name="group_sound">Sound</string>
+    <string name="group_display">Display</string>
+    <string name="group_connections">Connections</string>
 
     <!-- Action picker -->
     <string name="app_picker_search">Search apps</string>
@@ -89,6 +109,8 @@
     <string name="app_picker_empty">No apps match “%1$s”</string>
     <string name="app_picker_none">No apps found</string>
     <string name="tab_system">System</string>
+    <string name="action_search">Search actions</string>
+    <string name="action_search_empty">No actions match “%1$s”</string>
     <string name="tab_apps">Apps</string>
     <string name="tab_shortcuts">Shortcuts</string>
     <string name="tab_activities">Activities</string>
@@ -154,6 +176,7 @@
     <string name="update_available">Version %1$s is available</string>
     <string name="update_downloading">Downloading… %1$d%%</string>
     <string name="update_installing">Confirm to install</string>
+    <string name="update_installing_shizuku">Installing…</string>
     <string name="update_failed">Couldn’t update, tap to retry</string>
     <string name="update_dialog_title">Totch %1$s</string>
     <string name="update_action">Update</string>

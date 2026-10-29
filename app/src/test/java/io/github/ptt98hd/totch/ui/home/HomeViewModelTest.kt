@@ -95,7 +95,7 @@ class HomeViewModelTest {
         val sys = FakeSystemStatus(
             Requirements(
                 accessibilityEnabled = true, notificationsGranted = false, mediaAccessGranted = true,
-                batteryUnrestricted = false, installUpdatesAllowed = true,
+                batteryUnrestricted = false, installUpdatesAllowed = true, dndAccessGranted = true,
             ),
         )
         vm(sys = sys).state.test {
@@ -104,6 +104,7 @@ class HomeViewModelTest {
                     PermissionItem(Permission.ACCESSIBILITY, granted = true),
                     PermissionItem(Permission.NOTIFICATIONS, granted = false),
                     PermissionItem(Permission.MEDIA_ACCESS, granted = true),
+                    PermissionItem(Permission.DND_ACCESS, granted = true),
                     PermissionItem(Permission.BATTERY, granted = false),
                     PermissionItem(Permission.INSTALL_UPDATES, granted = true),
                 ),

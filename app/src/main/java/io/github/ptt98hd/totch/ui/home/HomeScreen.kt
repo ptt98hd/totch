@@ -29,6 +29,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessibilityNew
 import androidx.compose.material.icons.outlined.BatteryFull
+import androidx.compose.material.icons.outlined.DoNotDisturbOn
 import androidx.compose.material.icons.outlined.InstallMobile
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
@@ -80,6 +81,7 @@ import io.github.ptt98hd.totch.ui.common.openAppNotificationSettings
 import io.github.ptt98hd.totch.ui.common.openBatteryOptimizationSettings
 import io.github.ptt98hd.totch.ui.common.openInstallUnknownAppsSettings
 import io.github.ptt98hd.totch.ui.common.requestUnrestrictedBattery
+import io.github.ptt98hd.totch.ui.common.openDndAccessSettings
 import io.github.ptt98hd.totch.ui.common.openMediaAccessSettings
 import io.github.ptt98hd.totch.ui.common.openShizuku
 import io.github.ptt98hd.totch.ui.common.withGutters
@@ -110,6 +112,7 @@ fun HomeRoute(container: AppContainer) {
         when (permission) {
             Permission.ACCESSIBILITY -> context.openAccessibilitySettings()
             Permission.MEDIA_ACCESS -> context.openMediaAccessSettings()
+            Permission.DND_ACCESS -> context.openDndAccessSettings()
             Permission.INSTALL_UPDATES -> context.openInstallUnknownAppsSettings()
             Permission.BATTERY ->
                 if (state.permissions.any { it.permission == Permission.BATTERY && it.granted }) {
@@ -316,6 +319,7 @@ private val Permission.icon: ImageVector
         Permission.ACCESSIBILITY -> Icons.Outlined.AccessibilityNew
         Permission.NOTIFICATIONS -> Icons.Outlined.Notifications
         Permission.MEDIA_ACCESS -> Icons.Outlined.MusicNote
+        Permission.DND_ACCESS -> Icons.Outlined.DoNotDisturbOn
         Permission.BATTERY -> Icons.Outlined.BatteryFull
         Permission.INSTALL_UPDATES -> Icons.Outlined.InstallMobile
     }
@@ -325,6 +329,7 @@ private val Permission.titleRes: Int
         Permission.ACCESSIBILITY -> R.string.permission_accessibility
         Permission.NOTIFICATIONS -> R.string.permission_notifications
         Permission.MEDIA_ACCESS -> R.string.permission_media
+        Permission.DND_ACCESS -> R.string.permission_dnd
         Permission.BATTERY -> R.string.permission_battery
         Permission.INSTALL_UPDATES -> R.string.permission_install_updates
     }
@@ -355,6 +360,7 @@ private fun HomeScreenPreview() {
                     PermissionItem(Permission.ACCESSIBILITY, true),
                     PermissionItem(Permission.NOTIFICATIONS, false),
                     PermissionItem(Permission.MEDIA_ACCESS, false),
+                    PermissionItem(Permission.DND_ACCESS, false),
                     PermissionItem(Permission.BATTERY, true),
                     PermissionItem(Permission.INSTALL_UPDATES, false),
                 ),
