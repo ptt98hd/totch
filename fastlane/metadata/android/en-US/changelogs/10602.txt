@@ -1,0 +1,2 @@
+* Haptic feedback fires as soon as a gesture is recognized, without waiting for slow actions to finish.
+* New black hole app icon (launcher, themed icon, notifications).

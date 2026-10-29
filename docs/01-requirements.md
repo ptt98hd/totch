@@ -154,7 +154,7 @@ tham chiếu ID tương ứng.
 | FR-U8 | Highlight vùng notch trực tiếp trên màn hình khi mở app; chỉnh vùng chạm thấy thay đổi ngay (bỏ dialog preview) | [ui §2](specs/ui.md) |
 | FR-U9 | Màn chọn hành động dạng tab: Hệ thống & media / Ứng dụng / Shortcut | [ui §3](specs/ui.md) |
 | FR-U10 | Giao diện gọn: bỏ các đoạn mô tả không cần thiết; About thành section cuối của Settings | [ui](specs/ui.md) |
-| FR-U11 | Icon mới theo ảnh tham khảo, vẫn là dynamic (Monet + themed icon) | [ui](specs/ui.md) |
+| FR-U11 | Icon mới theo ảnh tham khảo, vẫn là dynamic (Monet + themed icon) (v1.6.2: thay bằng FR-U32) | [ui](specs/ui.md) |
 
 ## 9. Phiên bản 1.2 — sắp xếp lại giao diện
 
@@ -224,3 +224,10 @@ tham chiếu ID tương ứng.
 | FR-U29 | Settings có section **Update**: switch *Kiểm tra khi mở app*, chọn *Kiểm tra định kỳ* (Tắt / Hằng ngày / Hằng tuần / Hằng tháng — chạy nền bằng JobScheduler, có bản mới thì gửi thông báo, mỗi bản một lần), dòng *Kiểm tra cập nhật* thủ công (chuyển từ About). Có bản mới khi mở app → hộp thoại cập nhật ở bất kỳ màn hình nào | [update §5–6](specs/update.md), [ui §3](specs/ui.md) |
 | FR-U31 | Splash screen: giữ splash của hệ thống (icon app) đến khi đọc xong cài đặt rồi mờ dần, không còn khung trống | [ui — Splash](specs/ui.md) |
 | FR-D11 | Home › Permissions thêm **Install updates** (quyền "Cài ứng dụng không rõ nguồn gốc"): bật/tắt qua Shizuku (`appops`), tắt thì hỏi xác nhận vì Android khởi động lại app; không có Shizuku → mở trang cài đặt của hệ thống | [detection-modes §6](specs/detection-modes.md), [ui §3](specs/ui.md) |
+
+## 15. Phiên bản 1.6.2
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-A10 (sửa) | Rung phản hồi ngay khi **nhận diện** cử chỉ có gán hành động, không chờ hành động chạy xong (hành động qua Shizuku có thể mất vài trăm ms). Hành động lỗi vẫn báo toast | [actions §6](specs/actions.md), [detection-modes §5](specs/detection-modes.md) |
+| FR-U32 | Icon mới: **lỗ đen** (đĩa bồi tụ vàng cam trên nền không gian tím than, màu cố định — thay icon Monet FR-U11); có layer `monochrome` cho themed icon; icon thông báo và icon F-Droid dùng cùng hình | [ui — Icon](specs/ui.md) |

@@ -1,0 +1,2 @@
+* Rung phản hồi ngay khi nhận diện cử chỉ, không chờ các hành động chậm chạy xong.
+* Icon ứng dụng mới hình lỗ đen (launcher, themed icon, thông báo).

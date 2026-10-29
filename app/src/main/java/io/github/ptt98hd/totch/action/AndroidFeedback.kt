@@ -17,7 +17,7 @@ import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.engine.EngineFeedback
 
-/** Haptic click on success (FR-A10, actions spec §6), short toast on failure (FR-A9). */
+/** Haptic click when a gesture is recognized (FR-A10, actions spec §6), short toast on failure (FR-A9). */
 class AndroidFeedback(private val context: Context, private val apps: InstalledApps) : EngineFeedback {
     private val vibrator = context.getSystemService(VibratorManager::class.java)?.defaultVibrator
         ?.takeIf { it.hasVibrator() }
@@ -37,7 +37,7 @@ class AndroidFeedback(private val context: Context, private val apps: InstalledA
      * HF-2: hardware-feedback usage is allowed from the background and does not depend on the
      * system "touch feedback" switch (an attribute-less vibration is classified as touch feedback).
      */
-    override fun onPerformed() {
+    override fun onRecognized() {
         val v = vibrator ?: return
         val e = effect ?: return
         runCatching {

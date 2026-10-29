@@ -68,7 +68,8 @@ Trạng thái được expose qua `StateFlow<EngineStatus>` (singleton `GestureE
 | EN-3 | Settings đổi → `recognizer.config` cập nhật ngay (FR-S3) |
 | EN-4 | DOWN rồi chờ (virtual time) 500 ms → LONG_PRESS được dispatch không cần sự kiện mới |
 | EN-5 | Timestamp sự kiện lệch đồng hồ của engine > 10 s (nguồn dùng clock khác) → tự quy đổi theo độ lệch, timeout vẫn đúng |
-| EN-6 | Dispatch `Ok` + `haptics` bật → rung; `Failed` → báo lỗi (toast), không rung |
+| EN-6 | `haptics` bật → rung khi cử chỉ có hành động được nhận diện (v1.6.2: không chờ dispatch, kể cả khi `Failed`); `Failed` → báo lỗi (toast); `haptics` tắt → không rung |
+| EN-13 | (v1.6.2, HF-4) Dispatch còn đang chạy (treo) → cử chỉ đã rung; cử chỉ thứ hai trong lúc đó cũng rung ngay dù hành động còn trong hàng đợi |
 | EN-7 | Chạm ngoài vùng hoặc `region == null` → không dispatch |
 | EN-8 | Nhiều gesture liên tiếp được dispatch tuần tự, đúng thứ tự |
 | EN-9 | `SWIPE_DOWN` gán `Notifications` → vuốt xuống không dispatch gì (FR-G10, dùng `effectiveAction`) |

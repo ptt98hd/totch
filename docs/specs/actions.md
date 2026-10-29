@@ -90,7 +90,8 @@ lúc chọn để hiển thị mà không cần đọc lại manifest.
 | `AccessibilityExecutor` | LaunchActivity (v1.5): `startActivity(Intent().setClassName(pkg, activity) + NEW_TASK)`. `performGlobalAction(GLOBAL_ACTION_BACK/HOME/RECENTS/LOCK_SCREEN/TAKE_SCREENSHOT/NOTIFICATIONS/QUICK_SETTINGS)`; LaunchApp: `startActivity(launchIntent)` từ service; Assistant: `startActivity(ACTION_ASSIST)`, không có thì `ACTION_VOICE_COMMAND`; LaunchShortcut: `Intent.parseUri(intentUri)` (bỏ selector và cờ grant URI) + `FLAG_ACTIVITY_NEW_TASK`. `isAvailable()` = service đang chạy |
 | `ShizukuExecutor` | `ITouchService.exec(ShellCommands…)` (kể cả `ClickTile`, v1.6). `isAvailable()` = Shizuku binder sống + đã cấp quyền + UserService đã bind |
 
-Phản hồi: nếu `Ok` và `haptics` bật → rung (FR-A10, §6). Nếu `Failed` → Toast ngắn
+Phản hồi: `haptics` bật → rung ngay khi engine nhận diện cử chỉ có hành động, trước khi dispatch (v1.6.2, FR-A10, §6).
+Nếu `Failed` → Toast ngắn
 "Không thể thực hiện: <tên hành động>" (FR-A9).
 
 ## 5. Điều khiển media (FR-A6, R5)
@@ -124,7 +125,8 @@ hoặc không được hỗ trợ trên nhiều máy.
 |---|---|
 | HF-1 | Hiệu ứng: `EFFECT_CLICK` nếu `areAllEffectsSupported` = YES, ngược lại one-shot 30 ms biên độ mặc định |
 | HF-2 | Android 13+: `vibrate(effect, VibrationAttributes.createForUsage(USAGE_HARDWARE_FEEDBACK))` (được phép khi app ở nền, không phụ thuộc công tắc phản hồi chạm); Android 12: `AudioAttributes` `USAGE_ASSISTANCE_SONIFICATION` |
-| HF-3 | Mỗi lần dispatch `Ok` rung một lần; không có vibrator → bỏ qua, không crash |
+| HF-3 | Mỗi cử chỉ có hành động rung một lần; không có vibrator → bỏ qua, không crash |
+| HF-4 | (v1.6.2) Rung ngay khi nhận diện, **không chờ** dispatch xong (đang chạy, chờ trong hàng đợi, hay lỗi đều đã rung) — hành động qua Shizuku có thể chậm, rung sau khi xong cảm giác trễ |
 
 ## 7. Shortcut tĩnh của ứng dụng (FR-A12)
 
