@@ -110,7 +110,7 @@
     <string name="app_picker_clear">Clear search</string>
     <string name="app_picker_empty">No apps match “%1$s”</string>
     <string name="app_picker_none">No apps found</string>
-    <string name="tab_system">System</string>
+    <string name="tab_basic">Basic</string>
     <string name="action_search">Search actions</string>
     <string name="action_search_empty">No actions match “%1$s”</string>
     <string name="tab_apps">Apps</string>
@@ -185,8 +185,8 @@
     <string name="update_later">Later</string>
     <string name="update_install_failed">Update failed</string>
     <string name="section_update">Update</string>
-    <string name="setting_update_on_launch">Check on app launch</string>
-    <string name="setting_update_on_launch_summary">Look for a new version when Totch opens</string>
+    <string name="setting_update_on_launch">Check on launch</string>
+    <string name="setting_update_on_launch_summary">When Totch opens</string>
     <string name="setting_update_interval">Automatic checks</string>
     <string name="update_interval_never">Off</string>
     <string name="update_interval_daily">Daily</string>
@@ -206,7 +206,6 @@
 
     <!-- v1.7: update dialog from the top bar (update spec §8) -->
     <string name="update_dialog_checking">Checking for updates…</string>
-    <string name="update_dialog_up_to_date">You have the latest version (%1$s)</string>
     <string name="update_dialog_failed">Couldn’t update. Check your connection and try again.</string>
     <string name="update_via_shizuku">Installs through Shizuku, no confirmation needed</string>
     <string name="update_via_system">Android will ask you to confirm the install</string>
@@ -224,4 +223,10 @@
     <string name="donate_action">Buy me a coffee</string>
     <string name="donate_later">Maybe later</string>
     <string name="donate_url" translatable="false">https://buymeacoffee.com/ptt98hd</string>
+    <!-- v1.8.1 -->
+    <string name="picker_tab_label">Actions</string>
+    <string name="setting_nav_labels">Show navigation labels</string>
+    <string name="setting_nav_labels_summary">Text under the bottom bar icons</string>
+    <string name="update_version_change" translatable="false">%1$s → %2$s</string>
+    <string name="update_whats_new">What’s new</string>
 </resources>

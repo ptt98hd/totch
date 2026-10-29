@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), **v1.7** (§17) · Cập nhật: 2026-10-30
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), **v1.8.1** (§19) · Cập nhật: 2026-10-30
 
 ## 1. Tầm nhìn
 
@@ -267,3 +267,19 @@ tham chiếu ID tương ứng.
 | FR-U43 | Picker: tab **System** có lựa chọn **Not set** / **Chưa đặt** ở đầu danh sách (trên các nhóm); chọn → binding `None`, cử chỉ tắt. Dòng cử chỉ chưa gán hiển thị "Not set" / "Chưa đặt" | [ui §3](specs/ui.md) |
 | FR-U44 | Hành động và cử chỉ **không khả dụng thì bị vô hiệu** (mờ, không chọn / bật được), kèm lý do một dòng: hành động hệ thống / mở app, shortcut, activity cần Trợ năng hoặc Shizuku; hành động chỉ chạy qua Shizuku cần Shizuku; chế độ âm thanh cần quyền Không làm phiền. Cử chỉ: không có Trợ năng lẫn Shizuku → mọi cử chỉ bị vô hiệu; vuốt xuống thiếu Trợ năng như FR-G14; cử chỉ có hành động đã gán không khả dụng → switch tắt + vô hiệu, mô tả "<hành động> · <lý do>" màu lỗi, vẫn chạm được để đổi hành động. Thay FR-A20 (gợi ý "Cần Shizuku" nay đi kèm vô hiệu) | [ui §3](specs/ui.md) |
 | FR-U45 | Home: mô tả trạng thái ở thẻ Totch ngắn gọn, luôn **một dòng** (cắt bằng "…") | [ui §3](specs/ui.md) |
+
+## 19. Phiên bản 1.8.1
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-G15 | **Switch** và **Not set** tách bạch: switch quyết định cử chỉ có **nhận sự kiện** hay không (bật → engine nhận diện cử chỉ: chờ chạm đúp, giữ khi vuốt-giữ, overlay chặn vuốt xuống); **Not set** là cử chỉ đang bật, nhận sự kiện nhưng **không làm gì** (không rung). Bật switch của cử chỉ chưa đặt chỉ bật nó (không mở picker); chọn "Not set" trong picker giữ cử chỉ bật. Mặc định: mọi cử chỉ tắt và chưa đặt. Cấu hình đã lưu (≤ 1.8.0) giữ nguyên hành vi: cử chỉ bật ⇔ không bị tắt và đã gán hành động. Thay FR-G12 phần "chỉ bật khi có hành động" và FR-U43 phần "cử chỉ tắt" | [settings](specs/settings.md), [ui §3](specs/ui.md) |
+| FR-U46 | Picker: tab **System** đổi tên thành **Basic** / **Cơ bản**, icon `Category` | [ui §3](specs/ui.md) |
+| FR-U47 | Picker: chọn tab bằng **ô chọn** (`ExposedDropdownMenuBox`, icon + tên tab đang chọn, menu thả xuống liệt kê các tab có icon) thay hàng chip. Thay phần chip của FR-U25 | [ui §3](specs/ui.md) |
+| FR-U48 | Hộp thoại **Buy me a coffee** và **cập nhật** đẹp hơn: dùng chung khung `TotchDialog` (icon lớn trong vòng tròn tonal, tiêu đề giữa, nút chính dạng nút đầy đủ chiều rộng); hộp thoại cập nhật có chip phiên bản "hiện tại → mới", ghi chú phát hành trong khối nền riêng cuộn được, tiến độ tải có phần trăm | [ui §1](specs/ui.md), [update §8](specs/update.md) |
+| FR-U49 | Settings › Giao diện: switch **Show navigation labels** / **Hiện nhãn thanh điều hướng** (mặc định bật); tắt → bottom bar chỉ còn icon | [settings](specs/settings.md), [ui §1, §3](specs/ui.md) |
+| FR-U50 | Dòng **Check for updates** ở Settings mở **cùng hộp thoại cập nhật** với nút ở top bar (đang kiểm tra → kết quả). Thay UP-6 phần "chỉ mở dialog khi có bản mới" | [update §8](specs/update.md) |
+| FR-U51 | Settings: "Check on app launch" đổi thành **Check on launch** / **Kiểm tra khi mở**, mô tả ngắn hơn | [ui §3](specs/ui.md) |
+| FR-U52 | Mọi liên kết (mã nguồn, Shizuku, trang ủng hộ) mở **trong app** bằng Custom Tabs (`androidx.browser`, mã nguồn mở) thay vì chuyển sang trình duyệt ngoài; máy không có trình duyệt hỗ trợ → mở như cũ | [ui §1](specs/ui.md) |
+| FR-U53 | Mọi thanh trượt trong app dùng **nút kéo hình tròn** (thay thanh dọc của Material 3 Expressive), cùng một component | [ui §3](specs/ui.md) |
+| FR-U55 | Icon: các ngôi sao nền **giống hệt nhau** (cùng kích thước, cùng hình 4 cánh), mỗi góc một ngôi sao, **đối xứng** qua hai trục giữa của icon. Sửa phần sao của FR-U33 | [ui — Icon](specs/ui.md) |
+| FR-U54 | Mọi switch trong app có **icon trong nút gạt**: ✓ khi bật, ✕ khi tắt, cùng một component | [ui §1](specs/ui.md) |

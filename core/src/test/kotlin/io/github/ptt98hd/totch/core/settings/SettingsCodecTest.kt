@@ -10,6 +10,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class SettingsCodecTest {
     @Test fun `ST-4 encode decode round trip`() {
@@ -102,6 +103,10 @@ class SettingsCodecTest {
                     Gesture.SWIPE_DOWN to Action.Notifications, Gesture.SWIPE_LEFT to Action.MediaPrevious,
                     Gesture.SWIPE_RIGHT to Action.MediaNext,
                 ),
+                // ST-32: the bound gestures stay on
+                enabledGestures = setOf(
+                    Gesture.TAP, Gesture.DOUBLE_TAP, Gesture.LONG_PRESS, Gesture.SWIPE_DOWN, Gesture.SWIPE_LEFT, Gesture.SWIPE_RIGHT,
+                ),
             ),
             s,
         )
@@ -139,13 +144,13 @@ class SettingsCodecTest {
             """{"bindings":{"TAP":{"type":"home"}},"repeatOnHold":["LONG_PRESS"],"repeatIntervalMs":500}""",
         )
         assertEquals(Action.Home, s.bindings[Gesture.TAP])
-        assertEquals(emptySet(), s.disabledGestures)
+        assertEquals(setOf(Gesture.TAP), s.enabledGestures) // ST-32: bound and not switched off
     }
 
-    @Test fun `ST-21 disabled gestures and volume panel round trip`() {
+    @Test fun `ST-21 enabled gestures and volume panel round trip`() {
         val s = Settings(
             bindings = DefaultBindings + (Gesture.TAP to Action.VolumePanel),
-            disabledGestures = setOf(Gesture.TAP, Gesture.SWIPE_DOWN),
+            enabledGestures = setOf(Gesture.TAP, Gesture.SWIPE_DOWN),
         )
         assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
         val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
@@ -179,7 +184,7 @@ class SettingsCodecTest {
         assertFalse(old.updateOnLaunch)
         assertEquals(UpdateInterval.NEVER, old.updateInterval)
         assertEquals(OneHandedMethod.SYSTEM, old.oneHandedMethod)
-        assertEquals(Settings().copy(bindings = old.bindings), old)
+        assertEquals(Settings().copy(bindings = old.bindings, enabledGestures = setOf(Gesture.TAP)), old)
 
         val s = Settings(updateOnLaunch = true, updateInterval = UpdateInterval.WEEKLY, oneHandedMethod = OneHandedMethod.GESTURE)
         assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
@@ -212,5 +217,27 @@ class SettingsCodecTest {
             val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
             assertEquals("""{"type":"$name"}""", json.getValue("bindings").jsonObject.getValue("TAP").toString())
         }
+    }
+
+    @Test fun `ST-32 JSON without enabledGestures switches on the bound gestures that were not switched off`() {
+        val s = SettingsCodec.decode(
+            """{"bindings":{"TAP":{"type":"home"},"DOUBLE_TAP":{"type":"lock"},"LONG_PRESS":{"type":"torch"}},""" +
+                """"disabledGestures":["LONG_PRESS"]}""",
+        )
+        assertEquals(setOf(Gesture.TAP, Gesture.DOUBLE_TAP), s.enabledGestures)
+        val noDisabled = SettingsCodec.decode("""{"bindings":{"TAP":{"type":"home"},"SWIPE_LEFT":{"type":"back"}}}""")
+        assertEquals(setOf(Gesture.TAP, Gesture.SWIPE_LEFT), noDisabled.enabledGestures)
+        val saved = SettingsCodec.decode("""{"bindings":{"TAP":{"type":"home"}},"enabledGestures":["DOUBLE_TAP"]}""")
+        assertEquals(setOf(Gesture.DOUBLE_TAP), saved.enabledGestures)
+        val s2 = Settings(enabledGestures = setOf(Gesture.SWIPE_DOWN_HOLD, Gesture.TAP))
+        assertEquals(s2, SettingsCodec.decode(SettingsCodec.encode(s2)))
+        assertFalse("disabledGestures" in Json.parseToJsonElement(SettingsCodec.encode(s2)).jsonObject)
+    }
+
+    @Test fun `ST-33 navigation labels default on and round trip`() {
+        assertTrue(Settings().navLabels)
+        assertTrue(SettingsCodec.decode("""{"bindings":{"TAP":{"type":"home"}}}""").navLabels)
+        val s = Settings(navLabels = false)
+        assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
     }
 }

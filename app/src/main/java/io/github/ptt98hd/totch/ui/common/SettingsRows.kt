@@ -18,7 +18,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -61,7 +60,7 @@ fun SwitchRow(
         modifier = Modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
         supporting = summary,
         leading = icon?.let { { TonalIcon(it) } },
-        trailing = { Switch(checked = checked, onCheckedChange = null) },
+        trailing = { TotchSwitch(checked = checked, onCheckedChange = null) },
     )
 }
 

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Contrast
 import androidx.compose.material.icons.outlined.Favorite
@@ -63,6 +64,7 @@ data class AppSettingsActions(
     val onStartOnBoot: (Boolean) -> Unit = {},
     val onHaptics: (Boolean) -> Unit = {},
     val onLandscapeGestures: (Boolean) -> Unit = {},
+    val onNavLabels: (Boolean) -> Unit = {},
     val onUpdateOnLaunch: (Boolean) -> Unit = {},
     val onUpdateInterval: (UpdateInterval) -> Unit = {},
     val onOpenUrl: (String) -> Unit = {},
@@ -82,6 +84,7 @@ fun AppSettingsRoute(container: AppContainer) {
             onStartOnBoot = vm::setStartOnBoot,
             onHaptics = vm::setHaptics,
             onLandscapeGestures = vm::setLandscapeGestures,
+            onNavLabels = vm::setNavLabels,
             onUpdateOnLaunch = vm::setUpdateOnLaunch,
             onUpdateInterval = vm::setUpdateInterval,
             onOpenUrl = { uriHandler.openUri(it) },
@@ -146,6 +149,14 @@ fun AppSettingsScreen(state: AppSettingsUiState, actions: AppSettingsActions, ve
                     ChoiceRow(stringResource(R.string.setting_language), languageName(s.language), Icons.Outlined.Translate) {
                         picker = Picker.LANGUAGE
                     }
+                    RowDivider()
+                    SwitchRow( // FR-U49
+                        stringResource(R.string.setting_nav_labels),
+                        s.navLabels,
+                        actions.onNavLabels,
+                        Icons.AutoMirrored.Outlined.Label,
+                        summary = stringResource(R.string.setting_nav_labels_summary),
+                    )
                 }
             }
             item(key = "update") {

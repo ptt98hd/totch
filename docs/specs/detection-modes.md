@@ -78,6 +78,7 @@ Trạng thái được expose qua `StateFlow<EngineStatus>` (singleton `GestureE
 | EN-9 | `SWIPE_DOWN` gán `Notifications` → vuốt xuống không dispatch gì (FR-G10, dùng `effectiveAction`) |
 | EN-10 | `SWIPE_RIGHT_HOLD` gán `VolumeUp`: vuốt phải rồi giữ 500 + 2000 ms (virtual time) → `VolumeUp` dispatch đúng **1** lần (v1.3: không lặp, FR-G11) |
 | EN-11 | `SWIPE_RIGHT` gán `MediaNext` nhưng nằm trong `disabledGestures` → vuốt phải không dispatch gì (FR-G12) |
+| EN-14 | (v1.8.1, FR-G15) DOUBLE_TAP **bật** + `None`, TAP gán `Home` → chạm một lần: `Home` dispatch sau `doubleTapMs` (vẫn chờ chạm đúp), chạm đúp → không dispatch, không rung. DOUBLE_TAP **tắt** → `Home` dispatch ngay |
 | EN-12 | (v1.5, FR-G14) `engine.canBlockTouches = true` → `SWIPE_DOWN` gán `Notifications` được dispatch; đặt lại `false` → không dispatch (config cập nhật ngay) |
 
 Đồng hồ: engine dùng `SystemClock.uptimeMillis()` (CLOCK_MONOTONIC). `MotionEvent.eventTime` dùng cùng
@@ -154,7 +155,7 @@ engine — engine vẫn nhận qua `getevent` nên không bị phát cử chỉ 
 
 | ID | Tiêu chí |
 |---|---|
-| DM-15 | `needsTouchBlocking(s)` = `s.enabled` ∧ `isGestureOn(SWIPE_DOWN, true) ∨ isGestureOn(SWIPE_DOWN_HOLD, true)` |
+| DM-15 | `needsTouchBlocking(s)` = `s.enabled` ∧ `isGestureOn(SWIPE_DOWN, true) ∨ isGestureOn(SWIPE_DOWN_HOLD, true)` (v1.8.1: `isGestureOn` không xét binding — vuốt xuống bật + Not set vẫn chặn, FR-G15) |
 | DM-16 | Overlay nuốt chạm (`onTouchEvent` trả true) và không gọi engine (kiểm thủ công MT-A1) |
 
 ## 8. Nguồn chạm: Shizuku hoặc Trợ năng (v1.7 — FR-D13)

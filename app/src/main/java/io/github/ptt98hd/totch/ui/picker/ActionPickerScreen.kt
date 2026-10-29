@@ -28,21 +28,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Smartphone
+import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +53,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,6 +66,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -119,7 +123,7 @@ fun ActionPickerSheet(container: AppContainer, gesture: Gesture, onDismiss: () -
             onClose = onDismiss,
             onTab = vm::selectTab,
             onSelect = vm::select,
-            onSystemQuery = vm::setSystemQuery,
+            onBasicQuery = vm::setBasicQuery,
             onSelectApp = vm::selectApp,
             onSelectShortcut = vm::selectShortcut,
             onAppQuery = vm::setAppQuery,
@@ -138,7 +142,7 @@ data class PickerCallbacks(
     val onClose: () -> Unit = {},
     val onTab: (PickerTab) -> Unit = {},
     val onSelect: (Action) -> Unit = {},
-    val onSystemQuery: (String) -> Unit = {},
+    val onBasicQuery: (String) -> Unit = {},
     val onSelectApp: (AppInfo) -> Unit = {},
     val onSelectShortcut: (ShortcutEntry) -> Unit = {},
     val onAppQuery: (String) -> Unit = {},
@@ -153,44 +157,66 @@ data class PickerCallbacks(
 
 private val PickerTab.icon: ImageVector
     get() = when (this) {
-        PickerTab.SYSTEM -> Icons.Outlined.Smartphone
+        PickerTab.BASIC -> Icons.Outlined.Category
         PickerTab.APPS -> Icons.Outlined.Apps
         PickerTab.SHORTCUTS -> ShortcutIcon
         PickerTab.ACTIVITIES -> ActivityIcon
         PickerTab.TILES -> TileIcon
     }
 
-/** FR-U25: the sections as a horizontally scrolling chip row, so new sections never squeeze the labels. */
+/** FR-U47: the sections in a drop-down select (replacing the chip row of FR-U25); each entry has its icon. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TabChips(selected: PickerTab, onTab: (PickerTab) -> Unit) {
-    val listState = rememberLazyListState()
-    LaunchedEffect(selected) {
-        val info = listState.layoutInfo
-        val item = info.visibleItemsInfo.firstOrNull { it.index == selected.ordinal }
-        val fullyVisible = item != null && item.offset >= info.viewportStartOffset &&
-            item.offset + item.size <= info.viewportEndOffset
-        if (!fullyVisible) listState.animateScrollToItem(selected.ordinal)
-    }
-    LazyRow(
-        state = listState,
-        contentPadding = PaddingValues(horizontal = Gutter),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).selectableGroup(),
+private fun TabSelect(current: PickerTab, onTab: (PickerTab) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(bottom = 12.dp),
     ) {
-        items(PickerTab.entries, key = { it.name }) { tab ->
-            FilterChip(
-                selected = tab == selected,
-                onClick = { onTab(tab) },
-                label = { Text(stringResource(tab.labelRes)) },
-                leadingIcon = { Icon(tab.icon, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) },
-            )
+        OutlinedTextField(
+            value = stringResource(current.labelRes),
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            label = { Text(stringResource(R.string.picker_tab_label)) },
+            leadingIcon = { Icon(current.icon, contentDescription = null) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            PickerTab.entries.forEach { tab ->
+                val isSelected = tab == current
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            stringResource(tab.labelRes),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        onTab(tab)
+                    },
+                    leadingIcon = {
+                        Icon(
+                            tab.icon,
+                            contentDescription = null,
+                            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                    modifier = Modifier.semantics { selected = isSelected },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                )
+            }
         }
     }
 }
 
 private val PickerTab.labelRes: Int
     get() = when (this) {
-        PickerTab.SYSTEM -> R.string.tab_system
+        PickerTab.BASIC -> R.string.tab_basic
         PickerTab.APPS -> R.string.tab_apps
         PickerTab.SHORTCUTS -> R.string.tab_shortcuts
         PickerTab.ACTIVITIES -> R.string.tab_activities
@@ -214,7 +240,7 @@ private sealed interface ExpandableRow {
     }
 }
 
-/** FR-U9, FR-U20, FR-U25, FR-A14, FR-A15: action chooser with chip sections (System / Apps / Shortcuts / Activities / Tiles). */
+/** FR-U9, FR-U20, FR-U47, FR-A14, FR-A15: action chooser with a section select (Basic / Apps / Shortcuts / Activities / Tiles). */
 @Composable
 fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxSize().imePadding()) {
@@ -233,7 +259,7 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                 Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.picker_close))
             }
         }
-        TabChips(state.tab, callbacks.onTab)
+        TabSelect(state.tab, callbacks.onTab)
         AnimatedContent(
             targetState = state.tab,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -241,28 +267,28 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
         ) { tab ->
             Column(Modifier.fillMaxSize()) {
                 when (tab) {
-                    PickerTab.SYSTEM -> {
+                    PickerTab.BASIC -> {
                         val resources = LocalResources.current
-                        val groups = remember(state.systemQuery, resources) {
+                        val groups = remember(state.basicQuery, resources) {
                             filterCatalog(
                                 ActionCatalog.groups,
-                                state.systemQuery,
+                                state.basicQuery,
                                 actionLabel = { resources.getString(it.labelRes) },
                                 groupLabel = { resources.getString(it.labelRes()) },
                             )
                         }
                         // FR-U43: "Not set" leads the list, hidden by a query that does not match it.
-                        val showNotSet = remember(state.systemQuery, resources) {
-                            searchKey(state.systemQuery) in searchKey(resources.getString(Action.None.labelRes))
+                        val showNotSet = remember(state.basicQuery, resources) {
+                            searchKey(state.basicQuery) in searchKey(resources.getString(Action.None.labelRes))
                         }
                         SearchableList(
-                            query = state.systemQuery,
-                            onQuery = callbacks.onSystemQuery,
+                            query = state.basicQuery,
+                            onQuery = callbacks.onBasicQuery,
                             placeholder = stringResource(R.string.action_search),
                             loading = false,
                             empty = groups.isEmpty() && !showNotSet,
-                            emptyText = stringResource(R.string.action_search_empty, state.systemQuery.trim()),
-                        ) { systemTab(groups, showNotSet, state, callbacks.onSelect) }
+                            emptyText = stringResource(R.string.action_search_empty, state.basicQuery.trim()),
+                        ) { basicTab(groups, showNotSet, state, callbacks.onSelect) }
                     }
                     PickerTab.APPS -> SearchableList(
                         query = state.appQuery,
@@ -326,7 +352,7 @@ private val listPadding = PaddingValues(start = Gutter, end = Gutter, bottom = 2
  * UI-26: each group is one rounded card of rows (icon, name, radio) separated by dividers; FR-U35 groups. FR-U43: the
  * "Not set" card comes first. FR-U44: actions that cannot run are disabled and say why.
  */
-private fun LazyListScope.systemTab(
+private fun LazyListScope.basicTab(
     groups: List<ActionGroup>,
     showNotSet: Boolean,
     state: ActionPickerUiState,

@@ -43,7 +43,6 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -71,6 +70,7 @@ import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.EngineStatus
 import io.github.ptt98hd.totch.Permission
 import io.github.ptt98hd.totch.R
+import io.github.ptt98hd.totch.ui.common.TotchSwitch
 import io.github.ptt98hd.totch.ui.common.DonateRow
 import io.github.ptt98hd.totch.ui.common.GroupCard
 import io.github.ptt98hd.totch.ui.common.IconBox
@@ -266,7 +266,7 @@ private fun MasterSwitchCard(enabled: Boolean, status: EngineStatus, onEnabledCh
                 // FR-U45: one line, even for a long error.
                 Text(statusString, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            Switch(checked = enabled, onCheckedChange = null)
+            TotchSwitch(checked = enabled, onCheckedChange = null)
         }
     }
 }

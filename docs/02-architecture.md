@@ -185,7 +185,8 @@ enum class DetectionMode { SHIZUKU, ACCESSIBILITY }
     // v1.1
     val theme: ThemeMode = ThemeMode.SYSTEM, val amoledBlack: Boolean = false,
     val language: AppLanguage = AppLanguage.SYSTEM, val startOnBoot: Boolean = true,
-    val disabledGestures: Set<Gesture> = emptySet(),   // v1.3 (FR-G12)
+    // v1.3 (FR-G12) disabledGestures → v1.8.1 (FR-G15) enabledGestures: switch = nhận sự kiện, kể cả khi binding = None
+    val enabledGestures: Set<Gesture> = emptySet(), val navLabels: Boolean = true,
 ) { fun sanitized(): Settings }   // clamp theo FR-S4
 // effectiveAction: xem specs/settings.md
 

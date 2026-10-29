@@ -46,12 +46,15 @@ class AppSettingsViewModel(
     fun setHaptics(value: Boolean) = save { it.copy(haptics = value) }
     fun setLandscapeGestures(value: Boolean) = save { it.copy(landscapeGestures = value) }
 
+    /** UI-67 */
+    fun setNavLabels(value: Boolean) = save { it.copy(navLabels = value) }
+
     /** UP-13 */
     fun setUpdateOnLaunch(value: Boolean) = save { it.copy(updateOnLaunch = value) }
     fun setUpdateInterval(value: UpdateInterval) = save { it.copy(updateInterval = value) }
 
-    /** UP-6: checks GitHub, or reopens the dialog of a release already found. */
-    fun onUpdateRowClick() = updates.check()
+    /** UP-23: the same dialog as the top bar button, which checks GitHub unless a result is pending or known. */
+    fun onUpdateRowClick() = updates.openDialog()
 
     fun dismissUpdateDialog() = updates.dismissDialog()
 

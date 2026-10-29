@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -108,19 +107,14 @@ class GesturesViewModel(
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GesturesUiState())
 
     /**
-     * UI-16, UI-17: switching on a gesture without an action opens the picker; it is switched on once one is picked.
-     * UI-60, UI-61: nothing happens while the gesture or its action cannot run.
+     * UI-64: the switch only decides whether the gesture listens; a gesture that is not set is switched on as is
+     * (FR-G15). UI-60, UI-61: nothing happens while the gesture or its action cannot run.
      */
     fun setOn(gesture: Gesture, on: Boolean) {
         viewModelScope.launch {
             val row = state.value.groups.flatMap { it.rows }.firstOrNull { it.gesture == gesture }
             if (on && row != null && (!row.enabled || row.need != null)) return@launch
-            val settings = settingsRepository.settings.first()
-            if (on && settings.actionFor(gesture) == Action.None) {
-                picking.value = gesture
-            } else {
-                settingsRepository.update { it.withGestureOn(gesture, on) }
-            }
+            settingsRepository.update { it.withGestureOn(gesture, on) }
         }
     }
 

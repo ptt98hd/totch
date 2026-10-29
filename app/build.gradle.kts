@@ -12,8 +12,8 @@ android {
         applicationId = "io.github.ptt98hd.totch"
         minSdk = 31
         targetSdk = 36
-        versionCode = 10800
-        versionName = "1.8.0"
+        versionCode = 10801
+        versionName = "1.8.1"
     }
 
     buildTypes {
@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.browser)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
