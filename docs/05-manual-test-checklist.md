@@ -232,6 +232,24 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-U4 | Hủy hộp thoại cài của hệ thống | Toast lỗi hoặc không gì; bấm lại dòng → kiểm tra lại được | [ ] |
 | MT-S1 | Settings › System | 3 dòng đều có mô tả 1 dòng, không xuống dòng (cả en và vi, màn hẹp) | [ ] |
 
+## 13. v1.6.1 — ô Cài đặt nhanh không cần thêm, chế độ một tay, cập nhật, splash
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-T5 | Gán một ô **chưa thêm** vào Cài đặt nhanh, thực hiện cử chỉ (bảng Cài đặt nhanh đóng) | Ô được bấm (sau ~1 s); sau ~3 s ô không còn trong bảng, thứ tự ô cũ giữ nguyên. Nếu ô không phản hồi → chỉnh `sleep 0.8` / `sleep 2` (QT-2) | [ ] |
+| MT-T6 | Như MT-T5 với ô **đã thêm** | Bấm ngay như 1.6.0, ô vẫn ở chỗ cũ | [ ] |
+| MT-O3 | Chưa gán phím tắt Chế độ một tay, gán Double tap → Chế độ một tay, thực hiện cử chỉ 2 lần | Lần 1 màn hình hạ xuống, lần 2 trở lại; phím tắt âm lượng của người dùng giữ nguyên (Cài đặt › Hỗ trợ tiếp cận) | [ ] |
+| MT-O4 | Thoát chế độ một tay bằng chạm ra ngoài, rồi thực hiện cử chỉ | Vào lại chế độ một tay (không cần bấm 2 lần) | [ ] |
+| MT-O5 | `adb shell dumpsys activity service SystemUIService WMShell \| grep sCurrentState` | Có dòng `sCurrentState=` (nếu không có: OH-1 không kiểm tra được, ghi lại ROM) | [ ] |
+| MT-O6 | Máy không hỗ trợ / ROM riêng (Samsung) | Toast "Không thể thực hiện"; điều hướng cử chỉ: thử fallback vuốt (OH-2), chạy được thì lần sau dùng luôn | [ ] |
+| MT-U5 | Settings › Update | 3 dòng: Kiểm tra khi mở app (switch), Kiểm tra định kỳ (Tắt/Hằng ngày/Hằng tuần/Hằng tháng), Kiểm tra cập nhật; About không còn dòng cập nhật | [ ] |
+| MT-U6 | Cài bản cũ, bật Kiểm tra khi mở app, mở lại app | Hộp thoại "Totch X.Y.Z" hiện ở Home; Later → không hiện lại đến lần mở sau | [ ] |
+| MT-U7 | Cài bản cũ, chọn Hằng ngày, `adb shell cmd jobscheduler run -f io.github.ptt98hd.totch 1601` | Thông báo "Đã có Totch X.Y.Z"; chạm → mở app với hộp thoại; chạy lại job → không báo lần 2 | [ ] |
+| MT-U8 | Chọn Tắt, `adb shell dumpsys jobscheduler \| grep totch` | Không còn job 1601 | [ ] |
+| MT-P1 | Home › Install updates: bật (Shizuku sẵn sàng) | Granted; Cài đặt › Cài ứng dụng không rõ nguồn gốc của Totch = cho phép | [ ] |
+| MT-P2 | Tắt Install updates | Hộp thoại xác nhận; đồng ý → Totch đóng rồi tự mở lại, "Not granted" | [ ] |
+| MT-SP1 | Mở app từ launcher (cold start), sáng và tối | Splash hiện icon app, mờ dần khi vào Home, không có khung trống | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)

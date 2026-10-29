@@ -248,8 +248,9 @@ duy nhất trên `Dispatchers.Default` → không polling (NFR-3).
 | `BIND_ACCESSIBILITY_SERVICE` (service) | Accessibility mode |
 | Shizuku `ShizukuProvider` | Theo yêu cầu thư viện Shizuku |
 | `MediaListenerService` (`BIND_NOTIFICATION_LISTENER_SERVICE`, tùy chọn) | Điều khiển media qua `MediaController` (actions spec §5); không đọc thông báo |
-| `INTERNET` (v1.6) | FR-U27: chỉ khi người dùng bấm kiểm tra / cập nhật, chỉ tới GitHub (NFR-4) |
-| `REQUEST_INSTALL_PACKAGES` (v1.6) | FR-U27: cài APK cập nhật bằng `PackageInstaller` (hệ thống hỏi xác nhận) |
+| `INTERNET` (v1.6) | FR-U27: chỉ khi người dùng bấm kiểm tra / cập nhật, chỉ tới GitHub (NFR-4); v1.6.1: thêm kiểm tra khi mở app / định kỳ do người dùng bật (FR-U29) |
+| `REQUEST_INSTALL_PACKAGES` (v1.6) | FR-U27: cài APK cập nhật bằng `PackageInstaller` (hệ thống hỏi xác nhận); v1.6.1: bật/tắt ở Home › Permissions qua `appops` (FR-D11) |
+| `BIND_JOB_SERVICE` cho `UpdateCheckJobService` (v1.6.1) | FR-U29: kiểm tra cập nhật định kỳ (`setPersisted` dùng `RECEIVE_BOOT_COMPLETED` đã có) |
 | `<queries>` intent `QS_TILE` (v1.6) | FR-A15: liệt kê ô Cài đặt nhanh |
 
 ## 7. Stack & phiên bản

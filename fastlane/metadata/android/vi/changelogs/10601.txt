@@ -1,0 +1,5 @@
+* Bấm ô Cài đặt nhanh không cần thêm ô vào Cài đặt nhanh: ô chưa có được thêm tạm để bấm rồi gỡ.
+* Chế độ một tay chạy không cần phím tắt hệ thống, có cách dự phòng bằng cử chỉ; Totch nhớ cách chạy được.
+* Section Cập nhật mới trong Cài đặt: kiểm tra khi mở app, kiểm tra định kỳ (hằng ngày / tuần / tháng, có thông báo), kiểm tra thủ công.
+* Home › Quyền: "Cài bản cập nhật", bật/tắt được qua Shizuku.
+* Màn hình chờ (splash) giữ đến khi app sẵn sàng rồi mờ dần (không còn khung trống).

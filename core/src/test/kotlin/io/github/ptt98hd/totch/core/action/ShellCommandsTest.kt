@@ -3,7 +3,9 @@ package io.github.ptt98hd.totch.core.action
 import io.github.ptt98hd.totch.core.model.Action
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ShellCommandsTest {
     @Test fun `SC-1 command table`() {
@@ -79,23 +81,41 @@ class ShellCommandsTest {
     }
 
     @Test fun `SC-8 clickTile quotes the component`() {
-        assertEquals(
-            "cmd statusbar click-tile 'com.a/com.a.qs.Tile\$Inner'",
-            ShellCommands.clickTile("com.a", "com.a.qs.Tile\$Inner"),
-        )
+        assertTrue("c='com.a/com.a.qs.Tile\$Inner';" in ShellCommands.clickTile("com.a", "com.a.qs.Tile\$Inner")!!)
         assertNull(ShellCommands.clickTile("com.a; reboot", "Tile"))
         assertNull(ShellCommands.clickTile("com.a", "Tile'; reboot"))
         assertNull(ShellCommands.of(Action.ClickTile("com.a", "com.a.Tile", "Tile")))
     }
 
-    @Test fun `SC-9 one-handed mode needs its shortcut and toggles the activated setting`() {
+    @Test fun `QT-2 a tile already in the panel is only clicked`() {
+        val sim = ShellSim().apply { secure["sysui_qs_tiles"] = "wifi,custom(com.a/.qs.Tile),bt" }
+        assertEquals(0, sim.run(ShellCommands.clickTile("com.a", "com.a.qs.Tile")!!))
+        assertEquals(listOf("cmd statusbar click-tile com.a/com.a.qs.Tile"), sim.calls("cmd"))
+
+        val full = ShellSim().apply { secure["sysui_qs_tiles"] = "custom(com.a/com.a.qs.Tile)" }
+        full.run(ShellCommands.clickTile("com.a", "com.a.qs.Tile")!!)
+        assertEquals(listOf("cmd statusbar click-tile com.a/com.a.qs.Tile"), full.calls("cmd"))
+    }
+
+    @Test fun `QT-2 a missing tile is added, clicked and removed`() {
+        val sim = ShellSim().apply { secure["sysui_qs_tiles"] = "wifi,custom(com.a/.Other)" }
+        assertEquals(0, sim.run(ShellCommands.clickTile("com.a", "com.a.qs.Tile\$Inner")!!))
         assertEquals(
-            "case \"\$(settings get secure accessibility_button_targets):" +
-                "\$(settings get secure accessibility_shortcut_target_service)\" in " +
-                "*OneHandedMode*) ;; *) exit 1 ;; esac; " +
-                "if [ \"\$(settings get secure one_handed_mode_activated)\" = 1 ]; then v=0; else v=1; fi; " +
-                "settings put secure one_handed_mode_activated \$v",
-            ShellCommands.of(Action.OneHandedMode),
+            listOf(
+                "cmd statusbar add-tile com.a/com.a.qs.Tile\$Inner",
+                "cmd statusbar click-tile com.a/com.a.qs.Tile\$Inner",
+                "cmd statusbar remove-tile com.a/com.a.qs.Tile\$Inner",
+            ),
+            sim.calls("cmd"),
         )
+
+        val failing = ShellSim().apply { failing += "click-tile" }
+        assertEquals(1, failing.run(ShellCommands.clickTile("com.a", "org.b.Tile")!!))
+        assertEquals("cmd statusbar remove-tile com.a/org.b.Tile", failing.calls("cmd").last())
+        assertFalse("custom(com.a/." in ShellCommands.clickTile("com.a", "org.b.Tile")!!)
+    }
+
+    @Test fun `SC-9 one-handed mode has no plain shell command`() {
+        assertNull(ShellCommands.of(Action.OneHandedMode))
     }
 }

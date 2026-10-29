@@ -1,5 +1,6 @@
 package io.github.ptt98hd.totch.core.settings
 
+import io.github.ptt98hd.totch.core.action.OneHandedMethod
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import kotlinx.serialization.json.Json
@@ -163,5 +164,20 @@ class SettingsCodecTest {
         val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
         assertEquals("click_tile", json.getValue("bindings").jsonObject.getValue("TAP").jsonObject.getValue("type").jsonPrimitive.content)
         assertEquals("one_handed", json.getValue("bindings").jsonObject.getValue("LONG_PRESS").jsonObject.getValue("type").jsonPrimitive.content)
+    }
+
+    @Test fun `ST-28 update and one-handed fields`() {
+        val old = SettingsCodec.decode("""{"bindings":{"TAP":{"type":"one_handed"}}}""")
+        assertFalse(old.updateOnLaunch)
+        assertEquals(UpdateInterval.NEVER, old.updateInterval)
+        assertEquals(OneHandedMethod.SYSTEM, old.oneHandedMethod)
+        assertEquals(Settings().copy(bindings = old.bindings), old)
+
+        val s = Settings(updateOnLaunch = true, updateInterval = UpdateInterval.WEEKLY, oneHandedMethod = OneHandedMethod.GESTURE)
+        assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
+        val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
+        assertEquals("weekly", json.getValue("updateInterval").jsonPrimitive.content)
+        assertEquals("gesture", json.getValue("oneHandedMethod").jsonPrimitive.content)
+        assertEquals(Settings(), SettingsCodec.decode("""{"enabled":true,"updateInterval":"hourly"}"""))
     }
 }

@@ -15,9 +15,11 @@ import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PowerSettingsNew
+import androidx.compose.material.icons.outlined.RocketLaunch
 import androidx.compose.material.icons.outlined.ScreenRotation
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -48,6 +50,7 @@ import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.core.settings.AppLanguage
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.settings.ThemeMode
+import io.github.ptt98hd.totch.core.settings.UpdateInterval
 import io.github.ptt98hd.totch.ui.common.ChoiceDialog
 import io.github.ptt98hd.totch.ui.common.ChoiceRow
 import io.github.ptt98hd.totch.ui.common.RowDivider
@@ -57,6 +60,8 @@ import io.github.ptt98hd.totch.ui.common.TonalIcon
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.withGutters
 import io.github.ptt98hd.totch.ui.theme.TotchTheme
+import io.github.ptt98hd.totch.update.UpdateController
+import io.github.ptt98hd.totch.update.UpdateState
 
 /** Callbacks of the app settings screen, grouped to keep the stateless signature readable. */
 data class AppSettingsActions(
@@ -66,10 +71,10 @@ data class AppSettingsActions(
     val onStartOnBoot: (Boolean) -> Unit = {},
     val onHaptics: (Boolean) -> Unit = {},
     val onLandscapeGestures: (Boolean) -> Unit = {},
+    val onUpdateOnLaunch: (Boolean) -> Unit = {},
+    val onUpdateInterval: (UpdateInterval) -> Unit = {},
     val onOpenUrl: (String) -> Unit = {},
     val onUpdateRow: () -> Unit = {},
-    val onStartUpdate: () -> Unit = {},
-    val onDismissUpdate: () -> Unit = {},
 )
 
 @Composable
@@ -85,16 +90,16 @@ fun AppSettingsRoute(container: AppContainer) {
             onStartOnBoot = vm::setStartOnBoot,
             onHaptics = vm::setHaptics,
             onLandscapeGestures = vm::setLandscapeGestures,
+            onUpdateOnLaunch = vm::setUpdateOnLaunch,
+            onUpdateInterval = vm::setUpdateInterval,
             onOpenUrl = { uriHandler.openUri(it) },
             onUpdateRow = vm::onUpdateRowClick,
-            onStartUpdate = vm::startUpdate,
-            onDismissUpdate = vm::dismissUpdateDialog,
         )
     }
     AppSettingsScreen(state, actions, versionName = BuildConfig.VERSION_NAME)
 }
 
-private enum class Picker { THEME, LANGUAGE }
+private enum class Picker { THEME, LANGUAGE, UPDATE_INTERVAL }
 
 @Composable
 fun AppSettingsScreen(state: AppSettingsUiState, actions: AppSettingsActions, versionName: String, modifier: Modifier = Modifier) {
@@ -151,7 +156,31 @@ fun AppSettingsScreen(state: AppSettingsUiState, actions: AppSettingsActions, ve
                     }
                 }
             }
-            item(key = "about") { AboutSection(versionName, state.update, actions) }
+            item(key = "update") {
+                // FR-U29, UI-38
+                SettingsSection(stringResource(R.string.section_update)) {
+                    SwitchRow(
+                        stringResource(R.string.setting_update_on_launch),
+                        s.updateOnLaunch,
+                        actions.onUpdateOnLaunch,
+                        Icons.Outlined.RocketLaunch,
+                        summary = stringResource(R.string.setting_update_on_launch_summary),
+                    )
+                    RowDivider()
+                    ChoiceRow(stringResource(R.string.setting_update_interval), intervalName(s.updateInterval), Icons.Outlined.Update) {
+                        picker = Picker.UPDATE_INTERVAL
+                    }
+                    RowDivider()
+                    AboutRow(
+                        Icons.Outlined.SystemUpdate,
+                        stringResource(R.string.update_title),
+                        updateSummary(state.update),
+                        onClick = actions.onUpdateRow,
+                        chevron = false,
+                    )
+                }
+            }
+            item(key = "about") { AboutSection(versionName, actions) }
         }
     }
 
@@ -178,12 +207,28 @@ fun AppSettingsScreen(state: AppSettingsUiState, actions: AppSettingsActions, ve
             },
             onDismiss = { picker = null },
         )
+        Picker.UPDATE_INTERVAL -> ChoiceDialog(
+            title = stringResource(R.string.setting_update_interval),
+            options = UpdateInterval.entries,
+            current = s.updateInterval,
+            label = { intervalName(it) },
+            onSelect = {
+                picker = null
+                actions.onUpdateInterval(it)
+            },
+            onDismiss = { picker = null },
+        )
         null -> Unit
     }
+}
 
-    val available = state.update as? UpdateState.Available
-    if (state.updateDialog && available != null) {
-        UpdateDialog(available, onUpdate = actions.onStartUpdate, onDismiss = actions.onDismissUpdate)
+/** UI-37: the new-version dialog, drawn above every screen by `MainActivity` (update spec §5). */
+@Composable
+fun UpdateDialogHost(updates: UpdateController) {
+    val ui by updates.state.collectAsStateWithLifecycle()
+    val available = ui.state as? UpdateState.Available
+    if (ui.dialog && available != null) {
+        UpdateDialog(available, onUpdate = updates::startUpdate, onDismiss = updates::dismissDialog)
     }
 }
 
@@ -219,6 +264,14 @@ private fun updateSummary(update: UpdateState): String = when (update) {
 }
 
 @Composable
+private fun intervalName(interval: UpdateInterval): String = when (interval) {
+    UpdateInterval.NEVER -> stringResource(R.string.update_interval_never)
+    UpdateInterval.DAILY -> stringResource(R.string.update_interval_daily)
+    UpdateInterval.WEEKLY -> stringResource(R.string.update_interval_weekly)
+    UpdateInterval.MONTHLY -> stringResource(R.string.update_interval_monthly)
+}
+
+@Composable
 private fun themeName(theme: ThemeMode): String = when (theme) {
     ThemeMode.SYSTEM -> stringResource(R.string.theme_system)
     ThemeMode.LIGHT -> stringResource(R.string.theme_light)
@@ -232,22 +285,14 @@ private fun languageName(language: AppLanguage): String = when (language) {
     AppLanguage.VIETNAMESE -> stringResource(R.string.language_vietnamese)
 }
 
-/** FR-U5, FR-U10, FR-U27: About is the last section of the app settings. */
+/** FR-U5, FR-U10: About is the last section of the app settings. */
 @Composable
-private fun AboutSection(versionName: String, update: UpdateState, actions: AppSettingsActions) {
+private fun AboutSection(versionName: String, actions: AppSettingsActions) {
     val onOpenUrl = actions.onOpenUrl
     val sourceUrl = stringResource(R.string.about_source_url)
     val shizukuUrl = stringResource(R.string.about_shizuku_url)
     SettingsSection(stringResource(R.string.section_about)) {
         AboutRow(Icons.Outlined.Info, stringResource(R.string.app_name), stringResource(R.string.about_version, versionName))
-        RowDivider()
-        AboutRow(
-            Icons.Outlined.SystemUpdate,
-            stringResource(R.string.update_title),
-            updateSummary(update),
-            onClick = actions.onUpdateRow,
-            chevron = false,
-        )
         RowDivider()
         AboutRow(Icons.Outlined.Gavel, stringResource(R.string.about_license_title), stringResource(R.string.about_license))
         RowDivider()

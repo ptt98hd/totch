@@ -280,7 +280,6 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                         } else {
                             stringResource(R.string.tile_empty, state.tileQuery.trim())
                         },
-                        hint = stringResource(R.string.tile_hint),
                     ) { tilesTab(state, callbacks.onSelectTile) }
                 }
             }
@@ -302,7 +301,6 @@ private fun LazyListScope.systemTab(state: ActionPickerUiState, onSelect: (Actio
                 onClick = { onSelect(action) },
                 leading = { TonalIcon(action.icon) },
                 title = stringResource(action.labelRes),
-                supporting = if (action == Action.OneHandedMode) stringResource(R.string.action_one_handed_hint) else null,
                 modifier = Modifier.groupItem(index, group.actions.size),
             )
         }
@@ -441,7 +439,6 @@ private fun SearchableList(
     loading: Boolean,
     empty: Boolean,
     emptyText: String,
-    hint: String? = null,
     content: LazyListScope.() -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
@@ -469,16 +466,6 @@ private fun SearchableList(
         windowInsets = WindowInsets(0),
         modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(bottom = 12.dp),
     ) {}
-    if (hint != null) {
-        Text(
-            hint,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = Gutter).padding(bottom = 12.dp),
-        )
-    }
     when {
         loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         empty -> Box(Modifier.fillMaxSize().padding(Gutter), contentAlignment = Alignment.Center) {

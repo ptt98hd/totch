@@ -32,11 +32,13 @@
     <string name="permission_notifications">Thông báo</string>
     <string name="permission_media">Điều khiển media</string>
     <string name="permission_battery">Pin không giới hạn</string>
+    <string name="permission_install_updates">Cài bản cập nhật</string>
     <string name="permission_granted">Đã cấp</string>
     <string name="permission_not_granted">Chưa cấp</string>
     <string name="revoke_notifications_title">Tắt thông báo?</string>
     <string name="revoke_notifications_text">Android luôn đóng ứng dụng khi thu hồi một quyền của nó. Totch sẽ đóng rồi tự mở lại; cử chỉ vẫn hoạt động.</string>
     <string name="revoke_notifications_confirm">Tắt</string>
+    <string name="revoke_install_title">Tắt quyền cài bản cập nhật?</string>
 
     <!-- Gestures -->
     <string name="gesture_tap">Chạm</string>
@@ -73,7 +75,6 @@
     <string name="action_launch_app">Mở %1$s</string>
     <string name="action_assistant">Gọi trợ lý</string>
     <string name="action_one_handed">Chế độ một tay</string>
-    <string name="action_one_handed_hint">Cần bật phím tắt Chế độ một tay</string>
     <string name="action_open_shortcut">Mở shortcut…</string>
     <string name="action_launch_shortcut">%1$s: %2$s</string>
     <string name="action_open_activity">Mở activity…</string>
@@ -95,7 +96,6 @@
     <string name="tile_search">Tìm ô cài đặt nhanh</string>
     <string name="tile_empty">Không có ô nào khớp “%1$s”</string>
     <string name="tile_none">Không tìm thấy ô Cài đặt nhanh nào</string>
-    <string name="tile_hint">Chỉ ô đã thêm vào Cài đặt nhanh mới phản hồi</string>
     <string name="activity_search">Tìm activity</string>
     <string name="activity_empty">Không có activity nào khớp “%1$s”</string>
     <string name="activity_none">Không tìm thấy activity nào</string>
@@ -157,6 +157,17 @@
     <string name="update_action">Cập nhật</string>
     <string name="update_later">Để sau</string>
     <string name="update_install_failed">Cập nhật thất bại</string>
+    <string name="section_update">Cập nhật</string>
+    <string name="setting_update_on_launch">Kiểm tra khi mở app</string>
+    <string name="setting_update_on_launch_summary">Tìm bản mới mỗi khi mở Totch</string>
+    <string name="setting_update_interval">Kiểm tra định kỳ</string>
+    <string name="update_interval_never">Tắt</string>
+    <string name="update_interval_daily">Hằng ngày</string>
+    <string name="update_interval_weekly">Hằng tuần</string>
+    <string name="update_interval_monthly">Hằng tháng</string>
+    <string name="update_channel_name">Cập nhật</string>
+    <string name="update_notification_title">Đã có Totch %1$s</string>
+    <string name="update_notification_text">Chạm để xem điểm mới và cập nhật</string>
     <string name="about_license_title">Giấy phép</string>
     <string name="about_source_title">Mã nguồn</string>
     <string name="about_credits_title">Ghi công</string>

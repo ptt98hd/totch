@@ -86,6 +86,7 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ST-25 | `Settings().landscapeGestures == false`; JSON v1.4 (không có key) → `false`; `decode(encode(s)) == s` với `landscapeGestures=true` và `LaunchActivity` |
 | ST-26 | `needsTouchBlocking`: false khi `!enabled`, hoặc cả 2 cử chỉ vuốt xuống chưa gán / bị tắt; true khi `enabled` và `SWIPE_DOWN` (hoặc `SWIPE_DOWN_HOLD`) đã gán và bật (DM-15) |
 | ST-27 | (v1.6) `decode(encode(s)) == s` với `ClickTile(pkg, service, label)` và `OneHandedMode` (`"one_handed"`); JSON `{"type":"click_tile",…}` |
+| ST-28 | (v1.6.1) Field mới: `updateOnLaunch = false`, `updateInterval = NEVER` (update §6), `oneHandedMethod = SYSTEM` (actions §10, do executor ghi, không có trên UI). JSON v1.6.0 (không có key) → mặc định; `decode(encode(s)) == s` với `updateOnLaunch=true`, `updateInterval=WEEKLY`, `oneHandedMethod=GESTURE`; JSON `"oneHandedMethod":"gesture"`, `"updateInterval":"weekly"`; giá trị enum lạ → mặc định toàn bộ (ST-5) |
 
 ## 3. `SettingsRepository` (`:app`)
 - DataStore Preferences, key `settings_json`.

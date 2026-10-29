@@ -50,6 +50,7 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 │ [🔔] Notifications         [off] │  (Android 13+)
 │ [♪] Media control          [off] │
 │ [🔋] Unrestricted battery  [on]  │
+│ [⤓] Install updates        [off] │  v1.6.1
 ├──────────────────────────────────┤
 │ Home | Gestures | Notch | Settings│
 └──────────────────────────────────┘
@@ -69,9 +70,9 @@ Yêu cầu: FR-U1…FR-U27, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-R8, FR-S
 | UI-2 | Status text ánh xạ 1-1 từ `EngineStatus` |
 | UI-42 | `masterIcon(status)`: `Running` → ON; `Starting`, `Stopping` → PENDING; còn lại → OFF |
 | UI-50 | `HomeUiState.shizuku`: chưa chạy → NOT_RUNNING; chạy, chưa cấp quyền → PERMISSION_REQUIRED; còn lại READY |
-| UI-51 | `permissions` = Accessibility, Notifications (chỉ Android 13+), Media control, Battery, theo thứ tự, `granted` từ `Requirements` |
+| UI-51 | `permissions` = Accessibility, Notifications (chỉ Android 13+), Media control, Battery, Install updates (v1.6.1), theo thứ tự, `granted` từ `Requirements` |
 | UI-52 | `setPermission(p, on)` gọi `SystemStatus.setPermission(p, on)`; kết quả false → gọi fallback (mở trang hệ thống) |
-| UI-53 | (v1.5, FR-D10) Tắt switch Thông báo → hộp thoại xác nhận "Totch sẽ khởi động lại"; chỉ khi đồng ý mới gọi `setPermission(NOTIFICATIONS, false)` |
+| UI-53 | (v1.5, FR-D10) Tắt switch Thông báo → hộp thoại xác nhận "Totch sẽ khởi động lại"; chỉ khi đồng ý mới gọi `setPermission(NOTIFICATIONS, false)`. v1.6.1: tắt **Install updates** cũng hỏi như vậy (FR-D11); bật / các quyền khác không hỏi |
 | ~~UI-3, UI-4~~ | Bỏ ở v1.4: quyền media / pin luôn nằm trong Permissions |
 
 ### Gestures (FR-U2, FR-G8, FR-G10, FR-G12)
@@ -198,8 +199,11 @@ Các section, theo thứ tự (v1.5):
 2. **Giao diện**: Theme (icon bảng màu; System / Light / Dark — **dialog chọn** như Ngôn ngữ), Amoled black (icon độ
    tương phản, switch, mô tả "Pure black dark theme"), Ngôn ngữ (icon ngôn ngữ; System / English / Tiếng Việt — dialog
    chọn). Theme và Ngôn ngữ có **chevron** (›) ở cuối dòng.
-3. **Giới thiệu** (cuối cùng): phiên bản, **Check for updates** (v1.6, FR-U27 — icon cập nhật hệ thống, mô tả theo
-   trạng thái, xem [update](update.md)), license, mã nguồn (`github.com/ptt98hd/totch`), credit ("Shizuku by
+3. **Cập nhật** (v1.6.1, FR-U29 — [update §6](update.md)): *Check on app launch* (icon tên lửa/khởi chạy, switch, mô
+   tả "Look for a new version when Totch opens" / "Tìm bản mới mỗi khi mở Totch"), *Automatic checks* (icon đồng hồ cập nhật,
+   giá trị Off / Daily / Weekly / Monthly, chevron, dialog chọn), *Check for updates* (icon cập nhật hệ thống, mô tả theo
+   trạng thái — chuyển từ Giới thiệu).
+4. **Giới thiệu** (cuối cùng): phiên bản, license, mã nguồn (`github.com/ptt98hd/totch`), credit ("Shizuku by
    RikkaApps"). Dòng mở link có **chevron** (›) ở cuối.
 
 - Mọi mô tả (dòng phụ) chỉ một dòng (`maxLines = 1`, cắt bằng "…" nếu vẫn quá dài).
@@ -211,7 +215,8 @@ Các section, theo thứ tự (v1.5):
 | ID | Tiêu chí |
 |---|---|
 | UI-32 | Setter theme / amoled / language / startOnBoot / haptics / landscapeGestures lưu đúng field |
-| UI-37 | (v1.6) Dòng Check for updates hiển thị mô tả theo `UpdateState` (UP-6); bấm khi `Available` → hộp thoại tên bản + ghi chú phát hành, nút **Update** / **Later** |
+| UI-37 | (v1.6) Dòng Check for updates hiển thị mô tả theo `UpdateState` (UP-6); bấm khi `Available` → hộp thoại tên bản + ghi chú phát hành, nút **Update** / **Later** (v1.6.1: hộp thoại ở `MainActivity`, update §5) |
+| UI-38 | (v1.6.1) Thứ tự section: System, Appearance, Update, About; Update có đúng 3 dòng như trên, About không còn Check for updates |
 
 ### Giao diện & ngôn ngữ (FR-S6, FR-S7)
 | ID | Tiêu chí |
@@ -226,3 +231,8 @@ Các section, theo thứ tự (v1.5):
 Adaptive icon theo ảnh tham khảo: màn hình điện thoại bo góc, notch dạng viên thuốc, các dải sóng toả xuống
 từ notch, vòng chạm và bàn tay chỉ. Màu Monet (`system_accent*`) → đổi theo hình nền; có layer `monochrome`
 cho themed icon Android 13+. Icon thông báo giữ dạng đơn sắc.
+
+### Splash screen (v1.6.1 — FR-U31)
+Splash mặc định của Android 12+ (launcher icon trên nền cửa sổ, không có icon động riêng). `MainActivity` giữ splash
+đến khi đọc xong settings (`OnPreDrawListener` trả false — trước đây nền cửa sổ trống hiện trong lúc này), rồi splash
+mờ dần + phóng nhẹ (`setOnExitAnimationListener`, 250 ms).

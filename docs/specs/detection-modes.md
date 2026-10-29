@@ -105,6 +105,7 @@ tọa độ với `getevent`, xem notch-region §v1.5); ngược lại `null`. H
 | Thông báo (13+) | `pm grant <pkg> POST_NOTIFICATIONS` | v1.5: xác nhận → `pm revoke` tách rời rồi mở lại Totch (PC-5) | Thông báo foreground service |
 | Điều khiển media | `cmd notification allow_listener <component>` | `disallow_listener` | `MediaController` (FR-A6) |
 | Pin không giới hạn | `cmd deviceidle whitelist +<pkg>` | `whitelist -<pkg>` | Giữ service sống (FR-D7) |
+| Cài bản cập nhật (v1.6.1) | `appops set <pkg> REQUEST_INSTALL_PACKAGES allow` | xác nhận → `appops set … deny` tách rời rồi mở lại Totch (PC-7) | Cài APK tự cập nhật không cần hỏi quyền "Cài ứng dụng không rõ nguồn gốc" (FR-U27, FR-D11) |
 
 | ID | Tiêu chí |
 |---|---|
@@ -112,6 +113,8 @@ tọa độ với `getevent`, xem notch-region §v1.5); ngược lại `null`. H
 | PC-2 | `notificationListener(c, allowed)` = `cmd notification allow_listener|disallow_listener 'c'` |
 | PC-3 | `batteryUnrestricted(pkg, on)` = `cmd deviceidle whitelist +'pkg'` / `-'pkg'` |
 | PC-4 | `grantNotifications(pkg)` = `pm grant 'pkg' android.permission.POST_NOTIFICATIONS`; mọi giá trị được single-quote cho shell |
+| PC-6 | (v1.6.1) `allowInstallPackages(pkg)` = `appops set 'pkg' REQUEST_INSTALL_PACKAGES allow` |
+| PC-7 | (v1.6.1) `denyInstallPackagesAndRestart(pkg, activity)`: như PC-5 với lệnh `appops set <pkg> REQUEST_INSTALL_PACKAGES deny`; tên sai định dạng → `null` |
 | PC-5 | `revokeNotificationsAndRestart(pkg, activity)` = `setsid sh -c '<script>' </dev/null >/dev/null 2>&1 &` với script = `sleep 1; pm revoke <pkg> android.permission.POST_NOTIFICATIONS; am start -n <pkg>/<activity>`; package/activity sai định dạng (SC-2) → `null` |
 
 **Vì sao thu hồi Thông báo lại giết app (FR-D10).** Android giết process của app mỗi khi một quyền runtime bị thu hồi —
@@ -119,6 +122,11 @@ kể cả khi người dùng tắt Thông báo trong Cài đặt; không có cá
 Vì vậy: Home hiện hộp thoại xác nhận "Totch sẽ khởi động lại"; đồng ý → `setPermission(NOTIFICATIONS, false)` chạy lệnh
 PC-5. Lệnh chạy trong session riêng (`setsid`, nền) nên sống sót khi Shizuku gỡ UserService; `sleep 1` để lời gọi
 binder trả về trước khi app bị giết. Sau khi mở lại, foreground service tự chạy nếu `enabled` (DM-1).
+
+**Cài bản cập nhật (v1.6.1 — FR-D11).** Trạng thái = `PackageManager.canRequestPackageInstalls()`. Thu hồi quyền đặc biệt
+này cũng làm hệ thống giết app (ActivityManager theo dõi app-op `REQUEST_INSTALL_PACKAGES`), nên dùng cùng cách với
+Thông báo: hỏi xác nhận rồi chạy lệnh tách rời và mở lại Totch. Không có Shizuku → mở
+`Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES` (`package:<pkg>`).
 
 ## 7. Chặn chạm bằng Trợ năng (v1.5 — FR-G14)
 

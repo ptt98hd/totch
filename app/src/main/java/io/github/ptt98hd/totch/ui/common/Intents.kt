@@ -45,6 +45,11 @@ fun Context.requestUnrestrictedBattery() {
 /** List of apps and their battery optimization, where the exemption can be removed. */
 fun Context.openBatteryOptimizationSettings() = safeStart(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
 
+/** FR-D11: "Install unknown apps" page of Totch. */
+fun Context.openInstallUnknownAppsSettings() = safeStart(
+    Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")),
+)
+
 private fun Context.safeStart(intent: Intent): Boolean = try {
     startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     true

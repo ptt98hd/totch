@@ -39,13 +39,14 @@ class AndroidSystemStatus(
     private val notificationsGranted = MutableStateFlow(false)
     private val mediaAccessGranted = MutableStateFlow(false)
     private val batteryUnrestricted = MutableStateFlow(false)
+    private val installUpdatesAllowed = MutableStateFlow(false)
     private val powerManager = context.getSystemService(PowerManager::class.java)
 
     override val requirements: StateFlow<Requirements> = combine(
         combine(shizuku.state, accessibilityEnabled, accessibility.service, ::Triple),
-        notificationsGranted, mediaAccessGranted, batteryUnrestricted,
-    ) { (s, enabled, service), notifications, media, battery ->
-        Requirements(s.running, s.granted, enabled || service != null, notifications, media, battery)
+        notificationsGranted, mediaAccessGranted, batteryUnrestricted, installUpdatesAllowed,
+    ) { (s, enabled, service), notifications, media, battery, install ->
+        Requirements(s.running, s.granted, enabled || service != null, notifications, media, battery, install)
     }.stateIn(scope, SharingStarted.Eagerly, Requirements())
 
     init {
@@ -71,6 +72,7 @@ class AndroidSystemStatus(
         notificationsGranted.value = NotificationManagerCompat.from(context).areNotificationsEnabled()
         mediaAccessGranted.value = context.packageName in NotificationManagerCompat.getEnabledListenerPackages(context)
         batteryUnrestricted.value = powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
+        installUpdatesAllowed.value = context.packageManager.canRequestPackageInstalls()
     }
 
     override fun requestShizukuPermission() = shizuku.requestPermission()
@@ -89,6 +91,14 @@ class AndroidSystemStatus(
                 ),
             )
             Permission.BATTERY -> listOf(PermissionCommands.batteryUnrestricted(pkg, granted))
+            // Denying the app-op kills Totch too, so it is detached and reopens the app (PC-7, UI-53).
+            Permission.INSTALL_UPDATES -> listOf(
+                if (granted) {
+                    PermissionCommands.allowInstallPackages(pkg)
+                } else {
+                    PermissionCommands.denyInstallPackagesAndRestart(pkg, MainActivity::class.java.name) ?: return false
+                },
+            )
             // Android 12 has no runtime notification permission. Revoking kills Totch, so it is detached and
             // reopens the app (FR-D10, PC-5); the UI asks first (UI-53).
             Permission.NOTIFICATIONS -> when {
