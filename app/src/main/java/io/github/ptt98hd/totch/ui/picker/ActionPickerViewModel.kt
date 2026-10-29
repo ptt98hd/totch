@@ -36,7 +36,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-enum class PickerTab { SYSTEM, APPS, SHORTCUTS, ACTIVITIES, TILES }
+/** UI-66: BASIC (FR-U46, formerly System) holds Not set and the fixed actions. */
+enum class PickerTab { BASIC, APPS, SHORTCUTS, ACTIVITIES, TILES }
 
 data class ShortcutGroup(val packageName: String, val appLabel: String, val shortcuts: List<ShortcutEntry>)
 
@@ -48,7 +49,7 @@ fun initialTab(action: Action): PickerTab = when (action) {
     is Action.LaunchShortcut -> PickerTab.SHORTCUTS
     is Action.LaunchActivity -> PickerTab.ACTIVITIES
     is Action.ClickTile -> PickerTab.TILES
-    else -> PickerTab.SYSTEM
+    else -> PickerTab.BASIC
 }
 
 private val labelOrder: Comparator<AppInfo> =
@@ -115,9 +116,9 @@ fun filterTiles(entries: List<TileEntry>, query: String): List<TileEntry> {
 data class ActionPickerUiState(
     val gesture: Gesture,
     val current: Action = Action.None,
-    val tab: PickerTab = PickerTab.SYSTEM,
-    /** Search of the System tab, applied with [filterCatalog] where the labels are known (UI-24, UI-29). */
-    val systemQuery: String = "",
+    val tab: PickerTab = PickerTab.BASIC,
+    /** Search of the Basic tab, applied with [filterCatalog] where the labels are known (UI-24, UI-29). */
+    val basicQuery: String = "",
     /** What can run right now (UI-62); every action is available by default. */
     val capabilities: Capabilities = Capabilities(),
     val appQuery: String = "",
@@ -151,7 +152,7 @@ data class ActionPickerUiState(
 
 private data class Local(
     val tab: PickerTab? = null,
-    val systemQuery: String = "",
+    val basicQuery: String = "",
     val appQuery: String = "",
     val apps: List<AppInfo>? = null,
     val shortcutQuery: String = "",
@@ -188,7 +189,7 @@ class ActionPickerViewModel(
                 gesture = gesture,
                 current = current,
                 tab = l.tab ?: initialTab(current),
-                systemQuery = l.systemQuery,
+                basicQuery = l.basicQuery,
                 capabilities = r.capabilities(),
                 appQuery = l.appQuery,
                 apps = l.apps?.filterApps(l.appQuery).orEmpty(),
@@ -247,11 +248,11 @@ class ActionPickerViewModel(
                     local.update { it.copy(tiles = tiles) }
                 }
             }
-            PickerTab.SYSTEM -> Unit
+            PickerTab.BASIC -> Unit
         }
     }
 
-    fun setSystemQuery(value: String) = local.update { it.copy(systemQuery = value) }
+    fun setBasicQuery(value: String) = local.update { it.copy(basicQuery = value) }
 
     fun setAppQuery(value: String) = local.update { it.copy(appQuery = value) }
 
@@ -270,7 +271,7 @@ class ActionPickerViewModel(
 
     fun setTileQuery(value: String) = local.update { it.copy(tileQuery = value) }
 
-    /** UI-10: saves the binding, switches the gesture on and finishes; UI-62: unavailable actions are ignored. UI-63: None clears it. */
+    /** UI-10: saves the binding, switches the gesture on and finishes; UI-62: unavailable actions are ignored. UI-65: None clears it, the gesture stays on. */
     fun select(action: Action) {
         if (state.value.need(action) != null) return
         viewModelScope.launch {

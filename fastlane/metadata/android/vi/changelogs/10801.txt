@@ -1,0 +1,5 @@
+* Switch của cử chỉ giờ chỉ quyết định có nhận chạm hay không; "Chưa đặt" giữ cử chỉ bật nhưng không làm gì.
+* Bảng chọn hành động: tab Hệ thống đổi thành Cơ bản, chọn tab bằng ô thả xuống.
+* Hộp thoại Mời cà phê và cập nhật mới; Cài đặt › Kiểm tra cập nhật mở cùng hộp thoại với top bar.
+* Cài đặt: tùy chọn ẩn nhãn thanh điều hướng; "Kiểm tra khi mở".
+* Liên kết mở ngay trong app; thanh trượt nút tròn, switch có icon; sao trên icon cân đối hơn.

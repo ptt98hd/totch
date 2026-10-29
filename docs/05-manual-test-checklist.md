@@ -305,6 +305,22 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-P12 | (1.8) Chỉ Trợ năng (không Shizuku, chưa cấp Không làm phiền): picker mọi tab; cử chỉ đã gán Wi-Fi | Kết nối / Màn hình / Tiles mờ, không chọn được, "Cần Shizuku"; Đổ chuông… mờ, "Cần quyền Không làm phiền"; Ứng dụng / Shortcut / Activity chọn được. Cử chỉ Wi-Fi: switch tắt + disabled, "Wi-Fi · Cần Shizuku" màu đỏ, chạm dòng vẫn mở picker | [ ] |
 | MT-H11 | (1.8) Home, tiếng Việt và tiếng Anh, cỡ chữ lớn: tắt hết quyền / xoay ngang / bật-tắt | Mô tả thẻ Totch luôn một dòng ("Cần Trợ năng hoặc Shizuku", "Tạm dừng khi xoay ngang", "Đang bật…") | [ ] |
 
+## 17. v1.8.1 — switch / Chưa đặt, ô chọn tab, hộp thoại, Custom Tabs
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-G20 | Gestures: bật switch Chạm đúp (chưa đặt), Chạm = Home | Không mở picker; dòng sáng, "Chưa đặt". Chạm một lần ở notch → về Home sau ~300 ms; chạm đúp → không gì, không rung | [ ] |
+| MT-G21 | Bật Trợ năng; bật Vuốt xuống (chưa đặt); vuốt xuống ở notch | Thanh thông báo **không** kéo xuống, không gì xảy ra. Tắt switch → vuốt xuống kéo thanh thông báo như thường | [ ] |
+| MT-G22 | Picker của cử chỉ đang bật › Cơ bản › "Chưa đặt" | Sheet đóng, cử chỉ **vẫn bật**, mô tả "Chưa đặt" | [ ] |
+| MT-G23 | Cập nhật đè từ 1.8.0 có cử chỉ đã gán / đã tắt | Trạng thái switch giữ như trước; cử chỉ chưa đặt đều tắt | [ ] |
+| MT-P20 | Picker | Ô chọn tab dưới tiêu đề (icon + tên); mở → menu 5 tab có icon; tab đầu "Cơ bản" (icon danh mục) | [ ] |
+| MT-U50 | Settings › Giao diện › Hiện nhãn thanh điều hướng: tắt / bật | Bottom bar chỉ còn icon / có nhãn lại | [ ] |
+| MT-U51 | Settings › Kiểm tra cập nhật (đang mới nhất) | Mở cùng hộp thoại với nút top bar: đang kiểm tra → "bản mới nhất" | [ ] |
+| MT-U52 | Hộp thoại ủng hộ, hộp thoại cập nhật (mọi trạng thái), sáng / tối | Icon tròn lớn, tiêu đề giữa, nút đầy đủ chiều rộng; có bản mới: chip "1.8.1 → x.y.z", ghi chú trong khối nền cuộn được | [ ] |
+| MT-U53 | Bấm Mã nguồn, Shizuku (Giới thiệu), Mời cà phê | Trang mở trong Custom Tab ngay trong app; Back quay lại Totch | [ ] |
+| MT-U54 | Mọi switch (Home, Gestures, Settings); mọi thanh trượt (Notch) | Switch có ✓ khi bật, ✕ khi tắt; thanh trượt có nút kéo tròn | [ ] |
+| MT-I7 | Icon launcher / F-Droid | 4 ngôi sao giống nhau ở 4 góc, đối xứng | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)

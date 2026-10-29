@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.browser.customtabs.CustomTabsIntent
 import io.github.ptt98hd.totch.action.MediaListenerService
 
 const val SHIZUKU_PACKAGE = "moe.shizuku.privileged.api"
@@ -19,6 +20,23 @@ fun Context.openShizuku() {
     val intent = packageManager.getLaunchIntentForPackage(SHIZUKU_PACKAGE)
         ?: Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_WEBSITE))
     safeStart(intent)
+}
+
+/**
+ * FR-U52: opens [url] in a Custom Tab inside Totch, coloured for the [dark] theme; with any app that can view it when
+ * no browser supports Custom Tabs.
+ */
+fun Context.openInApp(url: String, dark: Boolean) {
+    val uri = Uri.parse(url)
+    val tab = CustomTabsIntent.Builder()
+        .setShowTitle(true)
+        .setColorScheme(if (dark) CustomTabsIntent.COLOR_SCHEME_DARK else CustomTabsIntent.COLOR_SCHEME_LIGHT)
+        .build()
+    try {
+        tab.launchUrl(this, uri)
+    } catch (_: ActivityNotFoundException) {
+        safeStart(Intent(Intent.ACTION_VIEW, uri))
+    }
 }
 
 fun Context.openAccessibilitySettings() = safeStart(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))

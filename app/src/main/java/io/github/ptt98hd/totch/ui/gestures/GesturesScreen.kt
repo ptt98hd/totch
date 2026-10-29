@@ -27,7 +27,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -48,6 +47,7 @@ import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.SectionHeader
 import io.github.ptt98hd.totch.ui.common.TonalIcon
 import io.github.ptt98hd.totch.ui.common.TotchListItem
+import io.github.ptt98hd.totch.ui.common.TotchSwitch
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.actionDisplayName
 import io.github.ptt98hd.totch.ui.common.icon
@@ -149,7 +149,7 @@ fun GesturesScreen(
 }
 
 /**
- * UI-16: a gesture row with its switch; switched-off and unavailable gestures are dimmed (UI-14). FR-U43: unbound
+ * UI-16, UI-64: a gesture row with its switch, which only decides whether the gesture listens (FR-G15); switched-off and unavailable gestures are dimmed (UI-14). FR-U43: unbound
  * gestures read "Not set"; FR-U44: a gesture or action that cannot run shows why, and its switch is disabled.
  */
 @Composable
@@ -176,7 +176,7 @@ private fun GestureListItem(row: GestureRow, onClick: () -> Unit, onSwitchChange
         leading = { TonalIcon(row.gesture.icon) },
         trailing = {
             val switchDescription = stringResource(R.string.gesture_switch_cd, stringResource(row.gesture.labelRes))
-            Switch(
+            TotchSwitch(
                 checked = row.on,
                 onCheckedChange = onSwitchChange,
                 enabled = row.enabled && need == null,
@@ -205,7 +205,7 @@ private fun GesturesScreenPreview() {
                             }
                             GestureRow(
                                 g, action, appLabel = if (g == Gesture.TAP) "Camera" else null,
-                                enabled = g.isAvailable(false), on = g.isAvailable(false) && action != Action.None && g != Gesture.SWIPE_LEFT,
+                                enabled = g.isAvailable(false), on = g.isAvailable(false) && g != Gesture.SWIPE_LEFT,
                             )
                         },
                     )

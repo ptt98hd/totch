@@ -195,8 +195,15 @@ Hộp thoại "bản mới" tự hiện (kiểm tra khi mở app, thông báo �
 Nút top bar có **chấm báo** (badge) khi trạng thái là `Available`.
 
 `UpdateUi.dialog` nay nghĩa là "hộp thoại cập nhật đang mở" ở mọi trạng thái; `startUpdate()` **giữ** hộp thoại mở để
-hiện tiến độ (v1.6: đóng); `installFailed()` mở hộp thoại ở `Failed`. Dòng *Check for updates* ở Settings vẫn gọi
-`check()` (UP-6, không đổi).
+hiện tiến độ (v1.6: đóng); `installFailed()` mở hộp thoại ở `Failed`. ~~Dòng *Check for updates* ở Settings vẫn gọi
+`check()` (UP-6, không đổi).~~ v1.8.1 (FR-U50): dòng *Check for updates* ở Settings gọi `openDialog()` như nút top bar
+(UP-23).
+
+**Giao diện (v1.8.1, FR-U48):** hộp thoại vẽ bằng `TotchDialog` ([ui §1](ui.md)): icon `SystemUpdate` trong vòng tròn
+(Checking / Downloading: vòng tiến độ quanh icon; Failed: icon `ErrorOutline`, nền `errorContainer`; UpToDate: icon
+`CheckCircle`). Available: chip phiên bản "X.Y.Z → A.B.C" dưới tiêu đề, ghi chú phát hành trong khối nền
+`surfaceContainer` bo 16 dp cuộn được (tối đa 280 dp), dòng cách cài có icon (Shizuku / cài đặt hệ thống). Downloading:
+thanh tiến độ + phần trăm lớn. Nút như bảng trên, xếp dọc đầy đủ chiều rộng.
 
 **Cài qua Shizuku:** đã có từ v1.6.3 (§7, FR-U36). Shizuku sẵn sàng → `pm install` dưới uid shell: không có hộp thoại
 xác nhận, không cần quyền "Cài ứng dụng không rõ nguồn gốc", Totch tự mở lại sau khi cài.
@@ -207,3 +214,4 @@ xác nhận, không cần quyền "Cài ứng dụng không rõ nguồn gốc", 
 | UP-20 | `startUpdate()` giữ `dialog = true` trong `Downloading` và sau khi xong (`Installing` / `Failed`); `dismissDialog()` ở `Downloading` đóng dialog, tải vẫn tiếp tục |
 | UP-21 | `installFailed()` → `Failed` với `dialog = true` (thay UP-17: đóng dialog) |
 | UP-22 | `UpdateUi.badge` đúng khi trạng thái là `Available` |
+| UP-23 | (v1.8.1, FR-U50) `AppSettingsViewModel.onUpdateRowClick()` = `openDialog()`: `Idle` → `dialog = true` + `Checking` → `UpToDate` với dialog vẫn mở (giống nút top bar). Thay UP-6 phần "`UpToDate` không mở dialog" |

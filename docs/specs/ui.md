@@ -10,7 +10,13 @@ Yêu cầu: FR-U1…FR-U42, FR-A20, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-
   (icon `SystemUpdate`, chấm báo khi có bản mới — update §8) rồi **Buy me a coffee** (icon ly cà phê, ngoài cùng bên
   phải). Hai nút lấy hành động từ `LocalAppActions` (do `MainActivity` cung cấp) nên màn hình không phải truyền tay.
 - `NavigationBar` dưới cùng có 4 mục (v1.4, FR-U19): **Home**, **Gestures**, **Notch** (icon điện thoại có notch,
-  vector riêng `NotchIcons`), **Settings** (cài đặt ứng dụng). Luôn hiển thị.
+  vector riêng `NotchIcons`), **Settings** (cài đặt ứng dụng). Luôn hiển thị. v1.8.1 (FR-U49): nhãn dưới icon hiện khi
+  `Settings.navLabels` (mặc định bật); tắt → chỉ icon (`label = null`).
+- **Switch** (v1.8.1, FR-U54): mọi switch dùng `TotchSwitch` — `Switch` của Material 3 với `thumbContent` là icon
+  `Check` (bật) / `Close` (tắt), cỡ `SwitchDefaults.IconSize`.
+- **Liên kết** (v1.8.1, FR-U52): `MainActivity` cung cấp `LocalUriHandler` mở `http(s)` bằng Custom Tabs
+  (`CustomTabsIntent`, màu thanh theo theme); lỗi (không có trình duyệt hỗ trợ) → `ACTION_VIEW` như cũ. Mọi chỗ mở link
+  (About, Buy me a coffee) đi qua handler này.
 - Chuyển tab có animation (FR-U22): trang mới trượt vào 1/5 chiều rộng + fade theo hướng tab (sang phải nếu tab
   đích nằm bên phải), trang cũ trượt ngược lại; 300 ms.
 - Action picker là **sheet** trên màn Gestures (FR-U20), không phải destination riêng.
@@ -29,13 +35,22 @@ Yêu cầu: FR-U1…FR-U42, FR-A20, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-
 | UI-43 | Chuyển tab: hướng trượt = dấu của (chỉ số tab đích − chỉ số tab nguồn) |
 | UI-44 | (v1.7) Top bar: bên phải đúng 2 nút — Check for updates (mở hộp thoại cập nhật, update §8) rồi Buy me a coffee (mở hộp thoại ủng hộ) |
 | UI-45 | (v1.7) Mọi dòng danh sách cao ≥ 72 dp, tiêu đề và mô tả một dòng (kiểm thủ công MT-U40) |
+| UI-70 | (v1.8.1, FR-U49) `navLabels = false` → bottom bar không có nhãn; `true` → có nhãn (kiểm thủ công MT-U50) |
 
 ### Buy me a coffee (v1.7 — FR-U40, prototype)
+v1.8.1 (FR-U48): hộp thoại vẽ bằng `TotchDialog` (bên dưới); nút chính **Buy me a coffee** đầy đủ chiều rộng có icon,
+**Maybe later** là `TextButton` bên dưới; link mở trong app (FR-U52).
+
 Hộp thoại ủng hộ dùng chung cho nút top bar, dòng ở Home và Settings: icon ly cà phê, tiêu đề "Buy me a coffee", một
 đoạn ngắn "Totch is free and open source, with no ads. If it helps you, a coffee keeps it going." / "Totch miễn phí, mã
 nguồn mở, không quảng cáo. Nếu thấy hữu ích, một ly cà phê giúp Totch tiếp tục phát triển.", nút **Buy me a coffee**
 (mở `donate_url` trong trình duyệt) và **Maybe later**. Đây là prototype: URL là chuỗi `donate_url` (không dịch) trong
 `strings.xml`, đổi được mà không sửa code; chưa có cổng thanh toán trong app (F-Droid: không thư viện độc quyền).
+
+**`TotchDialog`** (v1.8.1, FR-U48 — khung chung của hộp thoại ủng hộ và cập nhật): `BasicAlertDialog` + `Surface` bo 28 dp,
+nền `surfaceContainerHigh`; trên cùng là icon 32 dp trong vòng tròn 72 dp nền `primaryContainer` (tùy chọn có
+`CircularProgressIndicator` vòng quanh khi đang bận), tiêu đề `headlineSmall` căn giữa, nội dung, rồi các nút xếp dọc
+đầy đủ chiều rộng (nút chính `Button`, nút phụ `TextButton`).
 
 Dòng *Buy me a coffee* (Home, Settings): icon ly cà phê (box tonal), tiêu đề "Buy me a coffee", mô tả "Support Totch's
 development" / "Ủng hộ phát triển Totch", chevron (›).
@@ -118,8 +133,11 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
   "Chưa đặt".
   - Switch bật (`on = isGestureOn(g)`): chạm dòng → mở **Action picker** (bottom sheet); dòng hiện tên hành động.
   - Switch tắt: chạm dòng **không** mở picker; nếu có hành động đã nhớ, dòng hiện tên đó mờ đi.
-  - Bật switch: có hành động đã nhớ → bỏ g khỏi `disabledGestures`; chưa có (`None`) → mở picker, chỉ bật khi
-    đã chọn hành động (đóng sheet không chọn → vẫn tắt). Tắt switch → thêm g vào `disabledGestures`, binding giữ nguyên.
+  - ~~Bật switch: có hành động đã nhớ → bỏ g khỏi `disabledGestures`; chưa có (`None`) → mở picker, chỉ bật khi
+    đã chọn hành động (đóng sheet không chọn → vẫn tắt). Tắt switch → thêm g vào `disabledGestures`, binding giữ nguyên.~~
+  - v1.8.1 (FR-G15): switch = cử chỉ **nhận sự kiện**. Bật switch → thêm g vào `enabledGestures` (kể cả khi chưa đặt:
+    dòng sáng, mô tả "Not set", cử chỉ nhận sự kiện nhưng không làm gì); tắt → bỏ g khỏi `enabledGestures`, binding giữ
+    nguyên. Switch không bao giờ mở picker.
 - v1.3: bỏ nút **Lặp lại** (FR-G11).
 - Swipe down, Swipe down & hold bị vô hiệu (mờ, không bấm được, switch **tắt** + disabled) với nhãn "Cần quyền Trợ năng
   (bật ở Home)" khi Trợ năng **chưa** bật; Trợ năng đang bật → dùng như mọi cử chỉ khác (v1.5, FR-G14).
@@ -139,8 +157,9 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
 | UI-13 | `GesturesUiState.groups` đúng 4 nhóm theo bảng trên, đúng thứ tự |
 | UI-14 | Trợ năng chưa bật: dòng `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` có `enabled=false` và `on=false` (dù đã gán); mọi dòng khác `enabled=true`. Trợ năng đang bật (`Requirements.accessibilityEnabled`): mọi dòng `enabled=true`, `on = isGestureOn(g, true)` |
 | UI-15 | ~~Nút Lặp lại cho cử chỉ giữ~~ — bỏ ở v1.3 (FR-G11) |
-| UI-16 | `GestureRow.on = isGestureOn(g)`; `setOn(g, false)` thêm g vào `disabledGestures`, binding giữ nguyên; `setOn(g, true)` với binding ≠ None bỏ g khỏi `disabledGestures` |
-| UI-17 | `setOn(g, true)` với binding `None` → không lưu gì, `picking = g`; `openPicker(g)` chỉ đặt `picking` khi `on` (v1.8: hoặc khi `enabled` và hành động không khả dụng, UI-61); `closePicker()` → `picking = null` |
+| UI-16 | `GestureRow.on = isGestureOn(g)`; `setOn(g, false)` thêm g vào `disabledGestures`, binding giữ nguyên; `setOn(g, true)` với binding ≠ None bỏ g khỏi `disabledGestures`. v1.8.1: thay bằng UI-64 |
+| UI-64 | (v1.8.1, FR-G15) `setOn(g, true)` → g ∈ `enabledGestures`, binding giữ nguyên (kể cả `None`: `on=true`, `picking` không đổi); `setOn(g, false)` → g ∉ `enabledGestures`, binding giữ nguyên |
+| UI-17 | ~~`setOn(g, true)` với binding `None` → không lưu gì, `picking = g`~~ (v1.8.1: UI-64); `openPicker(g)` chỉ đặt `picking` khi `on` (v1.8: hoặc khi `enabled` và hành động không khả dụng, UI-61); `closePicker()` → `picking = null` |
 | UI-60 | (v1.8, FR-U44) `Capabilities(accessibility=false, shizuku=false)` → mọi dòng `enabled=false`, `on=false`, `need=ACCESS`. Chỉ Shizuku → vuốt xuống `need=ACCESSIBILITY`, các dòng khác `enabled=true` |
 | UI-61 | (v1.8, FR-U44) Dòng có hành động không khả dụng (ví dụ `ToggleWifi` khi Shizuku chưa sẵn sàng, `RingerSilent` khi thiếu quyền Không làm phiền): `enabled=true`, `on=false`, `need` = lý do; `setOn(g, true)` không lưu gì; `openPicker(g)` đặt `picking = g` |
 
@@ -156,13 +175,15 @@ v1.7 (FR-U37): sheet **native** của `BottomSheetScaffold` (Material 3), thay `
 
 ~~Sheet (`Surface` bo 2 góc trên 28 dp) chiếm vùng nội dung của màn Gestures — **không** che top bar và bottom bar, hai
 thanh này vẫn bấm được (chuyển tab → đóng picker).~~ **Không** kéo xuống để ẩn; hàng tiêu đề = tên cử chỉ + nút **đóng**
-(✕) bên phải; nút Back hệ thống cũng đóng. Bên dưới là **hàng chip cuộn ngang** (`LazyRow` của `FilterChip`, mỗi chip có
+(✕) bên phải; nút Back hệ thống cũng đóng. v1.8.1 (FR-U47): bên dưới là **ô chọn tab** (`ExposedDropdownMenuBox` +
+`OutlinedTextField` chỉ đọc, đầy đủ chiều rộng trừ gutter, icon tab đang chọn ở đầu, mũi tên ở cuối; menu liệt kê các tab
+theo thứ tự, mỗi mục có icon + tên, mục đang chọn được tô) thay hàng chip. ~~Bên dưới là **hàng chip cuộn ngang** (`LazyRow` của `FilterChip`, mỗi chip có
 icon + nhãn, chip đang chọn được tô màu và luôn được cuộn vào tầm nhìn — v1.5, FR-U25; thay segmented button để thêm
-mục mới như Intents, Settings… mà nhãn không bị hẹp lại). Nội dung đổi mục có fade:
+mục mới như Intents, Settings… mà nhãn không bị hẹp lại).~~ Nội dung đổi mục có fade:
 
 | Mục | Nội dung |
 |---|---|
-| System | v1.6.3 (FR-U34, FR-U35): ô tìm kiếm như tab Applications, rồi 6 nhóm (bảng dưới). ~~Không có "Không làm gì".~~ v1.8 (FR-U43): dòng **Not set** / **Chưa đặt** (icon `Block`, một card riêng không tiêu đề) ở đầu danh sách, ẩn khi query không khớp tên của nó. Hành động âm thanh (trừ âm lượng) có dòng phụ "Requires Do Not Disturb access" khi chưa có quyền (FR-A18) |
+| Basic (v1.8.1, FR-U46: trước là System; en **Basic**, vi **Cơ bản**, icon `Category`) | v1.6.3 (FR-U34, FR-U35): ô tìm kiếm như tab Applications, rồi 6 nhóm (bảng dưới). ~~Không có "Không làm gì".~~ v1.8 (FR-U43): dòng **Not set** / **Chưa đặt** (icon `Block`, một card riêng không tiêu đề) ở đầu danh sách, ẩn khi query không khớp tên của nó. Hành động âm thanh (trừ âm lượng) có dòng phụ "Requires Do Not Disturb access" khi chưa có quyền (FR-A18) |
 | Applications | Ô tìm kiếm + danh sách app (icon, tên, radio) |
 
 Ô tìm kiếm (v1.7, FR-U38): `CompactSearchField` cao 44 dp (thay `SearchBar` 56 dp), bo tròn hoàn toàn, nền
@@ -222,7 +243,9 @@ dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọ
 | UI-28 | (v1.6) Tab Tiles dùng `filterTiles` (QT-1), tải lần đầu mở tab (như UI-22); chọn → `ClickTile(pkg, service, label)` |
 | UI-29b | (v1.7) `ActionPickerUiState.shizukuReady` = `Requirements.shizukuRunning && shizukuGranted`; `needsShizuku` theo AR-10. v1.8: thay bằng `capabilities` + `need(action)` (UI-62) |
 | UI-62 | (v1.8, FR-U44) `Capabilities.need` theo bảng Khả dụng; `ActionPickerUiState.need(action)` dùng `Requirements` hiện tại; `select` một hành động có `need ≠ null` → không lưu, `finished=false` |
-| UI-63 | (v1.8, FR-U43) `select(None)` → binding `None`, `finished=true`, cử chỉ tắt (`isGestureOn = false`) |
+| UI-63 | (v1.8, FR-U43) `select(None)` → binding `None`, `finished=true`, cử chỉ tắt (`isGestureOn = false`). v1.8.1: thay bằng UI-65 |
+| UI-65 | (v1.8.1, FR-G15) `select(None)` → binding `None`, `finished=true`, cử chỉ **vẫn bật** (`isGestureOn = true`) |
+| UI-66 | (v1.8.1, FR-U46) `PickerTab.entries` = BASIC, APPS, SHORTCUTS, ACTIVITIES, TILES; `initialTab` của hành động cố định / `None` = BASIC; `basicQuery`, `setBasicQuery` (thay `systemQuery`, UI-29) |
 | UI-26 | Mỗi nhóm là một card bo góc (`Modifier.groupItem(index, count)`: bo góc trên ở dòng đầu, góc dưới ở dòng cuối, đường kẻ trên mỗi dòng trừ dòng đầu) |
 
 ### Notch (FR-U12, FR-U17, FR-U18, FR-S9, FR-R5…FR-R7) — tab thứ 3
@@ -233,6 +256,9 @@ chuyển sang Settings, bỏ section Phản hồi):
 3. **Kích thước**: Width (dp), Height (dp), Padding (dp).
 
 v1.6 (FR-U28): các slider trong một section ngăn bằng `RowDivider` (thụt lề hai bên như Settings).
+
+v1.8.1 (FR-U53): thanh trượt là `TotchSlider` — `Slider` của Material 3 với nút kéo **hình tròn** 20 dp màu `primary`
+(thay thanh dọc), track không có khe quanh nút kéo; mọi thanh trượt trong app dùng component này.
 
 Mỗi slider (FR-U18): hàng 1 là nhãn ngắn + giá trị; hàng 2 là nút **−**, thanh slider, nút **+**, nút reset. Kéo
 slider bắt vào nấc (bội số của bước, UI-35) nhưng **không vẽ vạch**; nút − / + đổi đúng một đơn vị (UI-36), lưu ngay,
@@ -282,9 +308,12 @@ Các section, theo thứ tự (v1.5):
    | Gestures in landscape | Keep the notch active when rotated | Vẫn nhận chạm ở notch khi xoay |
 2. **Giao diện**: Theme (icon bảng màu; System / Light / Dark — **dialog chọn** như Ngôn ngữ), Amoled black (icon độ
    tương phản, switch, mô tả "Pure black dark theme"), Ngôn ngữ (icon ngôn ngữ; System / English / Tiếng Việt — dialog
-   chọn). Theme và Ngôn ngữ có **chevron** (›) ở cuối dòng.
+   chọn). Theme và Ngôn ngữ có **chevron** (›) ở cuối dòng. v1.8.1 (FR-U49): dòng cuối **Show navigation labels** /
+   **Hiện nhãn thanh điều hướng** (icon `Label`, switch, mô tả "Text under the bottom bar icons" / "Chữ dưới icon thanh
+   điều hướng").
 3. **Cập nhật** (v1.6.1, FR-U29 — [update §6](update.md)): *Check on app launch* (icon tên lửa/khởi chạy, switch, mô
-   tả "Look for a new version when Totch opens" / "Tìm bản mới mỗi khi mở Totch"), *Automatic checks* (icon đồng hồ cập nhật,
+   tả "Look for a new version when Totch opens" / "Tìm bản mới mỗi khi mở Totch" — v1.8.1, FR-U51: **Check on launch** /
+   **Kiểm tra khi mở**, mô tả "When Totch opens" / "Mỗi khi mở Totch"), *Automatic checks* (icon đồng hồ cập nhật,
    giá trị Off / Daily / Weekly / Monthly, chevron, dialog chọn), *Check for updates* (icon cập nhật hệ thống, mô tả theo
    trạng thái — chuyển từ Giới thiệu).
 4. **Ủng hộ** (v1.7, FR-U40): một dòng *Buy me a coffee* (§1 — Buy me a coffee).
@@ -301,6 +330,7 @@ Các section, theo thứ tự (v1.5):
 |---|---|
 | UI-32 | Setter theme / amoled / language / startOnBoot / haptics / landscapeGestures lưu đúng field |
 | UI-37 | (v1.6) Dòng Check for updates hiển thị mô tả theo `UpdateState` (UP-6); bấm khi `Available` → hộp thoại tên bản + ghi chú phát hành, nút **Update** / **Later** (v1.6.1: hộp thoại ở `MainActivity`, update §5) |
+| UI-67 | (v1.8.1, FR-U49) `setNavLabels(v)` lưu `navLabels` |
 | UI-38 | (v1.6.1) Thứ tự section: System, Appearance, Update, About; Update có đúng 3 dòng như trên, About không còn Check for updates. v1.7: System, Appearance, Update, **Support**, About |
 
 ### Giao diện & ngôn ngữ (FR-S6, FR-S7)
@@ -319,13 +349,15 @@ Adaptive icon **lỗ đen**, nguồn duy nhất là `scripts/icon/gen.py` (sinh 
   hình tròn tâm (54, 54) bán kính 14.5.
 - Đĩa bồi tụ: hình **con thoi** (lens) **nằm ngang**, đối xứng qua y = 54, từ x = 21.6 đến 86.4, dày 5.2 ở giữa (hai
   cung bán kính lớn). Vòng sáng bị cắt quanh đĩa với khe 1.2 (cung đồng tâm với mép đĩa) nên đĩa tách rõ khỏi vòng.
-- Không xoay. Vài ngôi sao 4 cánh ở nền, nằm trong vùng an toàn 66 dp.
+- Không xoay. ~~Vài ngôi sao 4 cánh ở nền~~ v1.8.1 (FR-U55): **4 ngôi sao 4 cánh giống hệt nhau** (bán kính mũi 2.6),
+  tâm tại (54 ± 19, 54 ± 19) — mỗi góc một ngôi sao, đối xứng qua x = 54 và y = 54 — nằm trong vùng an toàn 66 dp.
 
 | ID | Tiêu chí |
 |---|---|
 | IC-1 | Mọi vòng tròn tâm (54, 54); đĩa đối xứng qua y = 54 và x = 54; không có `rotation` trong drawable |
 | IC-2 | Màu Monet (Android 12+, minSdk 31): nền `@android:color/system_accent1_800`, sao `system_accent1_200`, vòng sáng `system_accent1_200`, đĩa `system_accent1_100`, chân trời `system_neutral1_1000` → đổi theo hình nền (launcher vẽ lại khi bảng màu đổi) |
 | IC-3 | Layer `monochrome` = vòng sáng + đĩa (cùng hình, alpha) cho themed icon Android 13+; `ic_stat_totch` cùng hình |
+| IC-5 | (v1.8.1, FR-U55) `STARS` gồm đúng 4 ngôi sao cùng hình (`star(x, y)`), tâm (35, 35), (73, 35), (35, 73), (73, 73) |
 | IC-4 | `icon.png` 512×512 cho F-Droid dùng bảng màu xem trước cố định (tím) |
 
 ### Splash screen (v1.6.1 — FR-U31)

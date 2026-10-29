@@ -51,6 +51,15 @@ class AppSettingsViewModelTest {
     }
 
     @Test
+    fun `UI-67 navigation labels setter persists`() = runTest {
+        val repo = FakeSettingsRepository()
+        val vm = vm(repo)
+        assertTrue(repo.current.navLabels)
+        vm.setNavLabels(false)
+        assertFalse(repo.current.navLabels)
+    }
+
+    @Test
     fun `UP-13 update settings persist`() = runTest {
         val repo = FakeSettingsRepository()
         val vm = vm(repo)
@@ -69,10 +78,11 @@ class AppSettingsViewModelTest {
     }
 
     @Test
-    fun `UP-6 check reports available, up to date or failure`() {
+    fun `UP-6 UP-23 check reports available, up to date or failure in the dialog`() {
         val vm = vm()
         vm.onUpdateRowClick()
         assertEquals(UpdateState.Checking, vm.state.value.update)
+        assertTrue(vm.state.value.updateDialog) // UP-23: the same dialog as the top bar
         vm.onUpdateRowClick() // ignored while checking
         assertEquals(1, updater.checks)
         updater.latest.complete(release)
@@ -88,7 +98,8 @@ class AppSettingsViewModelTest {
         updater.latest = CompletableDeferred(release)
         current.onUpdateRowClick()
         assertEquals(UpdateState.UpToDate, current.state.value.update)
-        assertFalse(current.state.value.updateDialog)
+        assertTrue(current.state.value.updateDialog) // UP-23
+        current.dismissUpdateDialog()
 
         updater.latest = CompletableDeferred<Release?>().apply { complete(null) }
         current.onUpdateRowClick()
@@ -114,10 +125,14 @@ class AppSettingsViewModelTest {
         updater.install.complete(InstallResult.SYSTEM_INSTALLER)
         assertEquals(UpdateState.Installing(viaShizuku = false), vm.state.value.update)
 
+        vm.onUpdateRowClick() // UP-23: Installing only reopens the dialog
+        assertEquals(UpdateState.Installing(viaShizuku = false), vm.state.value.update)
+
+        val retry = vm()
         updater.latest = CompletableDeferred(release)
         updater.install = CompletableDeferred(InstallResult.FAILED)
-        vm.onUpdateRowClick()
-        vm.startUpdate()
-        assertEquals(UpdateState.Failed, vm.state.value.update)
+        retry.onUpdateRowClick()
+        retry.startUpdate()
+        assertEquals(UpdateState.Failed, retry.state.value.update)
     }
 }

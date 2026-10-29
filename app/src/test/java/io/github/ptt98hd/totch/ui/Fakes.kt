@@ -41,6 +41,9 @@ val LegacyBindings: Map<Gesture, Action> = DefaultBindings + mapOf(
     Gesture.SWIPE_RIGHT to Action.MediaNext,
 )
 
+/** Switches on exactly the gestures bound to an action, as a pre-1.8.1 configuration behaved (settings ST-32). */
+fun Settings.boundOn(): Settings = copy(enabledGestures = bindings.filterValues { it != Action.None }.keys)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainDispatcherRule(val dispatcher: TestDispatcher = UnconfinedTestDispatcher()) : TestWatcher() {
     override fun starting(description: Description) = Dispatchers.setMain(dispatcher)

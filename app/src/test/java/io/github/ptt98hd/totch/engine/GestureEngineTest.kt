@@ -7,6 +7,8 @@ import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.model.TouchAction
 import io.github.ptt98hd.totch.core.model.TouchEvent
 import io.github.ptt98hd.totch.ui.LegacyBindings
+import io.github.ptt98hd.totch.ui.boundOn
+import io.github.ptt98hd.totch.core.settings.withGestureOn
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +22,7 @@ import kotlin.test.assertTrue
 
 class GestureEngineTest {
     /** Bound gestures and the 500 ms long press these tests were written for. */
-    private val base = Settings(enabled = true, bindings = LegacyBindings, longPressMs = 500)
+    private val base = Settings(enabled = true, bindings = LegacyBindings, longPressMs = 500).boundOn()
     private val region = Rect(400, 0, 600, 80)
     private val dispatched = mutableListOf<Action>()
     private var result: DispatchResult = DispatchResult.Ok
@@ -47,8 +49,9 @@ class GestureEngineTest {
         region = this@GestureEngineTest.region
     }
 
+    /** Binds [pairs]; gestures bound to an action are switched on, the others off. */
     private fun Settings.bind(vararg pairs: Pair<Gesture, Action>) =
-        copy(bindings = bindings + pairs.toMap())
+        copy(bindings = bindings + pairs.toMap()).boundOn()
 
     private fun down(t: Long, x: Float = 500f, y: Float = 40f) = TouchEvent(TouchAction.DOWN, x, y, t)
     private fun up(t: Long, x: Float = 500f, y: Float = 40f) = TouchEvent(TouchAction.UP, x, y, t)
@@ -85,6 +88,33 @@ class GestureEngineTest {
         runCurrent()
         assertTrue(dispatched.isEmpty())
         assertEquals(0, haptics)
+    }
+
+    @Test
+    fun `EN-14 a switched on gesture that is not set is recognized but does nothing`() = runTest {
+        val notSet = base.bind(Gesture.TAP to Action.Home).withGestureOn(Gesture.DOUBLE_TAP, true)
+        val e = engine(notSet.copy(bindings = notSet.bindings + (Gesture.DOUBLE_TAP to Action.None)))
+        e.onTouch(down(0))
+        e.onTouch(up(50))
+        runCurrent()
+        assertTrue(dispatched.isEmpty(), "DOUBLE_TAP listens: TAP waits doubleTapMs")
+        advanceTimeBy(400)
+        runCurrent()
+        assertEquals(listOf<Action>(Action.Home), dispatched)
+        e.onTouch(down(1000))
+        e.onTouch(up(1050))
+        e.onTouch(down(1100))
+        e.onTouch(up(1150))
+        advanceTimeBy(1000)
+        runCurrent()
+        assertEquals(1, dispatched.size)
+        assertEquals(1, haptics)
+
+        e.updateSettings(notSet.withGestureOn(Gesture.DOUBLE_TAP, false))
+        e.onTouch(down(3000))
+        e.onTouch(up(3050))
+        runCurrent()
+        assertEquals(2, dispatched.size)
     }
 
     @Test
@@ -209,7 +239,7 @@ class GestureEngineTest {
 
     @Test
     fun `EN-11 a switched off gesture dispatches nothing`() = runTest {
-        val e = engine(base.copy(disabledGestures = setOf(Gesture.SWIPE_RIGHT)))
+        val e = engine(base.withGestureOn(Gesture.SWIPE_RIGHT, false))
         e.onTouch(down(0, x = 420f))
         e.onTouch(move(50, 560f))
         e.onTouch(up(100, 560f))

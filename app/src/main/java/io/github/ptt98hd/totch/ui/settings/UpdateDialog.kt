@@ -1,22 +1,27 @@
 package io.github.ptt98hd.totch.ui.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.InstallMobile
 import androidx.compose.material.icons.outlined.SystemUpdate
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -25,12 +30,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.ptt98hd.totch.R
+import io.github.ptt98hd.totch.ui.common.DialogButton
+import io.github.ptt98hd.totch.ui.common.DialogChip
+import io.github.ptt98hd.totch.ui.common.DialogText
+import io.github.ptt98hd.totch.ui.common.DialogTextButton
+import io.github.ptt98hd.totch.ui.common.TotchDialog
 import io.github.ptt98hd.totch.update.UpdateController
 import io.github.ptt98hd.totch.update.UpdateState
 
 /**
  * UI-37, update spec §8: the update dialog in every state, drawn above every screen by `MainActivity`. Opened from the
- * top bar, the Settings row (new release), when the app opens or from the update notification.
+ * top bar, the Settings row (UP-23), when the app opens or from the update notification.
  */
 @Composable
 fun UpdateDialogHost(updates: UpdateController, versionName: String, shizukuReady: Boolean) {
@@ -46,6 +56,7 @@ fun UpdateDialogHost(updates: UpdateController, versionName: String, shizukuRead
     )
 }
 
+/** FR-U48: the update dialog drawn with [TotchDialog]; one look per [UpdateState] (update spec §8). */
 @Composable
 private fun UpdateDialog(
     state: UpdateState,
@@ -55,61 +66,102 @@ private fun UpdateDialog(
     onRetry: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val title = (state as? UpdateState.Available)?.let { stringResource(R.string.update_dialog_title, it.release.version.toString()) }
-        ?: stringResource(R.string.update_title)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Outlined.SystemUpdate, contentDescription = null) },
-        title = { Text(title) },
-        text = {
-            when (state) {
-                UpdateState.Idle, UpdateState.Checking -> Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp)
-                    Text(stringResource(R.string.update_dialog_checking))
-                }
-                UpdateState.UpToDate -> Text(stringResource(R.string.update_dialog_up_to_date, versionName))
-                is UpdateState.Available -> Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(
-                        state.release.notes.trim(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()),
-                    )
-                    Text(
-                        stringResource(if (shizukuReady) R.string.update_via_shizuku else R.string.update_via_system),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                is UpdateState.Downloading -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
-                    Text(stringResource(R.string.update_downloading, (state.progress * 100).toInt()))
-                }
-                is UpdateState.Installing ->
-                    Text(stringResource(if (state.viaShizuku) R.string.update_installing_shizuku else R.string.update_installing))
-                UpdateState.Failed -> Text(stringResource(R.string.update_dialog_failed))
-            }
-        },
-        confirmButton = {
-            when (state) {
-                is UpdateState.Available -> TextButton(onClick = onUpdate) { Text(stringResource(R.string.update_action)) }
-                UpdateState.Failed -> TextButton(onClick = onRetry) { Text(stringResource(R.string.update_retry)) }
-                is UpdateState.Downloading -> TextButton(onClick = onDismiss) { Text(stringResource(R.string.update_hide)) }
-                UpdateState.Idle, UpdateState.Checking -> TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
-                UpdateState.UpToDate, is UpdateState.Installing ->
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) }
-            }
-        },
-        dismissButton = when (state) {
-            is UpdateState.Available -> {
-                { TextButton(onClick = onDismiss) { Text(stringResource(R.string.update_later)) } }
-            }
-            UpdateState.Failed -> {
-                { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } }
-            }
-            else -> null
-        },
-    )
+    val colors = MaterialTheme.colorScheme
+    when (state) {
+        UpdateState.Idle, UpdateState.Checking -> TotchDialog(
+            onDismissRequest = onDismiss,
+            icon = Icons.Outlined.SystemUpdate,
+            title = stringResource(R.string.update_dialog_checking),
+            busy = true,
+            buttons = { DialogTextButton(stringResource(R.string.close), onDismiss) },
+        )
+        UpdateState.UpToDate -> TotchDialog(
+            onDismissRequest = onDismiss,
+            icon = Icons.Outlined.CheckCircle,
+            title = stringResource(R.string.update_up_to_date),
+            subtitle = { DialogChip("Totch $versionName") },
+            buttons = { DialogButton(stringResource(R.string.ok), onDismiss) },
+        )
+        is UpdateState.Available -> {
+            val version = state.release.version.toString()
+            TotchDialog(
+                onDismissRequest = onDismiss,
+                icon = Icons.Outlined.SystemUpdate,
+                title = stringResource(R.string.update_dialog_title, version),
+                subtitle = { DialogChip(stringResource(R.string.update_version_change, versionName, version)) },
+                content = {
+                    val notes = state.release.notes.trim()
+                    if (notes.isNotEmpty()) {
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .background(colors.surfaceContainer, RoundedCornerShape(16.dp))
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                stringResource(R.string.update_whats_new),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = colors.primary,
+                            )
+                            Text(
+                                notes,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.onSurface,
+                                modifier = Modifier.heightIn(max = 240.dp).verticalScroll(rememberScrollState()),
+                            )
+                        }
+                    }
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Icon(
+                            if (shizukuReady) Icons.Outlined.Terminal else Icons.Outlined.InstallMobile,
+                            contentDescription = null,
+                            tint = colors.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Text(
+                            stringResource(if (shizukuReady) R.string.update_via_shizuku else R.string.update_via_system),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.onSurfaceVariant,
+                        )
+                    }
+                },
+                buttons = {
+                    DialogButton(stringResource(R.string.update_action), onUpdate, icon = Icons.Outlined.Download)
+                    DialogTextButton(stringResource(R.string.update_later), onDismiss)
+                },
+            )
+        }
+        is UpdateState.Downloading -> TotchDialog(
+            onDismissRequest = onDismiss,
+            icon = Icons.Outlined.Download,
+            title = stringResource(R.string.update_downloading, (state.progress * 100).toInt()),
+            progress = state.progress,
+            content = { LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth()) },
+            buttons = { DialogTextButton(stringResource(R.string.update_hide), onDismiss) },
+        )
+        is UpdateState.Installing -> TotchDialog(
+            onDismissRequest = onDismiss,
+            icon = Icons.Outlined.InstallMobile,
+            title = stringResource(if (state.viaShizuku) R.string.update_installing_shizuku else R.string.update_installing),
+            busy = state.viaShizuku,
+            buttons = { DialogButton(stringResource(R.string.ok), onDismiss) },
+        )
+        UpdateState.Failed -> TotchDialog(
+            onDismissRequest = onDismiss,
+            icon = Icons.Outlined.ErrorOutline,
+            title = stringResource(R.string.update_install_failed),
+            iconContainer = colors.errorContainer,
+            iconContent = colors.onErrorContainer,
+            content = { DialogText(stringResource(R.string.update_dialog_failed)) },
+            buttons = {
+                DialogButton(stringResource(R.string.update_retry), onRetry)
+                DialogTextButton(stringResource(R.string.close), onDismiss)
+            },
+        )
+    }
 }

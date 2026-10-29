@@ -1,0 +1,5 @@
+* A gesture's switch now only decides whether it listens; "Not set" keeps it on but does nothing.
+* Action picker: the System tab is now Basic, and tabs are chosen from a drop-down.
+* New Buy me a coffee and update dialogs; Settings › Check for updates opens the same dialog as the top bar.
+* Settings: option to hide the bottom bar labels; "Check on launch".
+* Links open inside the app; round slider handles and switch icons everywhere; tidier icon stars.

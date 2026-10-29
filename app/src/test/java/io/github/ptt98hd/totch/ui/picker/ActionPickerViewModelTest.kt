@@ -55,8 +55,18 @@ class ActionPickerViewModelTest {
     private fun bound(action: Action) = FakeSettingsRepository(Settings(bindings = DefaultBindings + (Gesture.TAP to action)))
 
     @Test
+    fun `UI-66 Basic leads the tabs and holds fixed actions and Not set`() = runTest {
+        assertEquals(
+            listOf(PickerTab.BASIC, PickerTab.APPS, PickerTab.SHORTCUTS, PickerTab.ACTIVITIES, PickerTab.TILES),
+            PickerTab.entries,
+        )
+        assertEquals(PickerTab.BASIC, initialTab(Action.None))
+        assertEquals(PickerTab.BASIC, initialTab(Action.ToggleWifi))
+    }
+
+    @Test
     fun `UI-20 initial tab follows the current action`() = runTest {
-        assertEquals(PickerTab.SYSTEM, vm(bound(Action.Back), Gesture.TAP).state.value.tab)
+        assertEquals(PickerTab.BASIC, vm(bound(Action.Back), Gesture.TAP).state.value.tab)
         assertEquals(PickerTab.APPS, vm(bound(Action.LaunchApp("com.a")), Gesture.TAP).state.value.tab)
         val sc = Action.LaunchShortcut("com.b", "new_tab", "New tab", "intent:#Intent;end")
         assertEquals(PickerTab.SHORTCUTS, vm(bound(sc), Gesture.TAP).state.value.tab)
@@ -116,12 +126,12 @@ class ActionPickerViewModelTest {
 
     @Test
     fun `UI-10 choosing a system action saves it, switches the gesture on and finishes`() = runTest {
-        val repo = FakeSettingsRepository(Settings(disabledGestures = setOf(Gesture.SWIPE_RIGHT, Gesture.TAP)))
+        val repo = FakeSettingsRepository(Settings())
         val vm = vm(repo)
         vm.state.test {
             vm.select(Action.Assistant)
             assertEquals(Settings().bindings + (Gesture.SWIPE_RIGHT to Action.Assistant), repo.current.bindings)
-            assertEquals(setOf(Gesture.TAP), repo.current.disabledGestures)
+            assertEquals(setOf(Gesture.SWIPE_RIGHT), repo.current.enabledGestures)
             assertTrue(expectMostRecentItem().finished)
         }
     }
@@ -196,7 +206,7 @@ class ActionPickerViewModelTest {
             val expanded = expectMostRecentItem()
             assertTrue(expanded.isActivityAppExpanded("com.b"))
             assertFalse(expanded.isExpanded("com.b")) // Shortcuts keep their own state
-            vm.selectTab(PickerTab.SYSTEM)
+            vm.selectTab(PickerTab.BASIC)
             vm.selectTab(PickerTab.ACTIVITIES)
             vm.setActivityQuery("zzz")
             assertTrue(expectMostRecentItem().activityGroups.isEmpty())
@@ -223,7 +233,7 @@ class ActionPickerViewModelTest {
             assertEquals(listOf(tile), state.tiles)
             vm.setTileQuery("zzz")
             assertTrue(expectMostRecentItem().tiles.isEmpty())
-            vm.selectTab(PickerTab.SYSTEM)
+            vm.selectTab(PickerTab.BASIC)
             vm.selectTab(PickerTab.TILES)
             vm.setTileQuery("notes")
             assertEquals(listOf(tile), expectMostRecentItem().tiles)
@@ -239,10 +249,10 @@ class ActionPickerViewModelTest {
         requirements.value = Requirements(accessibilityEnabled = true)
         val vm = vm(bound(Action.Back), Gesture.TAP)
         vm.state.test {
-            assertEquals("", expectMostRecentItem().systemQuery)
-            vm.setSystemQuery("wifi")
+            assertEquals("", expectMostRecentItem().basicQuery)
+            vm.setBasicQuery("wifi")
             val withoutAccess = expectMostRecentItem()
-            assertEquals("wifi", withoutAccess.systemQuery)
+            assertEquals("wifi", withoutAccess.basicQuery)
             assertEquals(Need.DND, withoutAccess.need(Action.RingerSilent))
             assertEquals(Need.DND, withoutAccess.need(Action.ToggleDnd))
             assertNull(withoutAccess.need(Action.VolumeUp))
@@ -284,13 +294,13 @@ class ActionPickerViewModelTest {
     }
 
     @Test
-    fun `UI-63 choosing Not set clears the binding and switches the gesture off`() = runTest {
+    fun `UI-65 choosing Not set clears the binding and keeps the gesture on`() = runTest {
         val repo = bound(Action.Home)
         val vm = vm(repo, Gesture.TAP)
         vm.state.test {
             vm.select(Action.None)
             assertEquals(Action.None, repo.current.bindings[Gesture.TAP])
-            assertFalse(repo.current.isGestureOn(Gesture.TAP))
+            assertTrue(repo.current.isGestureOn(Gesture.TAP))
             assertTrue(expectMostRecentItem().finished)
         }
     }

@@ -110,7 +110,7 @@
     <string name="app_picker_clear">Xóa tìm kiếm</string>
     <string name="app_picker_empty">Không có ứng dụng nào khớp “%1$s”</string>
     <string name="app_picker_none">Không tìm thấy ứng dụng</string>
-    <string name="tab_system">Hệ thống</string>
+    <string name="tab_basic">Cơ bản</string>
     <string name="action_search">Tìm hành động</string>
     <string name="action_search_empty">Không có hành động nào khớp “%1$s”</string>
     <string name="tab_apps">Ứng dụng</string>
@@ -183,8 +183,8 @@
     <string name="update_later">Để sau</string>
     <string name="update_install_failed">Cập nhật thất bại</string>
     <string name="section_update">Cập nhật</string>
-    <string name="setting_update_on_launch">Kiểm tra khi mở app</string>
-    <string name="setting_update_on_launch_summary">Tìm bản mới mỗi khi mở Totch</string>
+    <string name="setting_update_on_launch">Kiểm tra khi mở</string>
+    <string name="setting_update_on_launch_summary">Mỗi khi mở Totch</string>
     <string name="setting_update_interval">Kiểm tra định kỳ</string>
     <string name="update_interval_never">Tắt</string>
     <string name="update_interval_daily">Hằng ngày</string>
@@ -200,7 +200,6 @@
 
     <!-- v1.7 -->
     <string name="update_dialog_checking">Đang kiểm tra cập nhật…</string>
-    <string name="update_dialog_up_to_date">Bạn đang dùng bản mới nhất (%1$s)</string>
     <string name="update_dialog_failed">Không cập nhật được. Kiểm tra kết nối rồi thử lại.</string>
     <string name="update_via_shizuku">Cài qua Shizuku, không cần xác nhận</string>
     <string name="update_via_system">Android sẽ hỏi bạn xác nhận cài đặt</string>
@@ -216,4 +215,9 @@
     <string name="donate_text">Totch miễn phí, mã nguồn mở, không quảng cáo. Nếu thấy hữu ích, một ly cà phê giúp Totch tiếp tục phát triển.</string>
     <string name="donate_action">Mời cà phê</string>
     <string name="donate_later">Để sau</string>
+    <!-- v1.8.1 -->
+    <string name="picker_tab_label">Hành động</string>
+    <string name="setting_nav_labels">Hiện nhãn thanh điều hướng</string>
+    <string name="setting_nav_labels_summary">Chữ dưới icon thanh điều hướng</string>
+    <string name="update_whats_new">Điểm mới</string>
 </resources>

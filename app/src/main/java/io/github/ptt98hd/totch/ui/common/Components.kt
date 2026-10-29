@@ -1,6 +1,26 @@
 package io.github.ptt98hd.totch.ui.common
 
 import androidx.compose.foundation.background
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +35,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Coffee
 import androidx.compose.material.icons.outlined.SystemUpdate
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.TextButton
@@ -267,7 +286,7 @@ fun ToggleListItem(
                 Icon(icon, contentDescription = null, tint = colors.onSecondaryContainer, modifier = Modifier.size(22.dp))
             }
         },
-        trailing = { Switch(checked = checked, onCheckedChange = null) },
+        trailing = { TotchSwitch(checked = checked, onCheckedChange = null) },
     )
 }
 
@@ -284,25 +303,206 @@ fun DonateRow(modifier: Modifier = Modifier) {
     )
 }
 
-/** FR-U40 (prototype): asks for a coffee and opens the donate page in the browser. */
+/**
+ * FR-U48: the frame of the Buy me a coffee and update dialogs. A large [icon] in a tonal circle (ringed by a progress
+ * indicator while [busy]; determinate when [progress] is set), a centred title, an optional [subtitle] (a chip), the
+ * [content] and the [buttons], stacked at full width.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TotchDialog(
+    onDismissRequest: () -> Unit,
+    icon: ImageVector,
+    title: String,
+    buttons: @Composable ColumnScope.() -> Unit,
+    modifier: Modifier = Modifier,
+    iconContainer: Color = MaterialTheme.colorScheme.primaryContainer,
+    iconContent: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    busy: Boolean = false,
+    progress: Float? = null,
+    subtitle: (@Composable () -> Unit)? = null,
+    content: (@Composable ColumnScope.() -> Unit)? = null,
+) {
+    BasicAlertDialog(onDismissRequest = onDismissRequest, modifier = modifier) {
+        Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+            Column(
+                Modifier.padding(24.dp).animateContentSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(Modifier.size(80.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(64.dp).background(iconContainer, CircleShape), contentAlignment = Alignment.Center) {
+                        Icon(icon, contentDescription = null, tint = iconContent, modifier = Modifier.size(32.dp))
+                    }
+                    when {
+                        progress != null -> CircularProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxSize(),
+                            strokeWidth = 4.dp,
+                        )
+                        busy -> CircularProgressIndicator(Modifier.fillMaxSize(), strokeWidth = 4.dp)
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                )
+                if (subtitle != null) {
+                    Spacer(Modifier.height(8.dp))
+                    subtitle()
+                }
+                if (content != null) {
+                    Spacer(Modifier.height(16.dp))
+                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+                }
+                Spacer(Modifier.height(24.dp))
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp), content = buttons)
+            }
+        }
+    }
+}
+
+/** A small rounded label under a [TotchDialog] title, e.g. a version. */
+@Composable
+fun DialogChip(text: String, icon: ImageVector? = null) {
+    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer) {
+        Row(
+            Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            if (icon != null) Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+            Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
+        }
+    }
+}
+
+/** Centred body text of a [TotchDialog]. */
+@Composable
+fun DialogText(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = modifier.fillMaxWidth(),
+    )
+}
+
+/** The main button of a [TotchDialog], full width with an optional leading icon. */
+@Composable
+fun DialogButton(text: String, onClick: () -> Unit, icon: ImageVector? = null) {
+    Button(onClick = onClick, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+        }
+        Text(text)
+    }
+}
+
+/** A secondary button of a [TotchDialog], full width. */
+@Composable
+fun DialogTextButton(text: String, onClick: () -> Unit) {
+    TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(text) }
+}
+
+/** FR-U40, FR-U48: asks for a coffee and opens the donate page inside the app (FR-U52). */
 @Composable
 fun DonateDialog(onDismiss: () -> Unit) {
     val uriHandler = LocalUriHandler.current
     val url = stringResource(R.string.donate_url)
-    AlertDialog(
+    TotchDialog(
         onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Outlined.Coffee, contentDescription = null) },
-        title = { Text(stringResource(R.string.donate_title)) },
-        text = { Text(stringResource(R.string.donate_text)) },
-        confirmButton = {
-            TextButton(
+        icon = Icons.Outlined.Coffee,
+        title = stringResource(R.string.donate_title),
+        iconContainer = MaterialTheme.colorScheme.tertiaryContainer,
+        iconContent = MaterialTheme.colorScheme.onTertiaryContainer,
+        content = { DialogText(stringResource(R.string.donate_text)) },
+        buttons = {
+            DialogButton(
+                stringResource(R.string.donate_action),
                 onClick = {
                     onDismiss()
                     uriHandler.openUri(url)
                 },
-            ) { Text(stringResource(R.string.donate_action)) }
+                icon = Icons.Outlined.Favorite,
+            )
+            DialogTextButton(stringResource(R.string.donate_later), onClick = onDismiss)
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.donate_later)) } },
+    )
+}
+
+/** FR-U54: the switch of every row; its thumb shows a check when on and a cross when off. */
+@Composable
+fun TotchSwitch(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+        enabled = enabled,
+        thumbContent = {
+            Icon(
+                if (checked) Icons.Outlined.Check else Icons.Outlined.Close,
+                contentDescription = null,
+                modifier = Modifier.size(SwitchDefaults.IconSize),
+            )
+        },
+    )
+}
+
+/** FR-U53: the slider of the whole app, with a round thumb and a thin track without a gap around it. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TotchSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float>,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onValueChangeFinished: (() -> Unit)? = null,
+) {
+    val colors = SliderDefaults.colors()
+    val interaction = remember { MutableInteractionSource() }
+    val dragged by interaction.collectIsDraggedAsState()
+    val pressed by interaction.collectIsPressedAsState()
+    val thumbSize by animateDpAsState(if (dragged || pressed) 24.dp else 20.dp, label = "thumb")
+    Slider(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        enabled = enabled,
+        valueRange = valueRange,
+        onValueChangeFinished = onValueChangeFinished,
+        colors = colors,
+        interactionSource = interaction,
+        thumb = {
+            Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .size(thumbSize)
+                        .shadow(1.dp, CircleShape)
+                        .background(if (enabled) MaterialTheme.colorScheme.primary else colors.disabledThumbColor, CircleShape),
+                )
+            }
+        },
+        track = { state ->
+            SliderDefaults.Track(
+                sliderState = state,
+                modifier = Modifier.height(6.dp),
+                enabled = enabled,
+                colors = colors,
+                drawStopIndicator = null,
+                thumbTrackGapSize = 0.dp,
+            )
+        },
     )
 }
 
@@ -363,7 +563,7 @@ fun SliderSetting(
             IconButton(onClick = { nudge(-increment) }, enabled = draft > valueRange.start, modifier = Modifier.offset(x = (-12).dp)) {
                 Icon(Icons.Outlined.Remove, contentDescription = stringResource(R.string.slider_decrease_cd, title))
             }
-            Slider(
+            TotchSlider(
                 value = draft,
                 onValueChange = {
                     draft = snapToStep(it, valueRange, step)

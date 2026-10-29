@@ -92,8 +92,9 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(): ExitTransi
         fadeOut(tween(TRANSITION_MS / 2))
 }
 
+/** [navLabels]: labels under the bottom bar icons (FR-U49). */
 @Composable
-fun TotchNavHost(container: AppContainer, modifier: Modifier = Modifier) {
+fun TotchNavHost(container: AppContainer, navLabels: Boolean, modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
@@ -115,8 +116,16 @@ fun TotchNavHost(container: AppContainer, modifier: Modifier = Modifier) {
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(if (selected) item.selectedIcon else item.icon, contentDescription = null) },
-                        label = { Text(stringResource(item.label)) },
+                        icon = {
+                            // Without labels the icon names the tab for accessibility.
+                            val description = if (navLabels) null else stringResource(item.label)
+                            Icon(if (selected) item.selectedIcon else item.icon, contentDescription = description)
+                        },
+                        label = if (navLabels) {
+                            { Text(stringResource(item.label)) }
+                        } else {
+                            null
+                        },
                     )
                 }
             }

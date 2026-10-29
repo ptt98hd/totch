@@ -8,6 +8,8 @@ import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.FakeInstalledApps
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
 import io.github.ptt98hd.totch.ui.LegacyBindings
+import io.github.ptt98hd.totch.ui.boundOn
+import io.github.ptt98hd.totch.core.settings.withGestureOn
 import io.github.ptt98hd.totch.ui.common.Capabilities
 import io.github.ptt98hd.totch.ui.common.Need
 import io.github.ptt98hd.totch.ui.MainDispatcherRule
@@ -27,7 +29,7 @@ class GesturesViewModelTest {
 
     @Test
     fun `UI-13 gestures are listed in four groups in order`() = runTest {
-        GesturesViewModel(FakeSettingsRepository(Settings(bindings = LegacyBindings)), FakeInstalledApps()).state.test {
+        GesturesViewModel(FakeSettingsRepository(Settings(bindings = LegacyBindings).boundOn()), FakeInstalledApps()).state.test {
             val state = expectMostRecentItem()
             assertEquals(
                 listOf(
@@ -44,7 +46,7 @@ class GesturesViewModelTest {
 
     @Test
     fun `UI-14 swipe down rows are disabled and switched off`() = runTest {
-        val repo = FakeSettingsRepository(Settings(bindings = LegacyBindings + (Gesture.SWIPE_DOWN_HOLD to Action.Home)))
+        val repo = FakeSettingsRepository(Settings(bindings = LegacyBindings + (Gesture.SWIPE_DOWN_HOLD to Action.Home)).boundOn())
         GesturesViewModel(repo, FakeInstalledApps()).state.test {
             val rows = expectMostRecentItem().groups.flatMap { it.rows }
             val disabled = rows.filterNot { it.enabled }
@@ -55,39 +57,42 @@ class GesturesViewModelTest {
     }
 
     @Test
-    fun `UI-16 switching a gesture off keeps its action`() = runTest {
-        val repo = FakeSettingsRepository(Settings(bindings = LegacyBindings))
+    fun `UI-16 UI-64 switching a gesture off keeps its action`() = runTest {
+        val repo = FakeSettingsRepository(Settings(bindings = LegacyBindings).boundOn())
         val vm = GesturesViewModel(repo, FakeInstalledApps())
         vm.state.test {
             val state = expectMostRecentItem()
             assertTrue(state.row(Gesture.DOUBLE_TAP).on)
-            assertFalse(state.row(Gesture.TAP).on) // bound to None
+            assertFalse(state.row(Gesture.TAP).on) // never switched on
             vm.setOn(Gesture.DOUBLE_TAP, false)
-            assertEquals(setOf(Gesture.DOUBLE_TAP), repo.current.disabledGestures)
+            assertFalse(Gesture.DOUBLE_TAP in repo.current.enabledGestures)
             assertEquals(Action.LockScreen, repo.current.bindings[Gesture.DOUBLE_TAP])
             val off = expectMostRecentItem().row(Gesture.DOUBLE_TAP)
             assertFalse(off.on)
             assertEquals(Action.LockScreen, off.action)
             vm.setOn(Gesture.DOUBLE_TAP, true)
-            assertEquals(emptySet(), repo.current.disabledGestures)
+            assertTrue(Gesture.DOUBLE_TAP in repo.current.enabledGestures)
             assertTrue(expectMostRecentItem().row(Gesture.DOUBLE_TAP).on)
         }
     }
 
     @Test
-    fun `UI-17 switching on an unbound gesture opens the picker instead`() = runTest {
-        val repo = FakeSettingsRepository(Settings(bindings = LegacyBindings))
+    fun `UI-64 switching on a gesture that is not set only switches it on`() = runTest {
+        val repo = FakeSettingsRepository(Settings(bindings = LegacyBindings).boundOn())
         val vm = GesturesViewModel(repo, FakeInstalledApps())
         vm.state.test {
             vm.openPicker(Gesture.TAP)
             assertNull(expectMostRecentItem().picking) // switched off: no picker
             vm.setOn(Gesture.TAP, true)
-            assertEquals(Settings(bindings = LegacyBindings), repo.current)
+            assertEquals(Settings(bindings = LegacyBindings).boundOn().withGestureOn(Gesture.TAP, true), repo.current)
+            val row = expectMostRecentItem().row(Gesture.TAP)
+            assertTrue(row.on)
+            assertEquals(Action.None, row.action)
+            assertNull(vm.state.value.picking)
+            vm.openPicker(Gesture.TAP) // UI-17: a switched-on gesture opens the picker
             assertEquals(Gesture.TAP, expectMostRecentItem().picking)
             vm.closePicker()
             assertNull(expectMostRecentItem().picking)
-            vm.openPicker(Gesture.DOUBLE_TAP)
-            assertEquals(Gesture.DOUBLE_TAP, expectMostRecentItem().picking)
         }
     }
 
@@ -113,7 +118,7 @@ class GesturesViewModelTest {
     @Test
     fun `UI-14 swipe down rows are usable while accessibility is on`() = runTest {
         val accessibility = MutableStateFlow(Capabilities())
-        val repo = FakeSettingsRepository(Settings(bindings = LegacyBindings + (Gesture.SWIPE_DOWN_HOLD to Action.Home)))
+        val repo = FakeSettingsRepository(Settings(bindings = LegacyBindings + (Gesture.SWIPE_DOWN_HOLD to Action.Home)).boundOn())
         GesturesViewModel(repo, FakeInstalledApps(), accessibility).state.test {
             val rows = expectMostRecentItem().groups.flatMap { it.rows }
             assertTrue(rows.all { it.enabled })
@@ -127,7 +132,7 @@ class GesturesViewModelTest {
     @Test
     fun `UI-60 every gesture is disabled without Accessibility and Shizuku`() = runTest {
         val caps = MutableStateFlow(Capabilities(accessibility = false, shizuku = false))
-        val repo = FakeSettingsRepository(Settings(bindings = LegacyBindings))
+        val repo = FakeSettingsRepository(Settings(bindings = LegacyBindings).boundOn())
         val vm = GesturesViewModel(repo, FakeInstalledApps(), caps)
         vm.state.test {
             val rows = expectMostRecentItem().groups.flatMap { it.rows }
@@ -150,7 +155,7 @@ class GesturesViewModelTest {
     fun `UI-61 a gesture whose action cannot run is off but still opens the picker`() = runTest {
         val caps = MutableStateFlow(Capabilities(accessibility = true, shizuku = false, dndAccess = false))
         val repo = FakeSettingsRepository(
-            Settings(bindings = LegacyBindings + (Gesture.TAP to Action.ToggleWifi) + (Gesture.LONG_PRESS to Action.RingerSilent)),
+            Settings(bindings = LegacyBindings + (Gesture.TAP to Action.ToggleWifi) + (Gesture.LONG_PRESS to Action.RingerSilent)).boundOn(),
         )
         val vm = GesturesViewModel(repo, FakeInstalledApps(), caps)
         vm.state.test {

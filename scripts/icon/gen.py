@@ -37,13 +37,26 @@ COLORS = {
     "horizon": ("@android:color/system_neutral1_1000", "#000000"),
 }
 
-STARS = ("M33.5 30.1Q34.044 32.956 36.9 33.5Q34.044 34.044 33.5 36.9Q32.956 34.044 30.1 33.5Q32.956 32.956 33.5 30.1Z"
-         "M75 71.8Q75.352 73.648 77.2 74Q75.352 74.352 75 76.2Q74.648 74.352 72.8 74Q74.648 73.648 75 71.8Z"
-         "M73.1 33a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0Z")
+STAR_OFFSET = 19.0  # stars sit at (C ± STAR_OFFSET, C ± STAR_OFFSET): 26.9 from the centre, clear of the glow
+STAR_R = 2.6        # tip radius of every star; the whole star stays inside the 66 dp safe zone (radius 33)
+STAR_PINCH = 0.16   # control point of the concave sides, as a fraction of STAR_R
+
+
+def star(x, y):
+    """One four-pointed star centred on (x, y); every star has the same size and shape."""
+    r, k = STAR_R, STAR_R * STAR_PINCH
+    return (f"M{f(x)} {f(y - r)}Q{f(x + k)} {f(y - k)} {f(x + r)} {f(y)}"
+            f"Q{f(x + k)} {f(y + k)} {f(x)} {f(y + r)}"
+            f"Q{f(x - k)} {f(y + k)} {f(x - r)} {f(y)}"
+            f"Q{f(x - k)} {f(y - k)} {f(x)} {f(y - r)}Z")
 
 
 def f(v):
     return f"{v:.3f}".rstrip("0").rstrip(".")
+
+
+# Four identical stars, one per corner, mirror images across x = C and y = C (FR-U55).
+STARS = "".join(star(C + sx * STAR_OFFSET, C + sy * STAR_OFFSET) for sy in (-1, 1) for sx in (-1, 1))
 
 
 def cut_points(r):
@@ -116,7 +129,7 @@ def main():
     layers = foreground_layers()
     (RES / "ic_launcher_background.xml").write_text(vector(
         [(COLORS["space"][0], "M0,0h108v108h-108z", "Deep space (Monet)"),
-         (COLORS["star"][0], STARS, "Stars, inside the 66 dp safe zone")],
+         (COLORS["star"][0], STARS, "Four identical stars in the corners, inside the 66 dp safe zone")],
         "Black hole icon background (FR-U33)."))
     (RES / "ic_launcher_foreground.xml").write_text(vector(
         [(COLORS[role][0], d, note) for role, d, note in layers],

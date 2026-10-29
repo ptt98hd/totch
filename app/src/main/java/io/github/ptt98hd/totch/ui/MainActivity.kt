@@ -24,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import io.github.ptt98hd.totch.BuildConfig
@@ -37,6 +39,7 @@ import io.github.ptt98hd.totch.ui.common.LocalAppActions
 import io.github.ptt98hd.totch.ui.common.LocalNotchHighlight
 import io.github.ptt98hd.totch.ui.common.NotchHighlightOverlay
 import io.github.ptt98hd.totch.ui.common.NotchHighlightState
+import io.github.ptt98hd.totch.ui.common.openInApp
 import io.github.ptt98hd.totch.ui.navigation.TotchNavHost
 import io.github.ptt98hd.totch.ui.settings.UpdateDialogHost
 import io.github.ptt98hd.totch.ui.theme.TotchTheme
@@ -101,9 +104,19 @@ class MainActivity : ComponentActivity() {
                     onDonate = { donate = true },
                     updateBadge = update.badge,
                 )
-                CompositionLocalProvider(LocalNotchHighlight provides highlight, LocalAppActions provides actions) {
+                // FR-U52: every link opens in a Custom Tab inside Totch.
+                val uriHandler = remember(dark) {
+                    object : UriHandler {
+                        override fun openUri(uri: String) = this@MainActivity.openInApp(uri, dark)
+                    }
+                }
+                CompositionLocalProvider(
+                    LocalNotchHighlight provides highlight,
+                    LocalAppActions provides actions,
+                    LocalUriHandler provides uriHandler,
+                ) {
                     Box(Modifier.fillMaxSize()) {
-                        TotchNavHost(container)
+                        TotchNavHost(container, navLabels = settings.navLabels)
                         NotchHighlightOverlay(area, highlight) // FR-U8, drawn above every screen
                         // update spec §5, §8: on any screen
                         UpdateDialogHost(
