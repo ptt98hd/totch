@@ -23,6 +23,7 @@ import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.common.LocalNotchHighlight
 import io.github.ptt98hd.totch.ui.common.ResetButton
+import io.github.ptt98hd.totch.ui.common.RowDivider
 import io.github.ptt98hd.totch.ui.common.SettingsSection
 import io.github.ptt98hd.totch.ui.common.SliderSetting
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
@@ -104,6 +105,7 @@ fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActio
                         onValueChangeFinished = { actions.onDoubleTapMs(it.roundToInt().toLong()) },
                         trailing = reset(NotchSetting.DOUBLE_TAP),
                     )
+                    RowDivider()
                     SliderSetting(
                         title = stringResource(R.string.setting_long_press),
                         value = s.longPressMs.toFloat(),
@@ -114,6 +116,7 @@ fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActio
                         onValueChangeFinished = { actions.onLongPressMs(it.roundToInt().toLong()) },
                         trailing = reset(NotchSetting.LONG_PRESS),
                     )
+                    RowDivider()
                     SliderSetting(
                         title = stringResource(R.string.setting_swipe),
                         value = s.swipeMinDistanceDp.toFloat(),
@@ -137,6 +140,7 @@ fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActio
                         onValueChangeFinished = { actions.onArea(area.copy(centerXFraction = it / 100f)) },
                         trailing = reset(NotchSetting.AREA_X),
                     )
+                    RowDivider()
                     SliderSetting(
                         title = stringResource(R.string.setting_area_y),
                         value = area.topDp.toFloat(),
@@ -161,6 +165,7 @@ fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActio
                         onValueChangeFinished = { actions.onArea(area.copy(widthDp = it.roundToInt())) },
                         trailing = reset(NotchSetting.AREA_WIDTH),
                     )
+                    RowDivider()
                     SliderSetting(
                         title = stringResource(R.string.setting_area_height),
                         value = area.heightDp.toFloat(),
@@ -171,6 +176,7 @@ fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActio
                         onValueChangeFinished = { actions.onArea(area.copy(heightDp = it.roundToInt())) },
                         trailing = reset(NotchSetting.AREA_HEIGHT),
                     )
+                    RowDivider()
                     SliderSetting(
                         title = stringResource(R.string.setting_padding),
                         value = s.paddingDp.toFloat(),

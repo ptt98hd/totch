@@ -46,6 +46,9 @@
 
 | ID | Kịch bản | Kỳ vọng | KQ |
 |---|---|---|---|
+| MT-O1 | Gán Chế độ một tay khi **chưa** bật phím tắt One-handed | Toast "Không thể thực hiện: Chế độ một tay" | [ ] |
+| MT-O2 | Bật phím tắt (Cài đặt › Hệ thống › Cử chỉ › Chế độ một tay › Phím tắt), thực hiện cử chỉ 2 lần | Lần 1 màn hình hạ xuống, lần 2 trở lại; chạm ngoài để thoát rồi cử chỉ lại → vào lại ngay | [ ] |
+| MT-S2 | Tab Notch | Các slider trong mỗi section ngăn bằng đường kẻ ngang | [ ] |
 | MT-S1 | Chưa cài Shizuku → bấm nút ở thẻ "Shizuku running" | Mở trang web Shizuku | [ ] |
 | MT-S2 | Shizuku đã cài nhưng chưa chạy | Status "Waiting for Shizuku"; nút cấp quyền bị vô hiệu | [ ] |
 | MT-S3 | Khởi động Shizuku → bấm "Grant" → **Từ chối** | Thẻ quyền vẫn ✗; không crash; bấm lại vẫn hỏi được | [ ] |
@@ -214,6 +217,20 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-A6 | Bật Gestures in landscape, xoay ngang (cả 2 chiều), chạm/vuốt tại notch | Status "Gestures are on"; chạm notch chạy hành động; "vuốt xuống" = vuốt ra xa notch. Tắt tùy chọn → "paused in landscape" | [ ] |
 | MT-A7 | Settings (cả en và vi) | System: Start on boot → Haptic feedback → Gestures in landscape; "Amoled black" có mô tả 1 dòng; mọi mô tả trong About 1 dòng, cuối dòng link là › | [ ] |
 | MT-A8 | Mở picker | Sheet chạm sát mép dưới top bar; hàng chip cuộn ngang có icon; mở picker của cử chỉ gán activity → chip Activities được chọn và nằm trong tầm nhìn | [ ] |
+
+## 12. v1.6 — ô Cài đặt nhanh, tự cập nhật, mô tả Settings
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-T1 | Picker › Tiles | Liệt kê ô của các app (vd. Shizuku, app ghi chú…), có tìm kiếm và gợi ý 1 dòng | [ ] |
+| MT-T2 | Gán một ô **đã thêm** vào Cài đặt nhanh cho Double tap, thực hiện cử chỉ | Ô được bấm (bật/tắt hoặc mở dialog/activity của ô) | [ ] |
+| MT-T3 | Gán một ô **chưa thêm** vào Cài đặt nhanh | Không có gì xảy ra, không crash; bảng Cài đặt nhanh không bị đổi | [ ] |
+| MT-T4 | Gesture row của ô đã gán | Hiện "<app>: <nhãn ô>" | [ ] |
+| MT-U1 | Settings › About › Check for updates (đang ở bản mới nhất) | "You have the latest version" | [ ] |
+| MT-U2 | Cài bản cũ (vd. 1.5.0 từ GitHub) lên máy có bản 1.6.0 trên GitHub, bấm Check for updates | Dialog "Totch 1.6.0" + ghi chú; Update → % tải → hộp thoại cài của hệ thống (lần đầu xin quyền cài không rõ nguồn) → cài xong Totch mở lại được, cấu hình giữ nguyên | [ ] |
+| MT-U3 | Tắt mạng rồi bấm Check for updates | "Couldn't update, tap to retry", không crash | [ ] |
+| MT-U4 | Hủy hộp thoại cài của hệ thống | Toast lỗi hoặc không gì; bấm lại dòng → kiểm tra lại được | [ ] |
+| MT-S1 | Settings › System | 3 dòng đều có mô tả 1 dòng, không xuống dòng (cả en và vi, màn hẹp) | [ ] |
 
 ## Lịch sử kết quả
 

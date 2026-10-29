@@ -16,6 +16,7 @@ interface ActionExecutor {
 object ActionRequirements {
     private val system = setOf(Capability.ACCESSIBILITY, Capability.SHIZUKU)
     private val local = setOf(Capability.LOCAL)
+    private val shizuku = setOf(Capability.SHIZUKU)
 
     fun of(action: Action): Set<Capability> = when (action) {
         Action.None -> emptySet()
@@ -24,6 +25,7 @@ object ActionRequirements {
         is Action.LaunchShortcut, is Action.LaunchActivity -> system
         Action.ToggleTorch, Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious,
         Action.VolumeUp, Action.VolumeDown, Action.VolumePanel -> local
+        is Action.ClickTile, Action.OneHandedMode -> shizuku
     }
 }
 

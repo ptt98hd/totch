@@ -39,6 +39,9 @@ Mục tiêu độ phủ: `:core` ≥ 90% dòng (NFR-6).
 | notch-region (NR-12…NR-14)         | `app/.../engine/RegionTest`                                                             |
 | ui (TH-2)                          | `app/.../ui/theme/AmoledTest`                                                           |
 | detection-modes (DM-22)            | `app/.../service/BootActionTest`                                                        |
+| actions §9 (QT-\*), ui (UI-28)     | `app/.../ui/picker/TileFilterTest`, `ActionPickerViewModelTest`                         |
+| update (UP-1…UP-4)                 | `core/.../update/ReleasesTest`                                                          |
+| update (UP-5…UP-7)                 | `app/.../ui/settings/AppSettingsViewModelTest`                                          |
 
 ## 4. Checklist thủ công trước release
 

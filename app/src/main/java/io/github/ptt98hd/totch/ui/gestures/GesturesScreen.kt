@@ -143,7 +143,8 @@ fun GesturesScreen(
 private fun GestureListItem(row: GestureRow, onClick: () -> Unit, onSwitchChange: (Boolean) -> Unit) {
     val bound = row.action != Action.None
     val actionName = if (bound) actionDisplayName(row.action, row.appLabel) else null
-    val packageAction = row.action is Action.LaunchApp || row.action is Action.LaunchShortcut || row.action is Action.LaunchActivity
+    val packageAction = row.action is Action.LaunchApp || row.action is Action.LaunchShortcut ||
+        row.action is Action.LaunchActivity || row.action is Action.ClickTile
     val notInstalled = packageAction && row.appLabel == null
     val supporting = when {
         !row.enabled -> stringResource(R.string.gesture_unavailable)

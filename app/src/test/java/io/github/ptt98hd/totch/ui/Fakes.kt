@@ -11,6 +11,11 @@ import io.github.ptt98hd.totch.SettingsRepository
 import io.github.ptt98hd.totch.SystemStatus
 import io.github.ptt98hd.totch.AppShortcuts
 import io.github.ptt98hd.totch.ShortcutEntry
+import io.github.ptt98hd.totch.TileEntry
+import io.github.ptt98hd.totch.QuickSettingsTiles
+import io.github.ptt98hd.totch.AppUpdater
+import io.github.ptt98hd.totch.core.update.Release
+import kotlinx.coroutines.CompletableDeferred
 import io.github.ptt98hd.totch.TouchArea
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
@@ -86,5 +91,29 @@ class FakeAppActivities(private val entries: List<ActivityEntry> = emptyList()) 
     override suspend fun activities(): List<ActivityEntry> {
         loads++
         return entries
+    }
+}
+
+class FakeQuickSettingsTiles(private val entries: List<TileEntry> = emptyList()) : QuickSettingsTiles {
+    var loads = 0
+    override suspend fun tiles(): List<TileEntry> {
+        loads++
+        return entries
+    }
+}
+
+/** Each call suspends until the test completes the matching deferred. */
+class FakeAppUpdater : AppUpdater {
+    var checks = 0
+    var latest = CompletableDeferred<Release?>()
+    var install = CompletableDeferred<Boolean>()
+    var progress: (Float) -> Unit = {}
+    override suspend fun latestRelease(): Release? {
+        checks++
+        return latest.await()
+    }
+    override suspend fun downloadAndInstall(release: Release, onProgress: (Float) -> Unit): Boolean {
+        progress = onProgress
+        return install.await()
     }
 }

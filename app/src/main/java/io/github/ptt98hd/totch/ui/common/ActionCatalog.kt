@@ -13,7 +13,8 @@ object ActionCatalog {
             ActionGroupId.SYSTEM,
             listOf(
                 Action.Back, Action.Home, Action.Recents, Action.LockScreen,
-                Action.Screenshot, Action.Notifications, Action.QuickSettings, Action.Assistant, Action.ToggleTorch,
+                Action.Screenshot, Action.Notifications, Action.QuickSettings, Action.Assistant, Action.OneHandedMode,
+                Action.ToggleTorch,
             ),
         ),
         ActionGroup(

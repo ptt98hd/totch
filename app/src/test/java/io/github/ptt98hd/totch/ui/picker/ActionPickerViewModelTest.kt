@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import io.github.ptt98hd.totch.ActivityEntry
 import io.github.ptt98hd.totch.AppInfo
 import io.github.ptt98hd.totch.ShortcutEntry
+import io.github.ptt98hd.totch.TileEntry
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DefaultBindings
@@ -11,6 +12,7 @@ import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.FakeAppActivities
 import io.github.ptt98hd.totch.ui.FakeAppShortcuts
 import io.github.ptt98hd.totch.ui.FakeInstalledApps
+import io.github.ptt98hd.totch.ui.FakeQuickSettingsTiles
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
 import io.github.ptt98hd.totch.ui.MainDispatcherRule
 import kotlinx.coroutines.test.runTest
@@ -36,9 +38,11 @@ class ActionPickerViewModelTest {
     private val shortcuts = FakeAppShortcuts(listOf(shortcut))
     private val activity = ActivityEntry("com.b", "Browser", "com.b.Settings", "Browser settings")
     private val activities = FakeAppActivities(listOf(activity))
+    private val tile = TileEntry("com.notes", "Notes", "com.notes.QuickNote", "Quick note")
+    private val tiles = FakeQuickSettingsTiles(listOf(tile))
 
     private fun vm(repo: FakeSettingsRepository = FakeSettingsRepository(), gesture: Gesture = Gesture.SWIPE_RIGHT) =
-        ActionPickerViewModel(gesture, repo, installed, shortcuts, activities, main.dispatcher)
+        ActionPickerViewModel(gesture, repo, installed, shortcuts, activities, tiles, main.dispatcher)
 
     private fun bound(action: Action) = FakeSettingsRepository(Settings(bindings = DefaultBindings + (Gesture.TAP to action)))
 
@@ -50,6 +54,8 @@ class ActionPickerViewModelTest {
         assertEquals(PickerTab.SHORTCUTS, vm(bound(sc), Gesture.TAP).state.value.tab)
         val act = Action.LaunchActivity("com.b", "com.b.Settings", "Browser settings")
         assertEquals(PickerTab.ACTIVITIES, vm(bound(act), Gesture.TAP).state.value.tab)
+        val qs = Action.ClickTile("com.notes", "com.notes.QuickNote", "Quick note")
+        assertEquals(PickerTab.TILES, vm(bound(qs), Gesture.TAP).state.value.tab)
     }
 
     @Test
@@ -194,5 +200,29 @@ class ActionPickerViewModelTest {
             Action.LaunchActivity("com.b", "com.b.Settings", "Browser settings"),
             repo.current.bindings[Gesture.SWIPE_RIGHT],
         )
+    }
+
+    @Test
+    fun `UI-28 tiles load once, filter and are saved as ClickTile`() = runTest {
+        val repo = FakeSettingsRepository()
+        val vm = vm(repo)
+        vm.state.test {
+            expectMostRecentItem()
+            assertEquals(0, tiles.loads)
+            vm.selectTab(PickerTab.TILES)
+            val state = expectMostRecentItem()
+            assertFalse(state.tilesLoading)
+            assertEquals(listOf(tile), state.tiles)
+            vm.setTileQuery("zzz")
+            assertTrue(expectMostRecentItem().tiles.isEmpty())
+            vm.selectTab(PickerTab.SYSTEM)
+            vm.selectTab(PickerTab.TILES)
+            vm.setTileQuery("notes")
+            assertEquals(listOf(tile), expectMostRecentItem().tiles)
+            assertEquals(1, tiles.loads)
+            vm.selectTile(tile)
+            assertTrue(expectMostRecentItem().finished)
+        }
+        assertEquals(Action.ClickTile("com.notes", "com.notes.QuickNote", "Quick note"), repo.current.bindings[Gesture.SWIPE_RIGHT])
     }
 }

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Assistant
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.FlashlightOn
+import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.outlined.SwipeLeftAlt
 import androidx.compose.material.icons.outlined.SwipeRight
 import androidx.compose.material.icons.outlined.SwipeRightAlt
 import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material.icons.outlined.VerticalAlignBottom
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material.icons.outlined.WebAsset
@@ -85,8 +87,10 @@ val Action.labelRes: Int
         Action.VolumePanel -> R.string.action_volume_panel
         is Action.LaunchApp -> R.string.action_open_app
         Action.Assistant -> R.string.action_assistant
+        Action.OneHandedMode -> R.string.action_one_handed
         is Action.LaunchShortcut -> R.string.action_open_shortcut
         is Action.LaunchActivity -> R.string.action_open_activity
+        is Action.ClickTile -> R.string.action_click_tile
     }
 
 val Action.icon: ImageVector
@@ -108,8 +112,10 @@ val Action.icon: ImageVector
         Action.VolumePanel -> Icons.Outlined.Speaker
         is Action.LaunchApp -> Icons.Outlined.Apps
         Action.Assistant -> Icons.Outlined.Assistant
+        Action.OneHandedMode -> Icons.Outlined.VerticalAlignBottom
         is Action.LaunchShortcut -> Icons.Outlined.SubdirectoryArrowRight
         is Action.LaunchActivity -> Icons.Outlined.WebAsset
+        is Action.ClickTile -> Icons.Outlined.GridView
     }
 
 @StringRes
@@ -118,11 +124,12 @@ fun ActionGroupId.labelRes(): Int = when (this) {
     ActionGroupId.MEDIA -> R.string.group_media
 }
 
-/** Human-readable action name; LaunchApp/LaunchShortcut/LaunchActivity show the app label (UI-12) or the package name. */
+/** Human-readable action name; LaunchApp/LaunchShortcut/LaunchActivity/ClickTile show the app label (UI-12) or the package name. */
 @Composable
 fun actionDisplayName(action: Action, appLabel: String?): String = when (action) {
     is Action.LaunchApp -> stringResource(R.string.action_launch_app, appLabel ?: action.packageName)
     is Action.LaunchShortcut -> stringResource(R.string.action_launch_shortcut, appLabel ?: action.packageName, action.label)
     is Action.LaunchActivity -> stringResource(R.string.action_launch_shortcut, appLabel ?: action.packageName, action.label)
+    is Action.ClickTile -> stringResource(R.string.action_launch_shortcut, appLabel ?: action.packageName, action.label)
     else -> stringResource(action.labelRes)
 }

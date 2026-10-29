@@ -17,6 +17,10 @@ import io.github.ptt98hd.totch.action.LocalExecutor
 import io.github.ptt98hd.totch.action.PackageManagerAppActivities
 import io.github.ptt98hd.totch.action.PackageManagerAppShortcuts
 import io.github.ptt98hd.totch.action.PackageManagerInstalledApps
+import io.github.ptt98hd.totch.action.PackageManagerQuickSettingsTiles
+import io.github.ptt98hd.totch.update.GitHubAppUpdater
+import io.github.ptt98hd.totch.QuickSettingsTiles
+import io.github.ptt98hd.totch.AppUpdater
 import io.github.ptt98hd.totch.core.action.ActionDispatcher
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
@@ -105,6 +109,8 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
 
     override val appShortcuts: AppShortcuts = PackageManagerAppShortcuts(app.packageManager)
     override val appActivities: AppActivities = PackageManagerAppActivities(app.packageManager)
+    override val quickSettingsTiles: QuickSettingsTiles = PackageManagerQuickSettingsTiles(app.packageManager, app.packageName)
+    override val appUpdater: AppUpdater = GitHubAppUpdater(app)
 
     init {
         scope.launch { combine(settings, display.state) { s, d -> s to d.density }.collect { (s, d) -> engine.updateSettings(s, d) } }

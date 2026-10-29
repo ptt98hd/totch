@@ -1,6 +1,6 @@
 # Spec: Hành động & điều phối (`ActionDispatcher`)
 
-Yêu cầu: FR-A1…FR-A14 · Module: `:core` (logic) + `:app` (executor)
+Yêu cầu: FR-A1…FR-A16 · Module: `:core` (logic) + `:app` (executor)
 
 ## 1. Ma trận khả năng — `ActionRequirements.of(action)`
 
@@ -9,6 +9,7 @@ Yêu cầu: FR-A1…FR-A14 · Module: `:core` (logic) + `:app` (executor)
 | `None` | ∅ |
 | `Back`, `Home`, `Recents`, `LockScreen`, `Screenshot`, `Notifications`, `QuickSettings`, `LaunchApp`, `Assistant`, `LaunchShortcut`, `LaunchActivity` | {ACCESSIBILITY, SHIZUKU} |
 | `ToggleTorch`, `MediaPlayPause`, `MediaNext`, `MediaPrevious`, `VolumeUp`, `VolumeDown`, `VolumePanel` | {LOCAL} |
+| `ClickTile`, `OneHandedMode` (v1.6) | {SHIZUKU} |
 
 ## 2. Điều phối
 
@@ -31,6 +32,8 @@ Yêu cầu: FR-A1…FR-A14 · Module: `:core` (logic) + `:app` (executor)
 | AD-7 | `Assistant`, `LaunchShortcut` có requirements {ACCESSIBILITY, SHIZUKU} |
 | AD-8 | `VolumePanel` có requirements {LOCAL} (v1.3, FR-A13) |
 | AD-9 | `LaunchActivity` có requirements {ACCESSIBILITY, SHIZUKU} (v1.5, FR-A14) |
+| AD-11 | `OneHandedMode` có requirements {SHIZUKU} (v1.6, FR-A16) |
+| AD-10 | `ClickTile` có requirements {SHIZUKU} (v1.6, FR-A15): chỉ có Trợ năng → `Failed("unavailable")` |
 
 Action mới (v1.1):
 ```kotlin
@@ -58,10 +61,12 @@ lúc chọn để hiển thị mà không cần đọc lại manifest.
 | Notifications | `cmd statusbar expand-notifications` |
 | QuickSettings | `cmd statusbar expand-settings` |
 | Assistant | `input keyevent 219` (KEYCODE_ASSIST → trợ lý mặc định của hệ thống) |
+| OneHandedMode | script bật/tắt `one_handed_mode_activated` (§10) |
 | các action LOCAL, None | `null` |
 | LaunchApp(pkg) | `null` từ `of()`; dùng `launch(pkg, activity)` |
 | LaunchShortcut | `null` từ `of()`; dùng `startIntent(intentUri)` |
 | LaunchActivity | `null` từ `of()`; dùng `startActivity(pkg, activity)` (v1.5) |
+| ClickTile | `null` từ `of()`; dùng `clickTile(pkg, service)` (v1.6) |
 
 `ShellCommands.launch(packageName, activityName): String?` →
 `am start -n <pkg>/<activity> -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000`
@@ -74,6 +79,7 @@ lúc chọn để hiển thị mà không cần đọc lại manifest.
 | SC-4 | `startIntent("intent:#Intent;component=com.a/.B;end")` → `am start 'intent:#Intent;component=com.a/.B;end'` |
 | SC-5 | Dấu `'` trong URI được escape thành `'\''` (không thoát được khỏi chuỗi quote) |
 | SC-6 | URI không bắt đầu bằng `intent:` hoặc `#Intent;`, hoặc chứa ký tự điều khiển (`\n`, `\r`, `\u0000`…) → `null` |
+| SC-8 | (v1.6) `clickTile("com.a", "com.a.qs.Tile$Inner")` → `cmd statusbar click-tile 'com.a/com.a.qs.Tile$Inner'`; tên sai định dạng (SC-2) → `null` |
 | SC-7 | (v1.5) `startActivity("com.a", "com.a.Main$Sub")` → `am start -n 'com.a/com.a.Main$Sub' -f 0x10000000`; tên sai định dạng (SC-2) → `null` |
 
 ## 4. Executor phía `:app`
@@ -82,7 +88,7 @@ lúc chọn để hiển thị mà không cần đọc lại manifest.
 |---|---|
 | `LocalExecutor` | Đèn pin: `CameraManager.setTorchMode` trên camera có flash, lưu trạng thái qua `TorchCallback`. Media: xem §5. Âm lượng: `adjustStreamVolume(STREAM_MUSIC, ±1, FLAG_SHOW_UI)`. Bảng âm lượng: `adjustStreamVolume(STREAM_MUSIC, ADJUST_SAME, FLAG_SHOW_UI)` (chỉ hiện thanh, không đổi mức) |
 | `AccessibilityExecutor` | LaunchActivity (v1.5): `startActivity(Intent().setClassName(pkg, activity) + NEW_TASK)`. `performGlobalAction(GLOBAL_ACTION_BACK/HOME/RECENTS/LOCK_SCREEN/TAKE_SCREENSHOT/NOTIFICATIONS/QUICK_SETTINGS)`; LaunchApp: `startActivity(launchIntent)` từ service; Assistant: `startActivity(ACTION_ASSIST)`, không có thì `ACTION_VOICE_COMMAND`; LaunchShortcut: `Intent.parseUri(intentUri)` (bỏ selector và cờ grant URI) + `FLAG_ACTIVITY_NEW_TASK`. `isAvailable()` = service đang chạy |
-| `ShizukuExecutor` | `ITouchService.exec(ShellCommands…)`. `isAvailable()` = Shizuku binder sống + đã cấp quyền + UserService đã bind |
+| `ShizukuExecutor` | `ITouchService.exec(ShellCommands…)` (kể cả `ClickTile`, v1.6). `isAvailable()` = Shizuku binder sống + đã cấp quyền + UserService đã bind |
 
 Phản hồi: nếu `Ok` và `haptics` bật → rung (FR-A10, §6). Nếu `Failed` → Toast ngắn
 "Không thể thực hiện: <tên hành động>" (FR-A9).
@@ -152,3 +158,47 @@ Nguồn: `AppActivities.activities()` — với mỗi app có activity launcher 
 | AC-1 | Nhóm theo package, nhóm sắp theo tên app rồi package; activity trong nhóm theo nhãn rồi tên lớp (không phân biệt hoa thường) |
 | AC-2 | Query (trim, không phân biệt hoa thường) khớp nhãn, tên lớp **hoặc** tên app; khớp tên app → giữ cả nhóm; nhóm rỗng bị ẩn |
 | AC-3 | `shortActivityName("com.a", "com.a.ui.Main")` = `.ui.Main`; lớp ở package khác giữ nguyên tên đầy đủ |
+
+## 9. Ô Cài đặt nhanh (v1.6 — FR-A15)
+
+```kotlin
+@SerialName("click_tile") data class ClickTile(
+    val packageName: String, val serviceName: String, val label: String) : Action   // label lưu để hiển thị
+```
+
+Nguồn: `QuickSettingsTiles.tiles()` — `queryIntentServices(Intent(TileService.ACTION_QS_TILE))` (cần `<queries>` cho
+action này), giữ service `exported`, `enabled`, `permission == BIND_QUICK_SETTINGS_TILE`, bỏ ô của chính Totch. Nhãn =
+`loadLabel` của service, kèm tên app.
+
+Thực thi: chỉ Shizuku — `cmd statusbar click-tile <pkg>/<service>` (SystemUI tìm ô trong bảng Cài đặt nhanh và bấm như
+người dùng: bật/tắt, mở dialog hoặc activity của ô). Ô chưa được thêm vào bảng → hệ thống bỏ qua lệnh (không báo lỗi);
+picker hiển thị gợi ý "Chỉ ô đã thêm vào Cài đặt nhanh mới phản hồi". Không tự thêm ô vào bảng của người dùng.
+
+`filterTiles(entries, query): List<TileEntry>`:
+
+| ID | Tiêu chí |
+|---|---|
+| QT-1 | Sắp theo nhãn ô rồi tên app (không phân biệt hoa thường); query (trim, không phân biệt hoa thường) khớp nhãn ô **hoặc** tên app |
+
+## 10. Chế độ một tay (v1.6 — FR-A16)
+
+`@SerialName("one_handed") data object OneHandedMode : Action` — nhóm System của picker, dòng phụ "Cần phím tắt Chế độ một tay".
+
+Android không có global action / keyevent / lệnh shell cho One-handed mode. WMShell (`OneHandedController`) theo dõi
+`Settings.Secure.one_handed_mode_activated`: đổi thành 1 → vào chế độ một tay, 0 → thoát; khi thoát bằng chạm ngoài /
+hết giờ hệ thống tự ghi lại 0. Nhưng thay đổi bị **bỏ qua** nếu phím tắt chưa bật, tức `accessibility_button_targets`
+và `accessibility_shortcut_target_service` đều không chứa `OneHandedMode` (`OneHandedSettingsUtil.getShortcutEnabled`).
+Nếu `one_handed_mode_enabled` = 0 hệ thống tự bật khi nhận lệnh. Máy không hỗ trợ (`ro.support_one_handed_mode`) hoặc
+ROM thay chế độ một tay riêng (Samsung) → không có tác dụng.
+
+Lệnh (`sh -c` qua Shizuku), thoát 1 khi chưa có phím tắt để hiện Toast lỗi (FR-A9):
+```sh
+case "$(settings get secure accessibility_button_targets):$(settings get secure accessibility_shortcut_target_service)" in
+  *OneHandedMode*) ;; *) exit 1 ;; esac
+if [ "$(settings get secure one_handed_mode_activated)" = 1 ]; then v=0; else v=1; fi
+settings put secure one_handed_mode_activated $v
+```
+
+| ID | Tiêu chí |
+|---|---|
+| SC-9 | `ShellCommands.of(OneHandedMode)` kiểm tra phím tắt (`*OneHandedMode*` trong 2 key trên, không có → `exit 1`) rồi đảo `one_handed_mode_activated` (1 → 0, khác → 1) |

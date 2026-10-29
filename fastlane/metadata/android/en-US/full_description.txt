@@ -9,6 +9,8 @@
 <li>Toggle flashlight</li>
 <li>Media Play/Pause, Next, Previous; Volume up/down; volume panel</li>
 <li>Launch any installed app</li>
+<li>Tap an app's Quick Settings tile</li>
+<li>One-handed mode</li>
 </ul>
 
 <p><b>How it works:</b> Totch reads raw touch events with shell privileges through <b>Shizuku, which is required</b>. Touches are not consumed: the system still receives them, so swipe-down gestures are unavailable (they would also pull the notification shade). Runs as a foreground service with a persistent notification. Other permissions are optional and can be granted through Shizuku from the Home screen.</p>
@@ -16,6 +18,6 @@
 <p><b>About the Accessibility service (optional):</b> Totch uses the Accessibility API only to perform global actions such as Back, Home, Recents, lock screen, screenshot and opening the notification shade, to open apps from the background, and to block touches on the notch with an invisible, empty overlay so that swiping down there does not pull the notification shade. It does not read, collect or transmit any screen content or typed text.</p>
 <p><b>About notification access (optional):</b> if you bind Play/Pause, Next or Previous, Totch recommends granting notification access. It is used only to find the active media player and send it play/pause/skip commands. Totch does not read, store or transmit any notification.</p>
 
-<p><b>Privacy:</b> no Internet permission, no ads, no trackers, no analytics. All settings stay on your device.</p>
+<p><b>Privacy:</b> no ads, no trackers, no analytics. All settings stay on your device. The Internet permission is used only when you tap <i>Check for updates</i>, to read the latest release on GitHub and download its APK; nothing runs in the background.</p>
 
 <p>Requires Android 12 or newer and a phone with a top display cutout. Gestures can optionally keep working in landscape.</p>

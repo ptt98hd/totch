@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- FR-D7: recommended, keeps the gesture service from being killed. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- FR-U27: self-update from GitHub Releases, only when the user asks for it. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <queries>
         <intent>
@@ -20,6 +23,10 @@
         </intent>
         <intent>
             <action android:name="android.intent.action.VOICE_COMMAND" />
+        </intent>
+        <!-- FR-A15: list Quick Settings tiles. -->
+        <intent>
+            <action android:name="android.service.quicksettings.action.QS_TILE" />
         </intent>
     </queries>
 
@@ -80,6 +87,10 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".update.UpdateInstallReceiver"
+            android:exported="false" />
 
         <provider
             android:name="rikka.shizuku.ShizukuProvider"

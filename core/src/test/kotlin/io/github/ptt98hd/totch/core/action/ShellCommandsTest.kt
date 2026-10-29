@@ -77,4 +77,25 @@ class ShellCommandsTest {
         assertNull(ShellCommands.startActivity("com.a", "Main'; reboot"))
         assertNull(ShellCommands.of(Action.LaunchActivity("com.a", "com.a.Main", "Main")))
     }
+
+    @Test fun `SC-8 clickTile quotes the component`() {
+        assertEquals(
+            "cmd statusbar click-tile 'com.a/com.a.qs.Tile\$Inner'",
+            ShellCommands.clickTile("com.a", "com.a.qs.Tile\$Inner"),
+        )
+        assertNull(ShellCommands.clickTile("com.a; reboot", "Tile"))
+        assertNull(ShellCommands.clickTile("com.a", "Tile'; reboot"))
+        assertNull(ShellCommands.of(Action.ClickTile("com.a", "com.a.Tile", "Tile")))
+    }
+
+    @Test fun `SC-9 one-handed mode needs its shortcut and toggles the activated setting`() {
+        assertEquals(
+            "case \"\$(settings get secure accessibility_button_targets):" +
+                "\$(settings get secure accessibility_shortcut_target_service)\" in " +
+                "*OneHandedMode*) ;; *) exit 1 ;; esac; " +
+                "if [ \"\$(settings get secure one_handed_mode_activated)\" = 1 ]; then v=0; else v=1; fi; " +
+                "settings put secure one_handed_mode_activated \$v",
+            ShellCommands.of(Action.OneHandedMode),
+        )
+    }
 }

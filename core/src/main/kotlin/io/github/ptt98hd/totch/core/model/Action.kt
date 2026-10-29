@@ -24,6 +24,8 @@ sealed interface Action {
     @Serializable @SerialName("volume_panel") data object VolumePanel : Action
     @Serializable @SerialName("launch_app") data class LaunchApp(val packageName: String) : Action
     @Serializable @SerialName("assistant") data object Assistant : Action
+    /** Toggles Android's one-handed mode; needs its accessibility shortcut (FR-A16). */
+    @Serializable @SerialName("one_handed") data object OneHandedMode : Action
 
     /** Static app shortcut; [label] is kept for display, [intentUri] is `Intent.toUri(URI_INTENT_SCHEME)`. */
     @Serializable @SerialName("launch_shortcut") data class LaunchShortcut(
@@ -37,6 +39,13 @@ sealed interface Action {
     @Serializable @SerialName("launch_activity") data class LaunchActivity(
         val packageName: String,
         val activityName: String,
+        val label: String,
+    ) : Action
+
+    /** Quick Settings tile of an app, a `TileService` (FR-A15); [label] is kept for display. */
+    @Serializable @SerialName("click_tile") data class ClickTile(
+        val packageName: String,
+        val serviceName: String,
         val label: String,
     ) : Action
 }

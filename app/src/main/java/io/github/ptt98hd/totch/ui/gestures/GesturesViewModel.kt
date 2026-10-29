@@ -36,7 +36,7 @@ val GestureGroups: List<Pair<GestureGroup, List<Gesture>>> = listOf(
 
 /**
  * One gesture row. [action] is the bound action, remembered while the gesture is switched off; [on] is the
- * state of its switch (UI-16). [appLabel] is set for LaunchApp/LaunchShortcut/LaunchActivity whose app is installed
+ * state of its switch (UI-16). [appLabel] is set for LaunchApp/LaunchShortcut/LaunchActivity/ClickTile whose app is installed
  * (UI-12); [enabled] is false for gestures that cannot run (swipe down without accessibility, UI-14); they are off.
  */
 data class GestureRow(
@@ -75,6 +75,7 @@ class GesturesViewModel(
                                 is Action.LaunchApp -> action.packageName
                                 is Action.LaunchShortcut -> action.packageName
                                 is Action.LaunchActivity -> action.packageName
+                                is Action.ClickTile -> action.packageName
                                 else -> null
                             }
                             GestureRow(

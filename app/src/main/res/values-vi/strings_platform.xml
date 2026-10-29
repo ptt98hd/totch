@@ -33,7 +33,9 @@
     <string name="platform_action_volume_panel">Bảng âm lượng</string>
     <string name="platform_action_launch_app">Mở ứng dụng</string>
     <string name="platform_action_assistant">Trợ lý</string>
+    <string name="platform_action_one_handed">Chế độ một tay</string>
     <string name="platform_action_shortcut">Mở shortcut</string>
     <string name="platform_action_activity">Mở activity</string>
+    <string name="platform_action_tile">Bấm ô Cài đặt nhanh</string>
     <string name="media_listener_label">Totch điều khiển media</string>
 </resources>

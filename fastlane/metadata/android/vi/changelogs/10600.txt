@@ -1,0 +1,4 @@
+* Hành động mới: bấm ô Cài đặt nhanh của ứng dụng (tab Ô nhanh trong bộ chọn, ô phải có trong Cài đặt nhanh).
+* Hành động mới: chế độ một tay (cần bật phím tắt trong cài đặt hệ thống).
+* Tự cập nhật: Cài đặt › Giới thiệu › Kiểm tra cập nhật tải APK đã ký từ GitHub Releases (chỉ khi bạn bấm).
+* Cài đặt: mô tả một dòng cho các mục Hệ thống; đường kẻ giữa các slider Notch.

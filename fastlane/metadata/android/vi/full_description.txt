@@ -9,6 +9,8 @@
 <li>Bật/tắt đèn pin</li>
 <li>Phát/Tạm dừng, Bài tiếp, Bài trước; Tăng/Giảm âm lượng; bảng âm lượng</li>
 <li>Mở một ứng dụng bất kỳ đã cài</li>
+<li>Bấm ô Cài đặt nhanh của ứng dụng</li>
+<li>Chế độ một tay</li>
 </ul>
 
 <p><b>Cách hoạt động:</b> Totch đọc sự kiện chạm thô với quyền shell qua <b>Shizuku (bắt buộc)</b>. Totch không chặn chạm: hệ thống vẫn nhận chạm, nên các cử chỉ vuốt xuống không khả dụng (chúng cũng sẽ kéo thanh thông báo). Chạy dưới dạng foreground service với thông báo thường trực. Các quyền khác là tùy chọn và có thể cấp qua Shizuku ngay ở màn hình Trang chủ.</p>
@@ -16,6 +18,6 @@
 <p><b>Về dịch vụ Trợ năng (tùy chọn):</b> Totch chỉ dùng Accessibility API để thực hiện các hành động toàn cục như Back, Home, Recents, khóa màn hình, chụp màn hình, mở thanh thông báo để mở ứng dụng từ nền, và để chặn chạm tại notch bằng một lớp phủ trong suốt, rỗng để vuốt xuống ở đó không kéo thanh thông báo. Dịch vụ không đọc, không thu thập và không gửi đi bất kỳ nội dung màn hình hay văn bản nào.</p>
 <p><b>Về quyền truy cập thông báo (tùy chọn):</b> nếu bạn gán Play/Pause, Bài tiếp hoặc Bài trước, Totch khuyến nghị cấp quyền truy cập thông báo. Quyền này chỉ dùng để tìm trình phát media đang hoạt động và gửi lệnh phát/dừng/chuyển bài. Totch không đọc, không lưu và không gửi đi bất kỳ thông báo nào.</p>
 
-<p><b>Quyền riêng tư:</b> không có quyền Internet, không quảng cáo, không trình theo dõi, không analytics. Mọi cài đặt chỉ lưu trên máy bạn.</p>
+<p><b>Quyền riêng tư:</b> không quảng cáo, không trình theo dõi, không analytics. Mọi cài đặt chỉ lưu trên máy bạn. Quyền Internet chỉ dùng khi bạn bấm <i>Kiểm tra cập nhật</i> để đọc bản phát hành mới nhất trên GitHub và tải APK; không chạy ngầm.</p>
 
 <p>Yêu cầu Android 12 trở lên và điện thoại có tai thỏ/lỗ camera ở cạnh trên. Có thể bật nhận cử chỉ cả khi xoay ngang.</p>
