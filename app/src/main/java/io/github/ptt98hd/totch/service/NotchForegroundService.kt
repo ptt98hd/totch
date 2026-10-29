@@ -18,7 +18,10 @@ import io.github.ptt98hd.totch.TotchApp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/** Hosts the Shizuku touch pipeline (FR-D5, DM-1, DM-7); started/stopped by [DefaultAppContainer]. */
+/**
+ * Keeps gestures alive while enabled (FR-D5, DM-1, DM-7) and hosts the Shizuku touch pipeline, which idles while Shizuku
+ * is not ready (the accessibility overlay is then the touch source, FR-D13); started/stopped by [DefaultAppContainer].
+ */
 class NotchForegroundService : LifecycleService() {
     private var job: Job? = null
     private val notificationManager by lazy { getSystemService(NotificationManager::class.java) }
@@ -48,8 +51,7 @@ class NotchForegroundService : LifecycleService() {
     private fun updateNotification(status: EngineStatus) {
         val text = when (status) {
             EngineStatus.Running -> getString(R.string.platform_notification_running)
-            EngineStatus.WaitingShizuku -> getString(R.string.platform_notification_waiting)
-            EngineStatus.ShizukuPermissionRequired -> getString(R.string.platform_notification_permission)
+            EngineStatus.NeedsAccess -> getString(R.string.platform_notification_needs_access)
             EngineStatus.Starting -> getString(R.string.platform_notification_waiting)
             EngineStatus.PausedRotation -> getString(R.string.platform_notification_paused)
             is EngineStatus.Error -> status.message

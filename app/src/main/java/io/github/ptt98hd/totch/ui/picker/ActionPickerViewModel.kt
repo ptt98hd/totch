@@ -1,5 +1,7 @@
 package io.github.ptt98hd.totch.ui.picker
 
+import io.github.ptt98hd.totch.core.action.ActionRequirements
+import io.github.ptt98hd.totch.core.action.Capability
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
@@ -117,6 +119,8 @@ data class ActionPickerUiState(
     /** Search of the System tab, applied with [filterCatalog] where the labels are known (UI-24, UI-29). */
     val systemQuery: String = "",
     val dndAccessGranted: Boolean = true,
+    /** Shizuku is running and granted (UI-29b). */
+    val shizukuReady: Boolean = true,
     val appQuery: String = "",
     val apps: List<AppInfo> = emptyList(),
     val appsLoading: Boolean = true,
@@ -138,6 +142,10 @@ data class ActionPickerUiState(
 ) {
     /** UI-29: sound mode actions show a hint while Do Not Disturb access is missing. */
     fun needsDndAccess(action: Action): Boolean = !dndAccessGranted && action in ActionCatalog.needsDndAccess
+
+    /** AR-10: actions only Shizuku can run show a hint while it is not ready (FR-A20). */
+    fun needsShizuku(action: Action): Boolean =
+        !shizukuReady && ActionRequirements.of(action) == setOf(Capability.SHIZUKU)
 
     /** UI-25: while searching, every matching app is shown expanded. */
     fun isExpanded(packageName: String): Boolean = shortcutQuery.isNotBlank() || packageName in expanded
@@ -187,6 +195,7 @@ class ActionPickerViewModel(
                 tab = l.tab ?: initialTab(current),
                 systemQuery = l.systemQuery,
                 dndAccessGranted = r.dndAccessGranted,
+                shizukuReady = r.shizukuRunning && r.shizukuGranted,
                 appQuery = l.appQuery,
                 apps = l.apps?.filterApps(l.appQuery).orEmpty(),
                 appsLoading = l.apps == null,

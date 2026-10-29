@@ -4,10 +4,13 @@
 > DM-21 chỉ còn giá trị lịch sử). `NotchAccessibilityService` không còn overlay, chỉ là quyền tùy chọn để thực thi
 > hành động (§6). JSON cũ có `"mode"` vẫn đọc được (key bị bỏ qua, ST-23).
 
+> **v1.7 (FR-D13):** Shizuku là **tùy chọn**. Không có Shizuku, Trợ năng nhận chạm bằng overlay (như Accessibility mode
+> cũ, §3) — xem §8. `WaitingShizuku`, `ShizukuPermissionRequired` được thay bằng `NeedsAccess`.
+
 > **v1.5:** quyền Thông báo tắt được qua Shizuku (FR-D10, PC-5); overlay chặn chạm khi có Trợ năng (FR-G14, §7);
 > nhận cử chỉ khi xoay ngang (FR-R8, DM-31).
 
-Yêu cầu: FR-D1…FR-D10, FR-S8, FR-G10, FR-G14, FR-R8, NFR-3, NFR-8 · Module: `:app`
+Yêu cầu: FR-D1…FR-D13, FR-S8, FR-G10, FR-G14, FR-R8, NFR-3, NFR-8 · Module: `:app`
 
 ## 1. Trạng thái engine
 
@@ -153,3 +156,57 @@ engine — engine vẫn nhận qua `getevent` nên không bị phát cử chỉ 
 |---|---|
 | DM-15 | `needsTouchBlocking(s)` = `s.enabled` ∧ `isGestureOn(SWIPE_DOWN, true) ∨ isGestureOn(SWIPE_DOWN_HOLD, true)` |
 | DM-16 | Overlay nuốt chạm (`onTouchEvent` trả true) và không gọi engine (kiểm thủ công MT-A1) |
+
+## 8. Nguồn chạm: Shizuku hoặc Trợ năng (v1.7 — FR-D13)
+
+Totch chạy được với **một trong hai**: Shizuku (đọc `getevent`, §2) hoặc Trợ năng (overlay nhận chạm). Shizuku vẫn được
+ưu tiên khi sẵn sàng: không chiếm chạm ngoài trường hợp chặn vuốt xuống (§7) và mở thêm tính năng (hành động shell —
+actions §14, bật/tắt quyền trong app — §6, cài cập nhật im lặng — update §7).
+
+```kotlin
+enum class TouchSource { NONE, SHIZUKU, ACCESSIBILITY }
+
+/** DM-40 */
+fun touchSource(shizuku: ShizukuState, pipeline: PipelineState, accessibility: Boolean): TouchSource
+```
+
+| Shizuku sẵn sàng | Pipeline | Trợ năng | Nguồn |
+|---|---|---|---|
+| có | không `Failed` | bất kỳ | `SHIZUKU` |
+| có | `Failed` | có | `ACCESSIBILITY` (dự phòng khi `getevent` lỗi, vd. ROM chặn `/dev/input` — R1) |
+| có | `Failed` | không | `SHIZUKU` (để hiện `Error`) |
+| không | bất kỳ | có | `ACCESSIBILITY` |
+| không | bất kỳ | không | `NONE` |
+
+**Overlay của Trợ năng** (mở rộng §7): `NotchAccessibilityService` đặt overlay trên vùng notch khi engine `Running` và
+(nguồn = `ACCESSIBILITY` **hoặc** `needsTouchBlocking`). Overlay luôn nuốt chạm; khi nguồn = `ACCESSIBILITY` nó còn
+**chuyển** chạm cho engine (`GestureEngine.onTouch`) — tọa độ màn hình `rawX/rawY`, thời gian `eventTime`
+(`uptimeMillis`, cùng đồng hồ với engine). Chuỗi chạm bắt đầu trong overlay vẫn được giao cho overlay khi ngón tay ra
+ngoài vùng, nên vuốt hoạt động. Khi nguồn = `SHIZUKU`, overlay không chuyển (tránh nhận cử chỉ hai lần). Đổi nguồn →
+`engine.reset()`.
+
+Nguồn `ACCESSIBILITY` chỉ chạy ở hướng dọc (vùng overlay = `region` theo hướng hiện tại, `null` khi xoay):
+`landscapeGestures` (FR-R8) chỉ có tác dụng với Shizuku.
+
+Ánh xạ `MotionEvent` → `TouchEvent` (`touchEventOf(actionMasked, rawX, rawY, eventTime, pointerCount)`, hàm thuần):
+`ACTION_DOWN` → DOWN, `ACTION_MOVE` → MOVE, `ACTION_UP` → UP, `ACTION_CANCEL` → CANCEL, `ACTION_POINTER_DOWN` /
+`ACTION_POINTER_UP` → MOVE với `pointerCount` của sự kiện (recognizer hủy khi ≥ 2, FR-G7), còn lại → `null`.
+
+Trạng thái (`resolveEngineStatus(settings, shizuku, pipeline, rotation, accessibility)`):
+`!enabled` → như cũ (`Stopping` / `Disabled`); nguồn `NONE` → `NeedsAccess`; nguồn `SHIZUKU` → pipeline lỗi `Error` →
+xoay (và `!landscapeGestures`) `PausedRotation` → pipeline chạy `Running`, còn lại `Starting`; nguồn `ACCESSIBILITY` →
+xoay `PausedRotation`, còn lại `Running`.
+
+Foreground service (DM-1) vẫn chạy khi `enabled` ở cả hai nguồn (giữ process sống, thông báo trạng thái). Thông báo khi
+`NeedsAccess`: "Turn on Accessibility or Shizuku" / "Bật Trợ năng hoặc Shizuku".
+
+| ID | Tiêu chí |
+|---|---|
+| DM-40 | `touchSource` đúng bảng trên |
+| DM-41 | `enabled`, Shizuku chưa chạy / chưa cấp quyền, Trợ năng tắt → `NeedsAccess` |
+| DM-42 | `enabled`, Shizuku chưa sẵn sàng, Trợ năng bật → `Running` (pipeline `Idle`); xoay → `PausedRotation` kể cả khi `landscapeGestures` |
+| DM-43 | Shizuku sẵn sàng, pipeline `Failed`, Trợ năng bật → `Running` (dự phòng); Trợ năng tắt → `Error` |
+| DM-44 | `touchEventOf` ánh xạ đúng như trên; `ACTION_POINTER_DOWN` giữ `pointerCount` = 2; hành động khác (vd. `ACTION_HOVER_MOVE`) → `null` |
+| DM-45 | (thủ công) Không có Shizuku, bật Trợ năng: chạm / chạm đúp / vuốt tại notch chạy đúng hành động, chạm ở notch không tới app bên dưới |
+
+DM-2, DM-3 (chờ Shizuku / thiếu quyền Shizuku) không còn là trạng thái engine: Shizuku chỉ hiện ở Home › Nâng cao.

@@ -14,20 +14,19 @@
     <!-- Home -->
     <string name="master_switch_cd">Bật hoặc tắt cử chỉ trên notch</string>
     <string name="status_disabled">Cử chỉ đang tắt</string>
-    <string name="status_waiting_shizuku">Cử chỉ đang chờ Shizuku</string>
-    <string name="status_shizuku_permission_required">Cử chỉ cần quyền Shizuku</string>
+    <string name="status_needs_access">Bật Trợ năng hoặc Shizuku</string>
     <string name="status_error">Cử chỉ đã dừng: %1$s</string>
     <string name="status_running">Cử chỉ đang bật</string>
     <string name="status_paused_rotation">Cử chỉ tạm dừng khi xoay ngang</string>
     <string name="status_starting">Cử chỉ đang được bật…</string>
     <string name="status_stopping">Cử chỉ đang được tắt…</string>
-    <string name="requirement_title">Yêu cầu</string>
+    <string name="advanced_title">Nâng cao</string>
     <string name="permissions_title">Quyền</string>
     <string name="shizuku_title">Shizuku</string>
     <string name="shizuku_ready">Đang chạy, đã cấp quyền</string>
     <string name="shizuku_permission_required">Chưa cấp quyền</string>
-    <string name="shizuku_not_running">Chưa chạy</string>
-    <string name="shizuku_not_installed">Chưa cài đặt</string>
+    <string name="shizuku_not_running">Chưa chạy · tùy chọn</string>
+    <string name="shizuku_not_installed">Chưa cài đặt · tùy chọn</string>
     <string name="permission_accessibility">Trợ năng</string>
     <string name="permission_notifications">Thông báo</string>
     <string name="permission_media">Điều khiển media</string>
@@ -95,6 +94,8 @@
     <string name="action_airplane">Bật/tắt chế độ máy bay</string>
     <string name="action_location">Bật/tắt vị trí</string>
     <string name="action_needs_dnd">Cần quyền Không làm phiền</string>
+    <string name="action_needs_shizuku">Cần Shizuku</string>
+    <string name="tile_needs_shizuku">%1$s · Cần Shizuku</string>
     <string name="app_not_installed">Chưa cài đặt</string>
     <string name="group_system">Hệ thống</string>
     <string name="group_media">Media</string>
@@ -195,4 +196,23 @@
     <string name="about_source_title">Mã nguồn</string>
     <string name="about_credits_title">Ghi công</string>
     <string name="about_shizuku_credit">Shizuku của RikkaApps</string>
+
+    <!-- v1.7 -->
+    <string name="update_dialog_checking">Đang kiểm tra cập nhật…</string>
+    <string name="update_dialog_up_to_date">Bạn đang dùng bản mới nhất (%1$s)</string>
+    <string name="update_dialog_failed">Không cập nhật được. Kiểm tra kết nối rồi thử lại.</string>
+    <string name="update_via_shizuku">Cài qua Shizuku, không cần xác nhận</string>
+    <string name="update_via_system">Android sẽ hỏi bạn xác nhận cài đặt</string>
+    <string name="update_hide">Ẩn</string>
+    <string name="update_retry">Thử lại</string>
+    <string name="update_new_badge_cd">Đã có bản mới</string>
+    <string name="ok">OK</string>
+    <string name="close">Đóng</string>
+
+    <string name="section_support">Ủng hộ</string>
+    <string name="donate_title">Mời mình ly cà phê</string>
+    <string name="donate_summary">Ủng hộ phát triển Totch</string>
+    <string name="donate_text">Totch miễn phí, mã nguồn mở, không quảng cáo. Nếu thấy hữu ích, một ly cà phê giúp Totch tiếp tục phát triển.</string>
+    <string name="donate_action">Mời cà phê</string>
+    <string name="donate_later">Để sau</string>
 </resources>

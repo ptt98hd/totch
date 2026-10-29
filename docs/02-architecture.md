@@ -1,6 +1,6 @@
 # 02 — Thiết kế hệ thống
 
-> Trạng thái: **Đã chốt v1.0**, cập nhật cho v1.1 · **v1.4:** bỏ `AccessibilityTouchSource` (chỉ còn Shizuku nhận chạm), Accessibility chỉ còn là executor tùy chọn; quyền tùy chọn cấp qua `ShizukuShell` + `PermissionCommands` (detection-modes §6) · Liên quan: [01-requirements.md](01-requirements.md)
+> Trạng thái: **Đã chốt v1.0**, cập nhật cho v1.1 · **v1.4:** bỏ `AccessibilityTouchSource` (chỉ còn Shizuku nhận chạm), Accessibility chỉ còn là executor tùy chọn; quyền tùy chọn cấp qua `ShizukuShell` + `PermissionCommands` (detection-modes §6) · **v1.7:** Shizuku thành tùy chọn — nguồn chạm `TouchSource` = Shizuku (`getevent`) hoặc overlay của `NotchAccessibilityService` chuyển `MotionEvent` cho engine (detection-modes §8) · Liên quan: [01-requirements.md](01-requirements.md)
 
 ## 1. Tổng quan
 
@@ -218,7 +218,7 @@ sequenceDiagram
   `oneway ILineCallback { onDevice(path, name, minX, maxX, minY, maxY); onLines(String[] frame); onError(int) }`
   (mỗi lần gọi `onLines` chứa các dòng của một khung, tới `SYN_REPORT`).
 - `ShizukuExecutor.execute` gọi `exec("input keyevent 4")` …
-- Shizuku binder chết → engine chuyển trạng thái `WAITING_SHIZUKU`, lắng nghe `OnBinderReceivedListener` để tự kết nối lại (NFR-8).
+- Shizuku binder chết → ~~`WAITING_SHIZUKU`~~ (v1.7: nguồn chạm chuyển sang Trợ năng nếu đang bật, không thì `NeedsAccess`), lắng nghe `OnBinderReceivedListener` để tự kết nối lại (NFR-8).
 
 ### 4.2 Accessibility mode
 - `NotchAccessibilityService.onServiceConnected` thêm một `View` trong suốt kiểu

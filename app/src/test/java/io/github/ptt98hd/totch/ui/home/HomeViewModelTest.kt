@@ -21,8 +21,7 @@ class HomeViewModelTest {
 
     private val allStatuses = listOf(
         EngineStatus.Disabled,
-        EngineStatus.WaitingShizuku,
-        EngineStatus.ShizukuPermissionRequired,
+        EngineStatus.NeedsAccess,
         EngineStatus.Starting,
         EngineStatus.Stopping,
         EngineStatus.Error("boom"),
@@ -53,7 +52,7 @@ class HomeViewModelTest {
     @Test
     fun `UI-1 the switch can be turned off while Shizuku is missing`() = runTest {
         val repo = FakeSettingsRepository(Settings(enabled = true))
-        vm(repo, MutableStateFlow(EngineStatus.WaitingShizuku)).setEnabled(false)
+        vm(repo, MutableStateFlow(EngineStatus.NeedsAccess)).setEnabled(false)
         assertFalse(repo.current.enabled)
     }
 

@@ -105,7 +105,7 @@ class AppSettingsViewModelTest {
         updater.latest.complete(release)
         vm.onUpdateRowClick()
         vm.startUpdate()
-        assertFalse(vm.state.value.updateDialog)
+        assertTrue(vm.state.value.updateDialog) // UP-20: stays open to show the progress
         assertEquals(UpdateState.Downloading(0f), vm.state.value.update)
         updater.progress(0.5f)
         assertEquals(UpdateState.Downloading(0.5f), vm.state.value.update)

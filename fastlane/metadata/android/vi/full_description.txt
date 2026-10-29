@@ -16,7 +16,7 @@
 <li>Chế độ một tay</li>
 </ul>
 
-<p><b>Cách hoạt động:</b> Totch đọc sự kiện chạm thô với quyền shell qua <b>Shizuku (bắt buộc)</b>. Totch không chặn chạm: hệ thống vẫn nhận chạm, nên các cử chỉ vuốt xuống không khả dụng (chúng cũng sẽ kéo thanh thông báo). Chạy dưới dạng foreground service với thông báo thường trực. Các quyền khác là tùy chọn và có thể cấp qua Shizuku ngay ở màn hình Trang chủ.</p>
+<p><b>Cách hoạt động:</b> bật dịch vụ <b>Trợ năng</b> của Totch: một vùng trong suốt trên notch chỉ nhận các chạm tại đó (không đọc nội dung màn hình). <b>Shizuku là tùy chọn</b>: có Shizuku, Totch đọc sự kiện chạm thô với quyền shell, đồng thời mở thêm hành động (ô Cài đặt nhanh, độ sáng, Wi-Fi, Bluetooth…), bật quyền một chạm và cập nhật không cần xác nhận. Chạy dưới dạng foreground service với thông báo thường trực.</p>
 
 <p><b>Về dịch vụ Trợ năng (tùy chọn):</b> Totch chỉ dùng Accessibility API để thực hiện các hành động toàn cục như Back, Home, Recents, khóa màn hình, chụp màn hình, mở thanh thông báo để mở ứng dụng từ nền, và để chặn chạm tại notch bằng một lớp phủ trong suốt, rỗng để vuốt xuống ở đó không kéo thanh thông báo. Dịch vụ không đọc, không thu thập và không gửi đi bất kỳ nội dung màn hình hay văn bản nào.</p>
 <p><b>Về quyền truy cập thông báo (tùy chọn):</b> nếu bạn gán Play/Pause, Bài tiếp hoặc Bài trước, Totch khuyến nghị cấp quyền truy cập thông báo. Quyền này chỉ dùng để tìm trình phát media đang hoạt động và gửi lệnh phát/dừng/chuyển bài. Totch không đọc, không lưu và không gửi đi bất kỳ thông báo nào.</p>

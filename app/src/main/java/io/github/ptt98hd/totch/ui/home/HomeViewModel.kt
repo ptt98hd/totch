@@ -19,10 +19,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** The single requirement (UI-50): Totch does nothing without Shizuku. */
+/** Shizuku under Home › Advanced (UI-50); optional since v1.7 (FR-D13). */
 enum class ShizukuStatus { NOT_RUNNING, PERMISSION_REQUIRED, READY }
 
-/** An optional permission row (UI-51). */
+/** A permission row (UI-51). */
 data class PermissionItem(val permission: Permission, val granted: Boolean)
 
 /** A string resource plus its format arguments. */
@@ -31,8 +31,7 @@ data class StatusText(@StringRes val resId: Int, val args: List<String> = emptyL
 /** UI-2: one status text per [EngineStatus]. */
 fun statusText(status: EngineStatus): StatusText = when (status) {
     EngineStatus.Disabled -> StatusText(R.string.status_disabled)
-    EngineStatus.WaitingShizuku -> StatusText(R.string.status_waiting_shizuku)
-    EngineStatus.ShizukuPermissionRequired -> StatusText(R.string.status_shizuku_permission_required)
+    EngineStatus.NeedsAccess -> StatusText(R.string.status_needs_access) // UI-55
     EngineStatus.Starting -> StatusText(R.string.status_starting)
     EngineStatus.Stopping -> StatusText(R.string.status_stopping)
     is EngineStatus.Error -> StatusText(R.string.status_error, listOf(status.message))
@@ -95,7 +94,7 @@ class HomeViewModel(
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
-    /** UI-1: always persisted, even when Shizuku is missing. */
+    /** UI-1: always persisted, even when no touch source is available. */
     fun setEnabled(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.update { it.copy(enabled = enabled) } }
     }

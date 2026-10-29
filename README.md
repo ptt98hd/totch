@@ -25,23 +25,26 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers. The network is use
 
 ## How it works
 
-Totch reads raw touch events (`getevent`) with shell privileges through [Shizuku](https://shizuku.rikka.app/), in a foreground service with a persistent notification. **Shizuku is required**: without it Totch does nothing. Touches are not consumed (the system still receives them), so the swipe-down gestures need the optional Accessibility service: it places an invisible overlay on the notch that swallows touches there, otherwise swiping down would also pull the notification shade.
+Totch needs **one** of two ways to see touches on the notch, and runs a foreground service with a persistent notification:
 
-Every other permission is optional and can be switched on or off from the Home screen; Totch grants it through Shizuku when it can, otherwise it opens the matching system page:
+- **Accessibility** (no extra app needed): an invisible overlay on the notch receives the touches made there and nothing else. It does not read screen content.
+- **[Shizuku](https://shizuku.rikka.app/)** (optional): Totch reads raw touch events (`getevent`) with shell privileges instead. Shizuku also unlocks extra actions (Quick Settings tiles, one-handed mode, brightness, auto-rotate, Wi-Fi, Bluetooth, mobile data, airplane mode, location), switching the permissions below from inside Totch, and installing updates without a confirmation. With Shizuku alone touches are not consumed, so the swipe-down gestures also need Accessibility, whose overlay swallows them (otherwise swiping down would pull the notification shade).
 
-- **Accessibility** — to perform global actions (Back, Home, lock screen, ...), open apps from the background, and block touches on the notch for the swipe-down gestures (an empty, invisible overlay). It does not read screen content.
+The permissions can be switched on or off from the Home screen; Totch grants them through Shizuku when it can, otherwise it opens the matching system page:
+
+- **Accessibility** — to detect gestures without Shizuku, perform global actions (Back, Home, lock screen, ...), open apps from the background, and block touches on the notch for the swipe-down gestures. It does not read screen content.
 - **Notifications** (Android 13+) — for the foreground service notification. Android closes an app when one of its permissions is revoked, so switching it off restarts Totch.
 - **Media control** (notification access) — only to find the active media session and send play/pause/skip commands (more reliable than media key events). It never reads notifications.
 - **Do Not Disturb access** — needed by the sound mode actions; Android blocks ringer and Do Not Disturb changes without it.
 - **Unrestricted battery** — keeps the gesture service from being killed.
 - **Install updates** (install unknown apps) — lets the self-update install the new APK. Switching it off also restarts Totch.
 
-Self-update (Settings › Update › Check for updates) reads the latest [GitHub release](https://github.com/ptt98hd/totch/releases), downloads its signed APK, checks its SHA-256 and installs it through Shizuku (no confirmation, Totch reopens by itself), or hands it to the system installer when Shizuku is not running. Optionally it also checks when the app opens, or daily / weekly / monthly in the background with a notification; both are off by default. The APK is signed with the same key as the F-Droid build, so either can update the other.
+Self-update (the update button in the top bar, or Settings › Update › Check for updates) reads the latest [GitHub release](https://github.com/ptt98hd/totch/releases), downloads its signed APK, checks its SHA-256 and installs it through Shizuku (no confirmation, Totch reopens by itself), or hands it to the system installer when Shizuku is not running. Optionally it also checks when the app opens, or daily / weekly / monthly in the background with a notification; both are off by default. The APK is signed with the same key as the F-Droid build, so either can update the other.
 
 ## Requirements
 
 - Android 12 (API 31) or newer, phone with a top display cutout
-- [Shizuku](https://github.com/RikkaApps/Shizuku) running, with permission granted to Totch
+- The Totch Accessibility service turned on, or [Shizuku](https://github.com/RikkaApps/Shizuku) running with permission granted to Totch (both work together)
 
 ## Building
 

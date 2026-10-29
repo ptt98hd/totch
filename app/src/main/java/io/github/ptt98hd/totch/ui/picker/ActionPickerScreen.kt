@@ -6,13 +6,20 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -34,17 +41,12 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -83,6 +85,7 @@ import io.github.ptt98hd.totch.ui.common.filterCatalog
 import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.SectionHeader
 import io.github.ptt98hd.totch.ui.common.TonalIcon
+import io.github.ptt98hd.totch.ui.common.TotchListItem
 import io.github.ptt98hd.totch.ui.common.groupItem
 import io.github.ptt98hd.totch.ui.common.icon
 import io.github.ptt98hd.totch.ui.common.labelRes
@@ -90,9 +93,9 @@ import io.github.ptt98hd.totch.ui.gestures.AppIcon
 import io.github.ptt98hd.totch.ui.theme.TotchTheme
 
 /**
- * FR-U16, FR-U20: the action picker as a sheet over the Gestures content; the top and bottom bars stay usable.
- * It cannot be dragged away, only closed with its button (or Back). Its view model lives exactly as long as the
- * sheet, so every opening starts fresh.
+ * FR-U16, FR-U37: the action picker, content of the Gestures screen's native bottom sheet (full height, the bottom bar
+ * stays usable). It cannot be dragged away, only closed with its button (or Back). Its view model lives exactly as
+ * long as one opening, so every opening starts fresh.
  */
 @Composable
 fun ActionPickerSheet(container: AppContainer, gesture: Gesture, onDismiss: () -> Unit) {
@@ -324,7 +327,11 @@ private fun LazyListScope.systemTab(groups: List<ActionGroup>, state: ActionPick
                 onClick = { onSelect(action) },
                 leading = { TonalIcon(action.icon) },
                 title = stringResource(action.labelRes),
-                supporting = if (state.needsDndAccess(action)) stringResource(R.string.action_needs_dnd) else null,
+                supporting = when {
+                    state.needsShizuku(action) -> stringResource(R.string.action_needs_shizuku) // FR-A20
+                    state.needsDndAccess(action) -> stringResource(R.string.action_needs_dnd)
+                    else -> null
+                },
                 modifier = Modifier.groupItem(index, group.actions.size),
             )
         }
@@ -395,12 +402,13 @@ private fun LazyListScope.activitiesTab(state: ActionPickerUiState, callbacks: P
 private fun LazyListScope.tilesTab(state: ActionPickerUiState, onSelectTile: (TileEntry) -> Unit) {
     val current = state.current as? Action.ClickTile
     itemsIndexed(state.tiles, key = { _, tile -> "${tile.packageName}/${tile.name}" }) { index, tile ->
+        val action = Action.ClickTile(tile.packageName, tile.name, tile.label)
         Choice(
             selected = current?.packageName == tile.packageName && current.serviceName == tile.name,
             onClick = { onSelectTile(tile) },
             leading = { AppIcon(tile.packageName) },
             title = tile.label,
-            supporting = tile.appLabel,
+            supporting = if (state.needsShizuku(action)) stringResource(R.string.tile_needs_shizuku, tile.appLabel) else tile.appLabel,
             modifier = Modifier.groupItem(index, state.tiles.size),
         )
     }
@@ -424,14 +432,14 @@ private val TileIcon = Action.ClickTile("", "", "").icon
 private fun AppHeader(row: ExpandableRow.App, modifier: Modifier, onClick: () -> Unit) {
     val rotation by animateFloatAsState(if (row.expanded) 180f else 0f, label = "expand")
     val state = stringResource(if (row.expanded) R.string.state_expanded else R.string.state_collapsed)
-    ListItem(
+    TotchListItem(
+        headline = row.appLabel,
         modifier = modifier.clickable(onClick = onClick).semantics { stateDescription = state },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        leadingContent = { AppIcon(row.packageName) },
-        headlineContent = { Text(row.appLabel) },
-        trailingContent = {
+        leading = { AppIcon(row.packageName) },
+        trailing = {
             Icon(Icons.Outlined.ExpandMore, contentDescription = null, modifier = Modifier.rotate(rotation))
         },
+        containerColor = Color.Transparent,
     )
 }
 
@@ -444,17 +452,16 @@ private fun Choice(
     modifier: Modifier = Modifier,
     supporting: String? = null,
 ) {
-    ListItem(
+    TotchListItem(
+        headline = title,
         modifier = modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        leadingContent = leading,
-        headlineContent = { Text(title) },
-        supportingContent = supporting?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
-        trailingContent = { RadioButton(selected = selected, onClick = null) },
+        supporting = supporting,
+        leading = leading,
+        trailing = { RadioButton(selected = selected, onClick = null) },
+        containerColor = Color.Transparent,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchableList(
     query: String,
@@ -465,31 +472,12 @@ private fun SearchableList(
     emptyText: String,
     content: LazyListScope.() -> Unit,
 ) {
-    val focusManager = LocalFocusManager.current
-    SearchBar(
-        inputField = {
-            SearchBarDefaults.InputField(
-                query = query,
-                onQueryChange = onQuery,
-                onSearch = { focusManager.clearFocus() },
-                expanded = false,
-                onExpandedChange = {},
-                placeholder = { Text(placeholder) },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                trailingIcon = if (query.isEmpty()) null else {
-                    {
-                        IconButton(onClick = { onQuery("") }) {
-                            Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.app_picker_clear))
-                        }
-                    }
-                },
-            )
-        },
-        expanded = false,
-        onExpandedChange = {},
-        windowInsets = WindowInsets(0),
+    CompactSearchField(
+        query = query,
+        onQuery = onQuery,
+        placeholder = placeholder,
         modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(bottom = 12.dp),
-    ) {}
+    )
     when {
         loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         empty -> Box(Modifier.fillMaxSize().padding(Gutter), contentAlignment = Alignment.Center) {
@@ -497,6 +485,52 @@ private fun SearchableList(
         }
         else -> LazyColumn(contentPadding = listPadding, content = content)
     }
+}
+
+/** FR-U38: a 44 dp search field (the M3 SearchBar is 56 dp), fully rounded. */
+@Composable
+private fun CompactSearchField(query: String, onQuery: (String) -> Unit, placeholder: String, modifier: Modifier = Modifier) {
+    val focusManager = LocalFocusManager.current
+    val colors = MaterialTheme.colorScheme
+    BasicTextField(
+        value = query,
+        onValueChange = onQuery,
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
+        cursorBrush = SolidColor(colors.primary),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+        modifier = modifier.height(44.dp),
+        decorationBox = { field ->
+            Row(
+                Modifier.fillMaxSize().background(colors.surfaceContainerHigh, CircleShape).padding(start = 14.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Outlined.Search, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                Box(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+                    if (query.isEmpty()) {
+                        Text(
+                            placeholder,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = colors.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    field()
+                }
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = { onQuery("") }, modifier = Modifier.size(36.dp)) {
+                        Icon(
+                            Icons.Outlined.Close,
+                            contentDescription = stringResource(R.string.app_picker_clear),
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+            }
+        },
+    )
 }
 
 @Preview(showBackground = true)

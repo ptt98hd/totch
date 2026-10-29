@@ -14,20 +14,19 @@
     <!-- Home -->
     <string name="master_switch_cd">Turn notch gestures on or off</string>
     <string name="status_disabled">Gestures are off</string>
-    <string name="status_waiting_shizuku">Gestures are waiting for Shizuku</string>
-    <string name="status_shizuku_permission_required">Gestures need Shizuku permission</string>
+    <string name="status_needs_access">Turn on Accessibility or Shizuku</string>
     <string name="status_error">Gestures stopped: %1$s</string>
     <string name="status_running">Gestures are on</string>
     <string name="status_paused_rotation">Gestures are paused in landscape</string>
     <string name="status_starting">Gestures are turning on…</string>
     <string name="status_stopping">Gestures are turning off…</string>
-    <string name="requirement_title">Requirement</string>
+    <string name="advanced_title">Advanced</string>
     <string name="permissions_title">Permissions</string>
     <string name="shizuku_title">Shizuku</string>
     <string name="shizuku_ready">Running, permission granted</string>
     <string name="shizuku_permission_required">Permission not granted</string>
-    <string name="shizuku_not_running">Not running</string>
-    <string name="shizuku_not_installed">Not installed</string>
+    <string name="shizuku_not_running">Not running · optional</string>
+    <string name="shizuku_not_installed">Not installed · optional</string>
     <string name="permission_accessibility">Accessibility</string>
     <string name="permission_notifications">Notifications</string>
     <string name="permission_media">Media control</string>
@@ -95,6 +94,8 @@
     <string name="action_airplane">Toggle airplane mode</string>
     <string name="action_location">Toggle location</string>
     <string name="action_needs_dnd">Requires Do Not Disturb access</string>
+    <string name="action_needs_shizuku">Requires Shizuku</string>
+    <string name="tile_needs_shizuku">%1$s · Requires Shizuku</string>
     <string name="app_not_installed">Not installed</string>
     <string name="group_system">System</string>
     <string name="group_media">Media</string>
@@ -201,4 +202,25 @@
     <string name="about_credits_title">Credits</string>
     <string name="about_shizuku_credit">Shizuku by RikkaApps</string>
     <string name="about_shizuku_url" translatable="false">https://shizuku.rikka.app/</string>
+
+    <!-- v1.7: update dialog from the top bar (update spec §8) -->
+    <string name="update_dialog_checking">Checking for updates…</string>
+    <string name="update_dialog_up_to_date">You have the latest version (%1$s)</string>
+    <string name="update_dialog_failed">Couldn’t update. Check your connection and try again.</string>
+    <string name="update_via_shizuku">Installs through Shizuku, no confirmation needed</string>
+    <string name="update_via_system">Android will ask you to confirm the install</string>
+    <string name="update_hide">Hide</string>
+    <string name="update_retry">Retry</string>
+    <string name="update_new_badge_cd">New version available</string>
+    <string name="ok">OK</string>
+    <string name="close">Close</string>
+
+    <!-- v1.7: Buy me a coffee (prototype, FR-U40) -->
+    <string name="section_support">Support</string>
+    <string name="donate_title">Buy me a coffee</string>
+    <string name="donate_summary">Support Totch’s development</string>
+    <string name="donate_text">Totch is free and open source, with no ads. If it helps you, a coffee keeps it going.</string>
+    <string name="donate_action">Buy me a coffee</string>
+    <string name="donate_later">Maybe later</string>
+    <string name="donate_url" translatable="false">https://buymeacoffee.com/ptt98hd</string>
 </resources>

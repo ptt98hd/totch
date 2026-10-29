@@ -1,6 +1,6 @@
 # Spec: Hành động & điều phối (`ActionDispatcher`)
 
-Yêu cầu: FR-A1…FR-A19 (v1.6.3) · Module: `:core` (logic) + `:app` (executor)
+Yêu cầu: FR-A1…FR-A20 (v1.7) · Module: `:core` (logic) + `:app` (executor)
 
 ## 1. Ma trận khả năng — `ActionRequirements.of(action)`
 
@@ -356,3 +356,14 @@ rung phản hồi của cử chỉ là xác nhận.
 | SC-10 | `of(BrightnessUp) = "input keyevent 221"`, `of(BrightnessDown) = "input keyevent 220"` |
 | SC-11 | Script bật/tắt (§11, §13) chạy trên `ShellSim`: giá trị "bật" → chỉ lệnh tắt; giá trị khác hoặc `null` → chỉ lệnh bật; mã thoát = mã của lệnh đó |
 | SC-12 | `ToggleWifi` coi `wifi_on` = 2 là bật, = 3 là tắt; `ToggleBluetooth` lỗi `cmd bluetooth_manager` → chạy `svc bluetooth` |
+
+## 14. Hành động chỉ chạy qua Shizuku (v1.7 — FR-A20)
+
+Từ v1.7 Shizuku là tùy chọn (FR-D13), nên picker báo trước hành động nào không chạy được khi thiếu Shizuku: hành động
+có `ActionRequirements.of(a) == {SHIZUKU}` (§1) — `ClickTile`, `OneHandedMode`, độ sáng, tự xoay và kết nối. Dòng của
+hành động đó có mô tả "Requires Shizuku" / "Cần Shizuku" khi Shizuku chưa sẵn sàng (đang chạy **và** đã cấp quyền).
+Vẫn chọn được (người dùng có thể bật Shizuku sau); khi chạy mà thiếu Shizuku, dispatcher báo lỗi như cũ (FR-A9).
+
+| ID | Tiêu chí |
+|---|---|
+| AR-10 | `ActionPickerUiState.needsShizuku(a)` đúng khi `of(a) == {SHIZUKU}` và Shizuku chưa sẵn sàng; sai với hành động có Trợ năng / LOCAL, và sai với mọi hành động khi Shizuku sẵn sàng |

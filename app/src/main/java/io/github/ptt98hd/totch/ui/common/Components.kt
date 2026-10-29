@@ -10,6 +10,19 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Remove
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Coffee
+import androidx.compose.material.icons.outlined.SystemUpdate
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -99,11 +112,75 @@ fun TonalIcon(
     }
 }
 
-/** The static (pinned, never collapsing) top bar shared by every screen (UI-40): only the screen title. */
+/** Actions offered on every screen (FR-U40, FR-U41); provided by `MainActivity` through [LocalAppActions]. */
+data class AppActions(
+    val onCheckUpdates: () -> Unit = {},
+    val onDonate: () -> Unit = {},
+    /** A newer release is known (UP-22). */
+    val updateBadge: Boolean = false,
+)
+
+val LocalAppActions = compositionLocalOf { AppActions() }
+
+/**
+ * The static (pinned, never collapsing) top bar shared by every screen (UI-40): the screen title, then Check for
+ * updates and Buy me a coffee on the right (UI-44).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TotchTopBar(title: String) {
-    TopAppBar(title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) })
+    val actions = LocalAppActions.current
+    TopAppBar(
+        title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        actions = {
+            IconButton(onClick = actions.onCheckUpdates) {
+                BadgedBox(
+                    badge = {
+                        if (actions.updateBadge) {
+                            val badgeDescription = stringResource(R.string.update_new_badge_cd)
+                            Badge(Modifier.semantics { contentDescription = badgeDescription })
+                        }
+                    },
+                ) {
+                    Icon(Icons.Outlined.SystemUpdate, contentDescription = stringResource(R.string.update_title))
+                }
+            }
+            IconButton(onClick = actions.onDonate) {
+                Icon(Icons.Outlined.Coffee, contentDescription = stringResource(R.string.donate_title))
+            }
+        },
+    )
+}
+
+/** Height of every list row in the app, with or without a description (FR-U39, UI-45). */
+val RowHeight = 72.dp
+
+/**
+ * The list row used across the app (FR-U39): at least [RowHeight] tall, title and description on one line each,
+ * cut with "…". [contentAlpha] dims the leading content and the texts (switched-off gestures, UI-14).
+ */
+@Composable
+fun TotchListItem(
+    headline: String,
+    modifier: Modifier = Modifier,
+    supporting: String? = null,
+    supportingColor: Color = Color.Unspecified,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    contentAlpha: Float = 1f,
+) {
+    val dim = if (contentAlpha < 1f) Modifier.alpha(contentAlpha) else Modifier
+    ListItem(
+        modifier = modifier.heightIn(min = RowHeight),
+        colors = ListItemDefaults.colors(containerColor = containerColor),
+        leadingContent = leading?.let { { Box(dim) { it() } } },
+        headlineContent = { Text(headline, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = dim) },
+        supportingContent = supporting?.let {
+            { Text(it, color = supportingColor, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = dim) }
+        },
+        trailingContent = trailing,
+    )
 }
 
 /** Icon area in a rounded box, as on the master card and the Home rows. */
@@ -180,17 +257,52 @@ fun ToggleListItem(
     error: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
-    ListItem(
+    TotchListItem(
+        headline = title,
         modifier = modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
-        colors = ListItemDefaults.colors(containerColor = colors.surfaceContainer),
-        leadingContent = {
+        supporting = description,
+        supportingColor = if (error) colors.error else colors.onSurfaceVariant,
+        leading = {
             IconBox(size = 40.dp) {
                 Icon(icon, contentDescription = null, tint = colors.onSecondaryContainer, modifier = Modifier.size(22.dp))
             }
         },
-        headlineContent = { Text(title) },
-        supportingContent = { Text(description, color = if (error) colors.error else colors.onSurfaceVariant) },
-        trailingContent = { Switch(checked = checked, onCheckedChange = null) },
+        trailing = { Switch(checked = checked, onCheckedChange = null) },
+    )
+}
+
+/** FR-U40: the Buy me a coffee row of Home and Settings; opens the donate dialog. */
+@Composable
+fun DonateRow(modifier: Modifier = Modifier) {
+    val onDonate = LocalAppActions.current.onDonate
+    TotchListItem(
+        headline = stringResource(R.string.donate_title),
+        modifier = modifier.clickable(onClick = onDonate),
+        supporting = stringResource(R.string.donate_summary),
+        leading = { TonalIcon(Icons.Outlined.Coffee) },
+        trailing = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) },
+    )
+}
+
+/** FR-U40 (prototype): asks for a coffee and opens the donate page in the browser. */
+@Composable
+fun DonateDialog(onDismiss: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
+    val url = stringResource(R.string.donate_url)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Outlined.Coffee, contentDescription = null) },
+        title = { Text(stringResource(R.string.donate_title)) },
+        text = { Text(stringResource(R.string.donate_text)) },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onDismiss()
+                    uriHandler.openUri(url)
+                },
+            ) { Text(stringResource(R.string.donate_action)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.donate_later)) } },
     )
 }
 

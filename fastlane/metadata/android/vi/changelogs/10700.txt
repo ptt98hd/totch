@@ -1,0 +1,5 @@
+* Shizuku giờ là tùy chọn: bật Trợ năng là Totch tự nhận cử chỉ tại notch. Shizuku vẫn mở thêm hành động, bật quyền một chạm và cập nhật im lặng.
+* Nút Kiểm tra cập nhật và Mời cà phê trên top bar.
+* Bảng chọn hành động dạng sheet native cao toàn màn hình, ô tìm kiếm gọn hơn.
+* Mọi dòng danh sách cao bằng nhau, mô tả chỉ một dòng.
+* Trang chủ: "Yêu cầu" đổi thành "Nâng cao", nằm dưới Quyền.
