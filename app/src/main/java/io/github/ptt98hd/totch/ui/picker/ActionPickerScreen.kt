@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,16 +17,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -34,9 +45,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -47,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -59,6 +68,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.ptt98hd.totch.ActivityEntry
 import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.AppInfo
 import io.github.ptt98hd.totch.R
@@ -106,6 +116,9 @@ fun ActionPickerSheet(container: AppContainer, gesture: Gesture, onDismiss: () -
             onAppQuery = vm::setAppQuery,
             onShortcutQuery = vm::setShortcutQuery,
             onToggleApp = vm::toggleExpanded,
+            onSelectActivity = vm::selectActivity,
+            onActivityQuery = vm::setActivityQuery,
+            onToggleActivityApp = vm::toggleActivityApp,
         ),
     )
 }
@@ -119,29 +132,73 @@ data class PickerCallbacks(
     val onAppQuery: (String) -> Unit = {},
     val onShortcutQuery: (String) -> Unit = {},
     val onToggleApp: (String) -> Unit = {},
+    val onSelectActivity: (ActivityEntry) -> Unit = {},
+    val onActivityQuery: (String) -> Unit = {},
+    val onToggleActivityApp: (String) -> Unit = {},
 )
+
+private val PickerTab.icon: ImageVector
+    get() = when (this) {
+        PickerTab.SYSTEM -> Icons.Outlined.Smartphone
+        PickerTab.APPS -> Icons.Outlined.Apps
+        PickerTab.SHORTCUTS -> ShortcutIcon
+        PickerTab.ACTIVITIES -> ActivityIcon
+    }
+
+/** FR-U25: the sections as a horizontally scrolling chip row, so new sections never squeeze the labels. */
+@Composable
+private fun TabChips(selected: PickerTab, onTab: (PickerTab) -> Unit) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(selected) {
+        val info = listState.layoutInfo
+        val item = info.visibleItemsInfo.firstOrNull { it.index == selected.ordinal }
+        val fullyVisible = item != null && item.offset >= info.viewportStartOffset &&
+            item.offset + item.size <= info.viewportEndOffset
+        if (!fullyVisible) listState.animateScrollToItem(selected.ordinal)
+    }
+    LazyRow(
+        state = listState,
+        contentPadding = PaddingValues(horizontal = Gutter),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).selectableGroup(),
+    ) {
+        items(PickerTab.entries, key = { it.name }) { tab ->
+            FilterChip(
+                selected = tab == selected,
+                onClick = { onTab(tab) },
+                label = { Text(stringResource(tab.labelRes)) },
+                leadingIcon = { Icon(tab.icon, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) },
+            )
+        }
+    }
+}
 
 private val PickerTab.labelRes: Int
     get() = when (this) {
         PickerTab.SYSTEM -> R.string.tab_system
         PickerTab.APPS -> R.string.tab_apps
         PickerTab.SHORTCUTS -> R.string.tab_shortcuts
+        PickerTab.ACTIVITIES -> R.string.tab_activities
     }
 
-/** A row of the Shortcuts tab: an app (expandable) or one of its shortcuts. */
-private sealed interface ShortcutRow {
+/** A row of the Shortcuts or Activities tab: an app (expandable) or one of its shortcuts / activities. */
+private sealed interface ExpandableRow {
     val key: String
 
-    data class App(val group: ShortcutGroup, val expanded: Boolean) : ShortcutRow {
-        override val key = "app-${group.packageName}"
+    data class App(val packageName: String, val appLabel: String, val expanded: Boolean) : ExpandableRow {
+        override val key = "app-$packageName"
     }
 
-    data class Item(val entry: ShortcutEntry) : ShortcutRow {
+    data class Shortcut(val entry: ShortcutEntry) : ExpandableRow {
         override val key = "sc-${entry.packageName}-${entry.id}"
+    }
+
+    data class Activity(val entry: ActivityEntry) : ExpandableRow {
+        override val key = "act-${entry.packageName}-${entry.name}"
     }
 }
 
-/** FR-U9, FR-U16, FR-U20: action chooser with segmented sections (System / Applications / Shortcuts). */
+/** FR-U9, FR-U20, FR-U25, FR-A14: action chooser with chip sections (System / Apps / Shortcuts / Activities). */
 @Composable
 fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxSize().imePadding()) {
@@ -160,16 +217,7 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                 Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.picker_close))
             }
         }
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(bottom = 8.dp)) {
-            PickerTab.entries.forEach { tab ->
-                SegmentedButton(
-                    selected = state.tab == tab,
-                    onClick = { callbacks.onTab(tab) },
-                    shape = SegmentedButtonDefaults.itemShape(tab.ordinal, PickerTab.entries.size),
-                    label = { Text(stringResource(tab.labelRes), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                )
-            }
-        }
+        TabChips(state.tab, callbacks.onTab)
         AnimatedContent(
             targetState = state.tab,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -202,6 +250,18 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                             stringResource(R.string.shortcut_empty, state.shortcutQuery.trim())
                         },
                     ) { shortcutsTab(state, callbacks) }
+                    PickerTab.ACTIVITIES -> SearchableList(
+                        query = state.activityQuery,
+                        onQuery = callbacks.onActivityQuery,
+                        placeholder = stringResource(R.string.activity_search),
+                        loading = state.activitiesLoading,
+                        empty = state.activityGroups.isEmpty(),
+                        emptyText = if (state.activityQuery.isBlank()) {
+                            stringResource(R.string.activity_none)
+                        } else {
+                            stringResource(R.string.activity_empty, state.activityQuery.trim())
+                        },
+                    ) { activitiesTab(state, callbacks) }
                 }
             }
         }
@@ -246,34 +306,70 @@ private fun LazyListScope.shortcutsTab(state: ActionPickerUiState, callbacks: Pi
     val current = state.current as? Action.LaunchShortcut
     val rows = state.shortcutGroups.flatMap { group ->
         val expanded = state.isExpanded(group.packageName)
-        listOf(ShortcutRow.App(group, expanded)) + if (expanded) group.shortcuts.map(ShortcutRow::Item) else emptyList()
+        listOf(ExpandableRow.App(group.packageName, group.appLabel, expanded)) +
+            if (expanded) group.shortcuts.map(ExpandableRow::Shortcut) else emptyList()
     }
-    itemsIndexed(rows, key = { _, row -> row.key }) { index, row ->
-        val background = Modifier.groupItem(index, rows.size).animateItem()
+    expandableRows(rows) { row, modifier ->
         when (row) {
-            is ShortcutRow.App -> AppHeader(row, background, onClick = { callbacks.onToggleApp(row.group.packageName) })
-            is ShortcutRow.Item -> Choice(
+            is ExpandableRow.App -> AppHeader(row, modifier, onClick = { callbacks.onToggleApp(row.packageName) })
+            is ExpandableRow.Shortcut -> Choice(
                 selected = current?.packageName == row.entry.packageName && current.shortcutId == row.entry.id,
                 onClick = { callbacks.onSelectShortcut(row.entry) },
                 leading = { TonalIcon(ShortcutIcon) },
                 title = row.entry.label,
-                modifier = background.padding(start = 24.dp),
+                modifier = modifier.padding(start = 24.dp),
             )
+            is ExpandableRow.Activity -> Unit
         }
     }
 }
 
+/** UI-27: like the Shortcuts tab; each activity shows its label and short class name. */
+private fun LazyListScope.activitiesTab(state: ActionPickerUiState, callbacks: PickerCallbacks) {
+    val current = state.current as? Action.LaunchActivity
+    val rows = state.activityGroups.flatMap { group ->
+        val expanded = state.isActivityAppExpanded(group.packageName)
+        listOf(ExpandableRow.App(group.packageName, group.appLabel, expanded)) +
+            if (expanded) group.activities.map(ExpandableRow::Activity) else emptyList()
+    }
+    expandableRows(rows) { row, modifier ->
+        when (row) {
+            is ExpandableRow.App -> AppHeader(row, modifier, onClick = { callbacks.onToggleActivityApp(row.packageName) })
+            is ExpandableRow.Activity -> Choice(
+                selected = current?.packageName == row.entry.packageName && current.activityName == row.entry.name,
+                onClick = { callbacks.onSelectActivity(row.entry) },
+                leading = { TonalIcon(ActivityIcon) },
+                title = row.entry.label,
+                supporting = shortActivityName(row.entry.packageName, row.entry.name),
+                modifier = modifier.padding(start = 24.dp),
+            )
+            is ExpandableRow.Shortcut -> Unit
+        }
+    }
+}
+
+/** UI-26: [rows] as one rounded card; [content] gets the row's background modifier. */
+private fun LazyListScope.expandableRows(
+    rows: List<ExpandableRow>,
+    content: @Composable LazyItemScope.(ExpandableRow, Modifier) -> Unit,
+) {
+    itemsIndexed(rows, key = { _, row -> row.key }) { index, row ->
+        content(row, Modifier.groupItem(index, rows.size).animateItem())
+    }
+}
+
 private val ShortcutIcon = Action.LaunchShortcut("", "", "", "").icon
+private val ActivityIcon = Action.LaunchActivity("", "", "").icon
 
 @Composable
-private fun AppHeader(row: ShortcutRow.App, modifier: Modifier, onClick: () -> Unit) {
+private fun AppHeader(row: ExpandableRow.App, modifier: Modifier, onClick: () -> Unit) {
     val rotation by animateFloatAsState(if (row.expanded) 180f else 0f, label = "expand")
     val state = stringResource(if (row.expanded) R.string.state_expanded else R.string.state_collapsed)
     ListItem(
         modifier = modifier.clickable(onClick = onClick).semantics { stateDescription = state },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        leadingContent = { AppIcon(row.group.packageName) },
-        headlineContent = { Text(row.group.appLabel) },
+        leadingContent = { AppIcon(row.packageName) },
+        headlineContent = { Text(row.appLabel) },
         trailingContent = {
             Icon(Icons.Outlined.ExpandMore, contentDescription = null, modifier = Modifier.rotate(rotation))
         },
@@ -287,12 +383,14 @@ private fun Choice(
     leading: @Composable () -> Unit,
     title: String,
     modifier: Modifier = Modifier,
+    supporting: String? = null,
 ) {
     ListItem(
         modifier = modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         leadingContent = leading,
         headlineContent = { Text(title) },
+        supportingContent = supporting?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
         trailingContent = { RadioButton(selected = selected, onClick = null) },
     )
 }

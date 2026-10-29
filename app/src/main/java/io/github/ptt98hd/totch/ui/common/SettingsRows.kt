@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -25,8 +26,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.ptt98hd.totch.R
 
@@ -44,24 +47,37 @@ fun SettingsSection(title: String, content: @Composable () -> Unit) {
     }
 }
 
+/** Divider between the rows of a [SettingsSection] (FR-U23). */
 @Composable
-fun SwitchRow(title: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+fun RowDivider() = HorizontalDivider(Modifier.padding(horizontal = Gutter))
+
+@Composable
+fun SwitchRow(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    icon: ImageVector? = null,
+    summary: String? = null,
+) {
     ListItem(
         modifier = Modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        leadingContent = icon?.let { { TonalIcon(it) } },
         headlineContent = { Text(title) },
+        supportingContent = summary?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
         trailingContent = { Switch(checked = checked, onCheckedChange = null) },
     )
 }
 
 /** A row showing the current choice that opens a [ChoiceDialog]; the chevron marks it as openable (FR-U14). */
 @Composable
-fun ChoiceRow(title: String, value: String, onClick: () -> Unit) {
+fun ChoiceRow(title: String, value: String, icon: ImageVector? = null, onClick: () -> Unit) {
     ListItem(
         modifier = Modifier.clickable(onClick = onClick),
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        leadingContent = icon?.let { { TonalIcon(it) } },
         headlineContent = { Text(title) },
-        supportingContent = { Text(value) },
+        supportingContent = { Text(value, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         trailingContent = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) },
     )
 }

@@ -1,0 +1,5 @@
+* Swipe down and swipe down & hold work when Accessibility is on: Totch blocks touches on the notch so the shade is not pulled.
+* New action: open an app's activity (Activities tab in the action picker).
+* Notifications permission can be switched off from Home (Totch restarts itself).
+* Settings: System section first with Haptic feedback, Gestures in landscape and Start on boot; icons and dividers.
+* Optional gestures in landscape, on the physical notch.

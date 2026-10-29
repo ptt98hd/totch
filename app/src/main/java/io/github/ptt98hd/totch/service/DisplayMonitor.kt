@@ -10,6 +10,7 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.engine.DisplaySnapshot
+import io.github.ptt98hd.totch.engine.toNatural
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharingStarted
@@ -50,7 +51,11 @@ class DisplayMonitor(private val context: Context, scope: CoroutineScope) {
         val cutout = display.cutout?.boundingRectTop?.takeUnless { it.isEmpty }
             ?.let { listOf(Rect(it.left, it.top, it.right, it.bottom)) }
             .orEmpty()
-        return DisplaySnapshot(size.x, size.y, display.rotation, statusBarHeight(density), cutout, density)
+        // FR-R8: every cutout rect seen from the natural orientation; the ones on its top edge.
+        val naturalCutout = display.cutout?.boundingRects.orEmpty()
+            .map { toNatural(Rect(it.left, it.top, it.right, it.bottom), display.rotation, size.x, size.y) }
+            .filter { it.top == 0 && it.width > 0 && it.height > 0 }
+        return DisplaySnapshot(size.x, size.y, display.rotation, statusBarHeight(density), cutout, density, naturalCutout)
     }
 
     private fun statusBarHeight(density: Float): Int = runCatching {

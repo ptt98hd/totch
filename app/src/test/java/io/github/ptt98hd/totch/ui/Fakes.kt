@@ -1,5 +1,7 @@
 package io.github.ptt98hd.totch.ui
 
+import io.github.ptt98hd.totch.ActivityEntry
+import io.github.ptt98hd.totch.AppActivities
 import io.github.ptt98hd.totch.AppInfo
 import io.github.ptt98hd.totch.HighlightArea
 import io.github.ptt98hd.totch.Permission
@@ -74,6 +76,14 @@ class FakeTouchArea(
 class FakeAppShortcuts(private val entries: List<ShortcutEntry> = emptyList()) : AppShortcuts {
     var loads = 0
     override suspend fun shortcuts(): List<ShortcutEntry> {
+        loads++
+        return entries
+    }
+}
+
+class FakeAppActivities(private val entries: List<ActivityEntry> = emptyList()) : AppActivities {
+    var loads = 0
+    override suspend fun activities(): List<ActivityEntry> {
         loads++
         return entries
     }

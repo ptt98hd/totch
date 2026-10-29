@@ -47,6 +47,14 @@ class GestureEngine(
     /** Current touch region in screen pixels; `null` disables recognition. */
     @Volatile var region: Rect? = null
 
+    /** Swipe-down gestures can run: the accessibility overlay blocks touches at the notch (FR-G14, EN-12). */
+    @Volatile var canBlockTouches: Boolean = false
+        set(value) = synchronized(lock) {
+            field = value
+            recognizer.config = settings.toGestureConfig(density, value)
+            schedule()
+        }
+
     @Volatile private var settings = Settings()
     private var density = density
     private val recognizer = GestureRecognizer(settings.toGestureConfig(density)) { region }
@@ -75,7 +83,7 @@ class GestureEngine(
     fun updateSettings(newSettings: Settings, density: Float = this.density) = synchronized(lock) {
         settings = newSettings
         this.density = density
-        recognizer.config = newSettings.toGestureConfig(density)
+        recognizer.config = newSettings.toGestureConfig(density, canBlockTouches)
         schedule()
     }
 
@@ -108,7 +116,7 @@ class GestureEngine(
 
     private fun emit(gestures: List<Gesture>) {
         for (g in gestures) {
-            val action = settings.effectiveAction(g)
+            val action = settings.effectiveAction(g, canBlockTouches)
             if (action != Action.None) actions.trySend(action)
         }
     }

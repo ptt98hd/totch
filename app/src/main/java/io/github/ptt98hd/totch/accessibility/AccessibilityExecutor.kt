@@ -14,7 +14,8 @@ class AccessibilityExecutor(private val bridge: AccessibilityBridge) : ActionExe
     override fun isAvailable(): Boolean = bridge.service.value != null
 
     override fun supports(action: Action): Boolean =
-        action is Action.LaunchApp || action is Action.LaunchShortcut || action == Action.Assistant || globalAction(action) != null
+        action is Action.LaunchApp || action is Action.LaunchShortcut || action is Action.LaunchActivity ||
+            action == Action.Assistant || globalAction(action) != null
 
     override suspend fun execute(action: Action): Result<Unit> = withContext(Dispatchers.Main) {
         runCatching {
@@ -22,6 +23,7 @@ class AccessibilityExecutor(private val bridge: AccessibilityBridge) : ActionExe
             when (action) {
                 is Action.LaunchApp -> service.launchApp(action.packageName)
                 is Action.LaunchShortcut -> service.launchShortcut(action.intentUri)
+                is Action.LaunchActivity -> service.launchActivity(action.packageName, action.activityName)
                 Action.Assistant -> service.openAssistant()
                 else -> {
                     val global = globalAction(action) ?: error("unsupported")

@@ -34,6 +34,9 @@
     <string name="permission_battery">Unrestricted battery</string>
     <string name="permission_granted">Granted</string>
     <string name="permission_not_granted">Not granted</string>
+    <string name="revoke_notifications_title">Turn off notifications?</string>
+    <string name="revoke_notifications_text">Android closes an app whenever one of its permissions is revoked. Totch will close and reopen by itself; gestures keep working.</string>
+    <string name="revoke_notifications_confirm">Turn off</string>
 
     <!-- Gestures -->
     <string name="gesture_tap">Tap</string>
@@ -50,7 +53,7 @@
     <string name="group_swipe">Swipe</string>
     <string name="group_swipe_hold">Swipe &amp; hold</string>
     <string name="gesture_switch_cd">%1$s on or off</string>
-    <string name="gesture_unavailable">Unavailable: the system pulls down the shade</string>
+    <string name="gesture_unavailable">Requires Accessibility (turn it on in Home)</string>
     <string name="action_none">Do nothing</string>
     <string name="action_back">Back</string>
     <string name="action_home">Home</string>
@@ -71,6 +74,7 @@
     <string name="action_assistant">Open assistant</string>
     <string name="action_open_shortcut">Open shortcut…</string>
     <string name="action_launch_shortcut">%1$s: %2$s</string>
+    <string name="action_open_activity">Open activity…</string>
     <string name="app_not_installed">Not installed</string>
     <string name="group_system">System</string>
     <string name="group_media">Media</string>
@@ -81,8 +85,12 @@
     <string name="app_picker_empty">No apps match “%1$s”</string>
     <string name="app_picker_none">No apps found</string>
     <string name="tab_system">System</string>
-    <string name="tab_apps">Applications</string>
+    <string name="tab_apps">Apps</string>
     <string name="tab_shortcuts">Shortcuts</string>
+    <string name="tab_activities">Activities</string>
+    <string name="activity_search">Search activities</string>
+    <string name="activity_empty">No activities match “%1$s”</string>
+    <string name="activity_none">No activities found</string>
     <string name="shortcut_search">Search shortcuts</string>
     <string name="shortcut_empty">No shortcuts match “%1$s”</string>
     <string name="shortcut_none">No shortcuts found</string>
@@ -100,7 +108,6 @@
     <string name="unit_ms">%1$d ms</string>
     <string name="unit_dp">%1$d dp</string>
     <string name="unit_percent">%1$d%%</string>
-    <string name="section_feedback">Feedback</string>
     <string name="setting_haptics">Haptic feedback</string>
     <string name="section_position">Position</string>
     <string name="section_size">Size</string>
@@ -116,13 +123,15 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="setting_amoled">AMOLED black</string>
+    <string name="setting_amoled">Amoled black</string>
+    <string name="setting_amoled_summary">Pure black dark theme</string>
     <string name="setting_language">Language</string>
     <string name="language_system">System default</string>
     <string name="language_english" translatable="false">English</string>
     <string name="language_vietnamese" translatable="false">Tiếng Việt</string>
     <string name="section_system">System</string>
     <string name="setting_start_on_boot">Start on boot</string>
+    <string name="setting_landscape">Gestures in landscape</string>
     <string name="section_about">About</string>
 
     <!-- About (last section of Settings) -->
@@ -130,8 +139,9 @@
     <string name="about_license_title">License</string>
     <string name="about_license" translatable="false">GPL-3.0-or-later</string>
     <string name="about_source_title">Source code</string>
+    <string name="about_source_summary" translatable="false">github.com/ptt98hd/totch</string>
     <string name="about_source_url" translatable="false">https://github.com/ptt98hd/totch</string>
     <string name="about_credits_title">Credits</string>
-    <string name="about_shizuku_credit">Shizuku by RikkaApps, for privileged input access</string>
+    <string name="about_shizuku_credit">Shizuku by RikkaApps</string>
     <string name="about_shizuku_url" translatable="false">https://shizuku.rikka.app/</string>
 </resources>

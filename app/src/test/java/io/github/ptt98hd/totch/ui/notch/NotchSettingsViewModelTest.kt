@@ -88,20 +88,18 @@ class NotchSettingsViewModelTest {
     }
 
     @Test
-    fun `UI-34 sensitivity, padding and haptics are persisted and clamped`() = runTest {
+    fun `UI-34 sensitivity and padding are persisted and clamped`() = runTest {
         val repo = FakeSettingsRepository()
         val vm = NotchSettingsViewModel(repo, FakeTouchArea())
         vm.setDoubleTapMs(9999)
         vm.setLongPressMs(800)
         vm.setSwipeDistanceDp(60)
         vm.setPaddingDp(12)
-        vm.setHaptics(false)
         with(repo.current) {
             assertEquals(1000, doubleTapMs)
             assertEquals(800, longPressMs)
             assertEquals(60, swipeMinDistanceDp)
             assertEquals(10, paddingDp)
-            assertFalse(haptics)
         }
     }
 }

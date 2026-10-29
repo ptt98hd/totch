@@ -32,4 +32,11 @@ sealed interface Action {
         val label: String,
         val intentUri: String,
     ) : Action
+
+    /** Exported activity of another app (FR-A14); [label] is kept for display. */
+    @Serializable @SerialName("launch_activity") data class LaunchActivity(
+        val packageName: String,
+        val activityName: String,
+        val label: String,
+    ) : Action
 }

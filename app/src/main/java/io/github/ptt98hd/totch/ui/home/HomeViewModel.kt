@@ -70,6 +70,10 @@ internal fun permissionsFor(r: Requirements, notificationPermissionRequired: Boo
     add(PermissionItem(Permission.BATTERY, r.batteryUnrestricted))
 }
 
+/** UI-53: revoking notifications restarts Totch (FR-D10), so it is confirmed first. */
+fun needsConfirmation(permission: Permission, granted: Boolean): Boolean =
+    permission == Permission.NOTIFICATIONS && !granted
+
 class HomeViewModel(
     private val settingsRepository: SettingsRepository,
     engineStatus: StateFlow<EngineStatus>,

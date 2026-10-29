@@ -9,6 +9,7 @@ import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.FakeInstalledApps
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
 import io.github.ptt98hd.totch.ui.MainDispatcherRule
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -104,6 +105,20 @@ class GesturesViewModelTest {
             assertEquals("Camera", state.row(Gesture.TAP).appLabel)
             assertNull(state.row(Gesture.LONG_PRESS).appLabel)
             assertEquals("Camera", state.row(Gesture.SWIPE_LEFT).appLabel)
+        }
+    }
+
+    @Test
+    fun `UI-14 swipe down rows are usable while accessibility is on`() = runTest {
+        val accessibility = MutableStateFlow(true)
+        val repo = FakeSettingsRepository(Settings(bindings = DefaultBindings + (Gesture.SWIPE_DOWN_HOLD to Action.Home)))
+        GesturesViewModel(repo, FakeInstalledApps(), accessibility).state.test {
+            val rows = expectMostRecentItem().groups.flatMap { it.rows }
+            assertTrue(rows.all { it.enabled })
+            assertTrue(rows.single { it.gesture == Gesture.SWIPE_DOWN }.on)
+            assertTrue(rows.single { it.gesture == Gesture.SWIPE_DOWN_HOLD }.on)
+            accessibility.value = false
+            assertFalse(expectMostRecentItem().row(Gesture.SWIPE_DOWN).enabled)
         }
     }
 }

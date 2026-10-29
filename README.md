@@ -13,19 +13,19 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers, no `INTERNET` perm
 - **Actions** (one per gesture):
   - System: Back, Home, Recents, Lock screen, Screenshot, Notification shade, Quick Settings, Assistant
   - Flashlight toggle; media Play/Pause, Next, Previous; Volume up/down; show the volume panel
-  - Launch any installed app, or one of its static app shortcuts
+  - Launch any installed app, one of its static app shortcuts, or one of its exported activities
 - Adjustable sensitivity, manual notch size, position and padding shown live on screen, haptic feedback, start on boot.
+- Optionally keeps working in landscape, on the physical notch.
 - Material 3 with dynamic color; light / dark / AMOLED black theme; English and Vietnamese (or follow the system).
-- Automatically disabled in landscape.
 
 ## How it works
 
-Totch reads raw touch events (`getevent`) with shell privileges through [Shizuku](https://shizuku.rikka.app/), in a foreground service with a persistent notification. **Shizuku is required**: without it Totch does nothing. Touches are not consumed (the system still receives them), so the swipe-down gestures are unavailable: they would also pull the notification shade.
+Totch reads raw touch events (`getevent`) with shell privileges through [Shizuku](https://shizuku.rikka.app/), in a foreground service with a persistent notification. **Shizuku is required**: without it Totch does nothing. Touches are not consumed (the system still receives them), so the swipe-down gestures need the optional Accessibility service: it places an invisible overlay on the notch that swallows touches there, otherwise swiping down would also pull the notification shade.
 
 Every other permission is optional and can be switched on or off from the Home screen; Totch grants it through Shizuku when it can, otherwise it opens the matching system page:
 
-- **Accessibility** — only to perform global actions (Back, Home, lock screen, ...) and open apps from the background. It does not read screen content and draws nothing.
-- **Notifications** (Android 13+) — for the foreground service notification.
+- **Accessibility** — to perform global actions (Back, Home, lock screen, ...), open apps from the background, and block touches on the notch for the swipe-down gestures (an empty, invisible overlay). It does not read screen content.
+- **Notifications** (Android 13+) — for the foreground service notification. Android closes an app when one of its permissions is revoked, so switching it off restarts Totch.
 - **Media control** (notification access) — only to find the active media session and send play/pause/skip commands (more reliable than media key events). It never reads notifications.
 - **Unrestricted battery** — keeps the gesture service from being killed.
 

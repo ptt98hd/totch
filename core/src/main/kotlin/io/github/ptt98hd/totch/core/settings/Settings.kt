@@ -49,9 +49,13 @@ val HoldGestures: Set<Gesture> =
 
 private val SwipeHoldGestures = HoldGestures - Gesture.LONG_PRESS
 
-/** Touches cannot be blocked (input is read through Shizuku), so swiping down always pulls the shade (FR-G10, R2). */
-val Gesture.isAvailable: Boolean
-    get() = this != Gesture.SWIPE_DOWN && this != Gesture.SWIPE_DOWN_HOLD
+val SwipeDownGestures: Set<Gesture> = setOf(Gesture.SWIPE_DOWN, Gesture.SWIPE_DOWN_HOLD)
+
+/**
+ * Shizuku only reads touches, so swiping down at the notch also pulls the shade (FR-G10, R2) unless the accessibility
+ * overlay blocks them there ([canBlockTouches], FR-G14).
+ */
+fun Gesture.isAvailable(canBlockTouches: Boolean): Boolean = canBlockTouches || this !in SwipeDownGestures
 
 /** Touch slop used by [toGestureConfig], in dp. */
 const val TOUCH_SLOP_DP: Int = 12
@@ -72,6 +76,8 @@ data class Settings(
     val startOnBoot: Boolean = true,
     /** Gestures switched off by the user; their binding is kept for when they are switched on again (FR-G12). */
     val disabledGestures: Set<Gesture> = emptySet(),
+    /** Keep detecting gestures at the physical notch while rotated (FR-R8). */
+    val landscapeGestures: Boolean = false,
 ) {
     /** Clamps values to FR-S4 limits and ensures every [Gesture] has a binding. */
     fun sanitized(): Settings = copy(
@@ -93,12 +99,16 @@ data class Settings(
 
 fun Settings.actionFor(g: Gesture): Action = bindings[g] ?: Action.None
 
-/** The action that actually runs for [g] (ST-12, ST-19). */
-fun Settings.effectiveAction(g: Gesture): Action =
-    if (g.isAvailable && g !in disabledGestures) actionFor(g) else Action.None
+/** The action that actually runs for [g] (ST-12, ST-19, ST-24). */
+fun Settings.effectiveAction(g: Gesture, canBlockTouches: Boolean = false): Action =
+    if (g.isAvailable(canBlockTouches) && g !in disabledGestures) actionFor(g) else Action.None
 
 /** State of the gesture's switch: available, on and bound to an action (ST-20, ST-22). */
-fun Settings.isGestureOn(g: Gesture): Boolean = effectiveAction(g) != Action.None
+fun Settings.isGestureOn(g: Gesture, canBlockTouches: Boolean = false): Boolean =
+    effectiveAction(g, canBlockTouches) != Action.None
+
+/** The accessibility overlay should block touches at the notch (DM-15, ST-26). */
+fun Settings.needsTouchBlocking(): Boolean = enabled && SwipeDownGestures.any { isGestureOn(it, canBlockTouches = true) }
 
 fun Settings.withGestureOn(g: Gesture, on: Boolean): Settings =
     copy(disabledGestures = if (on) disabledGestures - g else disabledGestures + g)
@@ -107,8 +117,8 @@ fun Settings.withGestureOn(g: Gesture, on: Boolean): Settings =
 fun Settings.withBinding(g: Gesture, action: Action): Settings =
     copy(bindings = bindings + (g to action), disabledGestures = disabledGestures - g)
 
-fun Settings.toGestureConfig(density: Float): GestureConfig {
-    val bound = Gesture.entries.filterTo(mutableSetOf()) { effectiveAction(it) != Action.None }
+fun Settings.toGestureConfig(density: Float, canBlockTouches: Boolean = false): GestureConfig {
+    val bound = Gesture.entries.filterTo(mutableSetOf()) { effectiveAction(it, canBlockTouches) != Action.None }
     return GestureConfig(
         doubleTapMs = doubleTapMs,
         longPressMs = longPressMs,

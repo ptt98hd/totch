@@ -70,4 +70,11 @@ class ShellCommandsTest {
         listOf("", "http://x", "; reboot", "intent:#Intent;S.a=1\nreboot;end", "intent:#Intent;\rend", "intent:\u0000")
             .forEach { assertNull(ShellCommands.startIntent(it), it) }
     }
+
+    @Test fun `SC-7 startActivity quotes the component`() {
+        assertEquals("am start -n 'com.a/com.a.Main\$Sub' -f 0x10000000", ShellCommands.startActivity("com.a", "com.a.Main\$Sub"))
+        assertNull(ShellCommands.startActivity("com.a; reboot", "Main"))
+        assertNull(ShellCommands.startActivity("com.a", "Main'; reboot"))
+        assertNull(ShellCommands.of(Action.LaunchActivity("com.a", "com.a.Main", "Main")))
+    }
 }

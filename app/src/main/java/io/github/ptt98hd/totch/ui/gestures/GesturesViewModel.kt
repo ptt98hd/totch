@@ -11,6 +11,9 @@ import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.actionFor
 import io.github.ptt98hd.totch.core.settings.isAvailable
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import io.github.ptt98hd.totch.core.settings.isGestureOn
 import io.github.ptt98hd.totch.core.settings.withGestureOn
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,8 +36,8 @@ val GestureGroups: List<Pair<GestureGroup, List<Gesture>>> = listOf(
 
 /**
  * One gesture row. [action] is the bound action, remembered while the gesture is switched off; [on] is the
- * state of its switch (UI-16). [appLabel] is set for LaunchApp/LaunchShortcut whose app is installed (UI-12);
- * [enabled] is false for gestures that can never run (UI-14); they are always off.
+ * state of its switch (UI-16). [appLabel] is set for LaunchApp/LaunchShortcut/LaunchActivity whose app is installed
+ * (UI-12); [enabled] is false for gestures that cannot run (swipe down without accessibility, UI-14); they are off.
  */
 data class GestureRow(
     val gesture: Gesture,
@@ -55,11 +58,13 @@ data class GesturesUiState(
 class GesturesViewModel(
     private val settingsRepository: SettingsRepository,
     private val installedApps: InstalledApps,
+    /** Accessibility is on, so its overlay can block touches and swipe-down gestures run (FR-G14). */
+    private val canBlockTouches: Flow<Boolean> = flowOf(false),
 ) : ViewModel() {
     private val picking = MutableStateFlow<Gesture?>(null)
 
     val state: StateFlow<GesturesUiState> =
-        combine(settingsRepository.settings, picking) { settings, picking ->
+        combine(settingsRepository.settings, picking, canBlockTouches) { settings, picking, canBlock ->
             GesturesUiState(
                 groups = GestureGroups.map { (group, gestures) ->
                     GestureSection(
@@ -69,14 +74,15 @@ class GesturesViewModel(
                             val pkg = when (action) {
                                 is Action.LaunchApp -> action.packageName
                                 is Action.LaunchShortcut -> action.packageName
+                                is Action.LaunchActivity -> action.packageName
                                 else -> null
                             }
                             GestureRow(
                                 gesture = gesture,
                                 action = action,
                                 appLabel = pkg?.let(installedApps::labelOf),
-                                enabled = gesture.isAvailable,
-                                on = settings.isGestureOn(gesture),
+                                enabled = gesture.isAvailable(canBlock),
+                                on = settings.isGestureOn(gesture, canBlock),
                             )
                         },
                     )
@@ -100,7 +106,7 @@ class GesturesViewModel(
     /** UI-17: actions can only be chosen for a gesture that is switched on. */
     fun openPicker(gesture: Gesture) {
         viewModelScope.launch {
-            if (settingsRepository.settings.first().isGestureOn(gesture)) picking.value = gesture
+            if (state.value.groups.flatMap { it.rows }.any { it.gesture == gesture && it.on }) picking.value = gesture
         }
     }
 
@@ -110,7 +116,13 @@ class GesturesViewModel(
 
     companion object {
         fun factory(container: AppContainer) = viewModelFactory {
-            initializer { GesturesViewModel(container.settingsRepository, container.installedApps) }
+            initializer {
+                GesturesViewModel(
+                    container.settingsRepository,
+                    container.installedApps,
+                    container.systemStatus.requirements.map { it.accessibilityEnabled },
+                )
+            }
         }
     }
 }

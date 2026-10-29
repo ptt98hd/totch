@@ -92,4 +92,11 @@ class ActionDispatcherTest {
     @Test fun `AD-8 volume panel runs locally`() {
         assertEquals(setOf(Capability.LOCAL), ActionRequirements.of(Action.VolumePanel))
     }
+
+    @Test fun `AD-9 activities run on accessibility or shizuku`() {
+        assertEquals(
+            setOf(Capability.ACCESSIBILITY, Capability.SHIZUKU),
+            ActionRequirements.of(Action.LaunchActivity("com.a", "com.a.Main", "Main")),
+        )
+    }
 }

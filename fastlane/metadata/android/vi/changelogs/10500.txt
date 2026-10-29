@@ -1,0 +1,5 @@
+* Vuốt xuống và vuốt xuống & giữ dùng được khi bật Trợ năng: Totch chặn chạm tại notch nên không kéo thanh thông báo.
+* Hành động mới: mở activity của ứng dụng (tab Activity trong màn chọn hành động).
+* Tắt được quyền Thông báo ngay ở Trang chủ (Totch tự khởi động lại).
+* Cài đặt: mục Hệ thống lên đầu với Rung phản hồi, Nhận cử chỉ khi xoay ngang, Khởi động cùng máy; có icon và đường kẻ.
+* Tùy chọn nhận cử chỉ khi xoay ngang, tại notch vật lý.

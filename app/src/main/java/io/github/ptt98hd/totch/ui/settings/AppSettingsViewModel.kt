@@ -20,7 +20,7 @@ data class AppSettingsUiState(
     val settings: Settings = Settings(),
 )
 
-/** App settings: appearance, system and about (FR-U12). */
+/** App settings: system, appearance and about (FR-U12, FR-U23). */
 class AppSettingsViewModel(private val settingsRepository: SettingsRepository) : ViewModel() {
     val state: StateFlow<AppSettingsUiState> = settingsRepository.settings
         .map { AppSettingsUiState(loading = false, settings = it) }
@@ -34,6 +34,8 @@ class AppSettingsViewModel(private val settingsRepository: SettingsRepository) :
     fun setAmoledBlack(value: Boolean) = save { it.copy(amoledBlack = value) }
     fun setLanguage(value: AppLanguage) = save { it.copy(language = value) }
     fun setStartOnBoot(value: Boolean) = save { it.copy(startOnBoot = value) }
+    fun setHaptics(value: Boolean) = save { it.copy(haptics = value) }
+    fun setLandscapeGestures(value: Boolean) = save { it.copy(landscapeGestures = value) }
 
     companion object {
         fun factory(container: AppContainer) = viewModelFactory {

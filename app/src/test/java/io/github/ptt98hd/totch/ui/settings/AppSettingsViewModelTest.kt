@@ -22,7 +22,11 @@ class AppSettingsViewModelTest {
         vm.setAmoledBlack(true)
         vm.setLanguage(AppLanguage.ENGLISH)
         vm.setStartOnBoot(false)
+        vm.setHaptics(false)
+        vm.setLandscapeGestures(true)
         with(repo.current) {
+            assertFalse(haptics)
+            assertTrue(landscapeGestures)
             assertEquals(ThemeMode.LIGHT, theme)
             assertTrue(amoledBlack)
             assertEquals(AppLanguage.ENGLISH, language)

@@ -202,6 +202,19 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-V14 | Tab Notch: Width / Padding | − / + đổi 1 dp; padding 1–10; highlight vẽ notch đậm + viền nét đứt phần padding, cập nhật ngay | [ ] |
 | MT-V15 | Bottom bar | 4 tab Home, Gestures, Notch (icon notch), Settings; top bar không có nút; chuyển tab có hiệu ứng trượt theo hướng | [ ] |
 
+## 11. v1.5 — activities, chặn chạm bằng Trợ năng, xoay ngang
+
+| ID | Bước | Kỳ vọng | Kết quả |
+|---|---|---|---|
+| MT-A1 | Bật Trợ năng, gán Swipe down → Thông báo, vuốt xuống tại notch | Dòng Swipe down bấm được; vuốt xuống tại notch **không** kéo thanh thông báo của hệ thống mà chạy hành động đúng 1 lần; vuốt xuống ngoài notch vẫn kéo thanh thông báo | [ ] |
+| MT-A2 | Tắt Trợ năng | Swipe down / Swipe down & hold mờ lại, nhãn "Requires Accessibility"; vuốt xuống ở notch kéo thanh thông báo như cũ | [ ] |
+| MT-A3 | Tắt switch Thông báo ở Home (13+, Shizuku sẵn sàng) | Hộp thoại xác nhận; đồng ý → Totch đóng rồi tự mở lại sau ~1 s, quyền Thông báo "Not granted", cử chỉ vẫn chạy | [ ] |
+| MT-A4 | Picker tab Activities | App thu gọn; mở rộng → activity (nhãn + tên lớp); chọn một activity → cử chỉ mở đúng activity (cả khi chỉ có Shizuku, và khi có Trợ năng) | [ ] |
+| MT-A5 | Settings | System đầu tiên (Haptic feedback, Gestures in landscape, Start on boot), rồi Appearance, About; mọi dòng có icon, có đường kẻ giữa các dòng; tab Notch không còn Feedback | [ ] |
+| MT-A6 | Bật Gestures in landscape, xoay ngang (cả 2 chiều), chạm/vuốt tại notch | Status "Gestures are on"; chạm notch chạy hành động; "vuốt xuống" = vuốt ra xa notch. Tắt tùy chọn → "paused in landscape" | [ ] |
+| MT-A7 | Settings (cả en và vi) | System: Start on boot → Haptic feedback → Gestures in landscape; "Amoled black" có mô tả 1 dòng; mọi mô tả trong About 1 dòng, cuối dòng link là › | [ ] |
+| MT-A8 | Mở picker | Sheet chạm sát mép dưới top bar; hàng chip cuộn ngang có icon; mở picker của cử chỉ gán activity → chip Activities được chọn và nằm trong tầm nhìn | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)

@@ -27,6 +27,8 @@ Yêu cầu: FR-S1…FR-S9, FR-G10…FR-G12, FR-R6 · Module: `:core` (model, cod
     val startOnBoot: Boolean = true,
     // v1.3
     val disabledGestures: Set<Gesture> = emptySet(), // cử chỉ người dùng tắt; binding vẫn giữ (FR-G12)
+    // v1.5
+    val landscapeGestures: Boolean = false,           // FR-R8
 )
 val DefaultBindings = mapOf(
     TAP to None, DOUBLE_TAP to LockScreen, LONG_PRESS to ToggleTorch,
@@ -42,8 +44,14 @@ fun Settings.withBinding(g: Gesture, action: Action): Settings  // gán action v
 
 // v1.1
 val HoldGestures: Set<Gesture>          // LONG_PRESS, SWIPE_DOWN_HOLD, SWIPE_LEFT_HOLD, SWIPE_RIGHT_HOLD
-val Gesture.isAvailable: Boolean                          // v1.4: false cho SWIPE_DOWN, SWIPE_DOWN_HOLD (FR-G10)
-fun Settings.effectiveAction(g: Gesture): Action          // None nếu !g.isAvailable hoặc g ∈ disabledGestures, ngược lại actionFor(g)
+// v1.5 (FR-G14): thay `val Gesture.isAvailable`
+val SwipeDownGestures: Set<Gesture>                       // SWIPE_DOWN, SWIPE_DOWN_HOLD
+fun Gesture.isAvailable(canBlockTouches: Boolean): Boolean // false cho SwipeDownGestures khi !canBlockTouches
+fun Settings.effectiveAction(g: Gesture, canBlockTouches: Boolean = false): Action
+                                                          // None nếu !g.isAvailable(…) hoặc g ∈ disabledGestures, ngược lại actionFor(g)
+fun Settings.isGestureOn(g: Gesture, canBlockTouches: Boolean = false): Boolean
+fun Settings.toGestureConfig(density: Float, canBlockTouches: Boolean = false): GestureConfig
+fun Settings.needsTouchBlocking(): Boolean                // DM-15
 ```
 Gesture mới thêm ở v1.1 có binding mặc định `None`.
 
@@ -74,6 +82,9 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ST-22 | `isGestureOn` = false cho `SWIPE_DOWN`, `SWIPE_DOWN_HOLD` dù đã gán |
 | ST-23 | JSON có `"mode"` (SHIZUKU / ACCESSIBILITY) vẫn decode, key bị bỏ qua; `paddingDp` 48 cũ → kẹp về 10 |
 | ST-21 | `decode(encode(s)) == s` khi có `disabledGestures` và `Action.VolumePanel` |
+| ST-24 | (v1.5) `canBlockTouches=true`: `effectiveAction(SWIPE_DOWN, true)` = action đã gán, `isGestureOn(SWIPE_DOWN_HOLD, true)` đúng khi đã gán và không tắt; `toGestureConfig(d, true).holdSwipes` chứa `SWIPE_DOWN_HOLD` khi đã gán. Mặc định (`false`) giữ nguyên ST-12, ST-22 |
+| ST-25 | `Settings().landscapeGestures == false`; JSON v1.4 (không có key) → `false`; `decode(encode(s)) == s` với `landscapeGestures=true` và `LaunchActivity` |
+| ST-26 | `needsTouchBlocking`: false khi `!enabled`, hoặc cả 2 cử chỉ vuốt xuống chưa gán / bị tắt; true khi `enabled` và `SWIPE_DOWN` (hoặc `SWIPE_DOWN_HOLD`) đã gán và bật (DM-15) |
 
 ## 3. `SettingsRepository` (`:app`)
 - DataStore Preferences, key `settings_json`.
