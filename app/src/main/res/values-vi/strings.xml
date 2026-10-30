@@ -29,7 +29,7 @@
     <string name="shizuku_not_installed">Chưa cài đặt · tùy chọn</string>
     <string name="permission_accessibility">Trợ năng</string>
     <string name="permission_notifications">Thông báo</string>
-    <string name="permission_media">Điều khiển media</string>
+    <string name="permission_media">Media và thông báo</string>
     <string name="permission_dnd">Không làm phiền</string>
     <string name="permission_battery">Pin không giới hạn</string>
     <string name="permission_install_updates">Cài bản cập nhật</string>
@@ -286,4 +286,24 @@
     <string name="settings_page_panel_wifi">Bảng Wi-Fi</string>
     <string name="settings_page_panel_nfc">Bảng NFC</string>
     <string name="settings_page_panel_volume">Bảng âm lượng</string>
+    <!-- Notch overlay (FR-O1…FR-O8) -->
+    <string name="section_effects">Hiệu ứng</string>
+    <string name="setting_indicator">Báo thông báo</string>
+    <string name="setting_indicator_summary">Viền notch sáng khi có thông báo chưa xem</string>
+    <string name="setting_island">Dynamic Island</string>
+    <string name="setting_island_summary">Hiện hoạt động quanh notch</string>
+    <string name="setting_island_media">Media đang phát</string>
+    <string name="setting_island_notifications">Thông báo mới</string>
+    <string name="setting_island_charging">Sạc pin</string>
+    <string name="setting_island_sound">Âm thanh</string>
+    <string name="setting_island_sound_summary">Chế độ âm thanh và âm lượng</string>
+    <string name="setting_touch_effects">Hiệu ứng chạm</string>
+    <string name="setting_touch_effects_summary">Gợn sóng, viền sáng và co giãn khi chạm notch</string>
+    <string name="overlay_needs_accessibility">Cần Trợ năng</string>
+    <string name="overlay_needs_notification_access">Cần quyền Media và thông báo</string>
+    <string name="island_sound_ring">Đổ chuông</string>
+    <string name="island_sound_vibrate">Rung</string>
+    <string name="island_sound_silent">Im lặng</string>
+    <string name="island_dnd_on">KLP bật</string>
+    <string name="island_dnd_off">KLP tắt</string>
 </resources>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="accessibility_service_label">Cử chỉ notch Totch</string>
-    <string name="accessibility_service_description">Giúp Totch nhận chạm và vuốt tại notch mà không cần Shizuku: một vùng trong suốt trên notch chỉ nhận các chạm tại đó. Ngoài ra thực hiện các hành động hệ thống bạn gán (Quay lại, Màn hình chính, khóa màn hình…) và mở ứng dụng từ nền. Totch không đọc nội dung màn hình.</string>
+    <string name="accessibility_service_description">Giúp Totch nhận chạm và vuốt tại notch mà không cần Shizuku: một vùng trong suốt trên notch chỉ nhận các chạm tại đó. Ngoài ra thực hiện các hành động hệ thống bạn gán (Quay lại, Màn hình chính, khóa màn hình…) và mở ứng dụng từ nền. Nếu bạn bật, Totch còn vẽ viền báo thông báo, Dynamic Island và hiệu ứng chạm quanh notch, và biết khi thanh thông báo được mở (chỉ cửa sổ của System UI). Totch không đọc nội dung màn hình.</string>
 
     <string name="platform_channel_name">Dịch vụ cử chỉ</string>
     <string name="platform_channel_description">Hiện khi Totch đang nhận cử chỉ tại notch</string>
@@ -50,7 +50,7 @@
     <string name="platform_action_mobile_data">Bật/tắt dữ liệu di động</string>
     <string name="platform_action_airplane">Bật/tắt chế độ máy bay</string>
     <string name="platform_action_location">Bật/tắt vị trí</string>
-    <string name="media_listener_label">Totch điều khiển media</string>
+    <string name="media_listener_label">Totch media và thông báo</string>
     <string name="platform_action_settings">Mở trang Cài đặt</string>
     <string name="platform_action_intent">Gửi intent</string>
     <string name="platform_action_contact">Mở liên hệ</string>

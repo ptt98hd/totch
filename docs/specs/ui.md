@@ -332,6 +332,8 @@ Giá trị đã lưu lệch nấc (vd. vùng tự phát hiện rộng 87 dp) v�
 | UI-35 | `snapToStep(v, range, step)` = `round(v/step)·step`, kẹp trong `range` (hai đầu thang luôn chọn được, vd. padding 1, 5, 10) |
 | UI-36 | `stepBy(v, delta, range)` = `v + delta` kẹp trong `range` |
 
+v1.9 (FR-O7): section **Hiệu ứng** ở đầu màn — xem [notch-overlay §6](notch-overlay.md) (UI-78…UI-81).
+
 ### Cài đặt ứng dụng (FR-U12, FR-U14, FR-S6…FR-S8, FR-U23) — tab thứ 4 "Settings" (v1.4)
 Các section, theo thứ tự (v1.5):
 1. **Hệ thống**: Start on boot (icon nguồn), Haptic feedback (icon rung), Gestures in landscape (icon xoay màn hình —

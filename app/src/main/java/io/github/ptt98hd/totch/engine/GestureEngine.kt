@@ -6,6 +6,7 @@ import io.github.ptt98hd.totch.core.gesture.GestureRecognizer
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.model.Rect
+import io.github.ptt98hd.totch.core.model.TouchAction
 import io.github.ptt98hd.totch.core.model.TouchEvent
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.settings.effectiveAction
@@ -25,6 +26,24 @@ interface EngineFeedback {
     fun onFailed(action: Action, reason: String)
 }
 
+/** What the notch overlay draws touch effects from (notch-overlay §4, EN-16…EN-18). */
+interface EngineObserver {
+    /** A single finger went down inside the region. */
+    fun onPress(x: Float, y: Float, timeMs: Long)
+    /** That finger went up or the touch was cancelled. */
+    fun onRelease()
+    /** A switched-on gesture was recognized, whatever its action and the haptics setting. */
+    fun onGesture(g: Gesture)
+
+    companion object {
+        val None = object : EngineObserver {
+            override fun onPress(x: Float, y: Float, timeMs: Long) = Unit
+            override fun onRelease() = Unit
+            override fun onGesture(g: Gesture) = Unit
+        }
+    }
+}
+
 /**
  * Touch source → [GestureRecognizer] → bindings → dispatcher (docs/specs/detection-modes.md §5).
  *
@@ -42,6 +61,7 @@ class GestureEngine(
     density: Float,
     private val dispatch: suspend (Action) -> DispatchResult,
     private val feedback: EngineFeedback,
+    @Volatile var observer: EngineObserver = EngineObserver.None,
 ) {
     private val lock = Any()
 
@@ -61,6 +81,7 @@ class GestureEngine(
     private val recognizer = GestureRecognizer(settings.toGestureConfig(density)) { region }
     private var timer: Job? = null
     private var clockOffsetMs = 0L
+    private var pressed = false
     private val actions = Channel<Action>(Channel.UNLIMITED)
 
     init {
@@ -88,6 +109,7 @@ class GestureEngine(
     fun onTouch(event: TouchEvent) = synchronized(lock) {
         val skew = event.timeMs - clock()
         clockOffsetMs = if (abs(skew) > CLOCK_SKEW_TOLERANCE_MS) skew else 0
+        observe(event)
         emit(recognizer.onTouch(event))
         schedule()
     }
@@ -95,10 +117,26 @@ class GestureEngine(
     /** Drops any gesture in progress (e.g. when the touch source changes). */
     fun reset() = synchronized(lock) {
         recognizer.reset()
+        if (pressed) observe(TouchEvent(TouchAction.CANCEL, 0f, 0f, now()))
         schedule()
     }
 
     private fun now() = clock() + clockOffsetMs
+
+    /** EN-16, EN-17 */
+    private fun observe(event: TouchEvent) {
+        when (event.action) {
+            TouchAction.DOWN -> if (event.pointerCount == 1 && region?.contains(event.x, event.y) == true) {
+                pressed = true
+                observer.onPress(event.x, event.y, event.timeMs)
+            }
+            TouchAction.UP, TouchAction.CANCEL -> if (pressed) {
+                pressed = false
+                observer.onRelease()
+            }
+            TouchAction.MOVE -> Unit
+        }
+    }
 
     private fun schedule() {
         timer?.cancel()
@@ -115,6 +153,7 @@ class GestureEngine(
     private fun emit(gestures: List<Gesture>) {
         for (g in gestures) {
             if (!settings.isGestureOn(g, canBlockTouches)) continue
+            observer.onGesture(g) // EN-18
             // EN-13: vibrate now; the action may be slow or still queued behind another one. EN-15: Nothing vibrates too.
             if (settings.haptics) feedback.onRecognized()
             val action = settings.effectiveAction(g, canBlockTouches)

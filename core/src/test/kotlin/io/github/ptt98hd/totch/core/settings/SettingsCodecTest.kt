@@ -4,6 +4,7 @@ import io.github.ptt98hd.totch.core.action.OneHandedMethod
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.IntentTarget
 import io.github.ptt98hd.totch.core.model.Gesture
+import io.github.ptt98hd.totch.core.overlay.IslandActivity
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -275,5 +276,29 @@ class SettingsCodecTest {
         assertFalse(SettingsCodec.decode("""{"bindings":{"TAP":{"type":"home"}}}""").accessibilityWanted)
         val s = Settings(accessibilityWanted = true)
         assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
+    }
+
+    @Test fun `ST-37 overlay features default off and round trip`() {
+        val d = Settings()
+        assertFalse(d.notificationIndicator)
+        assertFalse(d.island)
+        assertFalse(d.touchEffects)
+        assertEquals(IslandActivity.entries.toSet(), d.islandActivities)
+        assertEquals(d, SettingsCodec.decode("""{"bindings":{}}""").copy(bindings = d.bindings))
+        val s = Settings(
+            island = true,
+            islandActivities = setOf(IslandActivity.MEDIA, IslandActivity.SOUND),
+            notificationIndicator = true,
+            touchEffects = true,
+        )
+        assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
+        val json = SettingsCodec.encode(s)
+        assertTrue(""""media"""" in json && """"sound"""" in json, json)
+    }
+
+    @Test fun `ST-38 active island activities`() {
+        val s = Settings(islandActivities = setOf(IslandActivity.CHARGING))
+        assertEquals(emptySet(), s.activeIslandActivities())
+        assertEquals(setOf(IslandActivity.CHARGING), s.copy(island = true).activeIslandActivities())
     }
 }

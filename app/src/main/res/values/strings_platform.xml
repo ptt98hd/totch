@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="accessibility_service_label">Totch notch gestures</string>
-    <string name="accessibility_service_description">Lets Totch detect taps and swipes on the notch without Shizuku: a transparent area over the notch receives only touches made there. Also performs the system actions you assign (Back, Home, lock screen…) and opens apps from the background. Totch does not read any screen content.</string>
+    <string name="accessibility_service_description">Lets Totch detect taps and swipes on the notch without Shizuku: a transparent area over the notch receives only touches made there. Also performs the system actions you assign (Back, Home, lock screen…) and opens apps from the background. If you turn them on, it also draws the notification indicator, Dynamic Island and touch effects around the notch, and notices when the notification shade opens (System UI windows only). Totch does not read any screen content.</string>
 
     <!-- Foreground service -->
     <string name="platform_channel_name">Gesture service</string>
@@ -53,7 +53,7 @@
     <string name="platform_action_mobile_data">Toggle mobile data</string>
     <string name="platform_action_airplane">Toggle airplane mode</string>
     <string name="platform_action_location">Toggle location</string>
-    <string name="media_listener_label">Totch media control</string>
+    <string name="media_listener_label">Totch media &amp; notifications</string>
     <string name="platform_action_settings">Open Settings page</string>
     <string name="platform_action_intent">Send intent</string>
     <string name="platform_action_contact">Open contact</string>

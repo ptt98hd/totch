@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), **v1.8.3** (§21) · Cập nhật: 2026-10-30
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), v1.8.3 (§21), **v1.9** (§22) · Cập nhật: 2026-10-30
 
 ## 1. Tầm nhìn
 
@@ -306,3 +306,16 @@ tham chiếu ID tương ứng.
 | FR-A21 | Hành động **Mở trang Cài đặt**: một trang Cài đặt hệ thống trong danh sách tuyển chọn (Wi-Fi, Bluetooth, Màn hình, Âm thanh, Pin, Ứng dụng, Tùy chọn nhà phát triển, các bảng nổi Internet / Âm lượng…), ẩn trang máy không có. Loại **Settings** / **Cài đặt** trong picker, nhóm như tab Cơ bản, tìm kiếm được. Chạy qua Trợ năng hoặc Shizuku | [actions §15](specs/actions.md), [ui §3](specs/ui.md) |
 | FR-A22 | Hành động **Gửi intent**: liệt kê intent mà app (có launcher) khai báo trong manifest — `intent-filter` không có `<data>` của activity (trừ `MAIN`) và broadcast receiver (trừ broadcast của hệ thống) được export, không yêu cầu quyền. Loại **Intents** trong picker, hiển thị như Shortcuts (nhóm theo app). Activity chạy qua Trợ năng hoặc Shizuku; broadcast do Totch gửi trực tiếp | [actions §16](specs/actions.md), [ui §3](specs/ui.md) |
 | FR-A23 | Hành động **Mở liên hệ**: chọn một liên hệ ngay trong app (loại **Contacts** / **Danh bạ** trong picker, cần quyền **Danh bạ** — xin khi mở loại này), khi cử chỉ chạy → mở liên hệ đó trong app Danh bạ mặc định của hệ thống. Chạy qua Trợ năng hoặc Shizuku | [actions §17](specs/actions.md), [ui §3](specs/ui.md) |
+
+## 22. Phiên bản 1.9 — Lớp hiển thị quanh notch
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-O1 | **Báo thông báo** (notification indicator): còn thông báo chưa xem (không tính thông báo thường trực / im lặng) → **viền quanh notch phát sáng nhịp thở** theo màu của app; tắt khi mở thanh thông báo hoặc thông báo bị gỡ | [notch-overlay §2](specs/notch-overlay.md) |
+| FR-O2 | **Dynamic Island — media**: đang phát nhạc / video → viên đen quanh notch giãn ra hai bên (ảnh bìa, sóng nhạc); bấm → mở rộng: tên bài, nghệ sĩ, nút Trước / Phát-Dừng / Tiếp | [notch-overlay §3](specs/notch-overlay.md) |
+| FR-O3 | **Dynamic Island — thông báo mới**: bung ra 3 s với icon app (chỉ metadata, FR-O7); bấm → mở thanh thông báo | [notch-overlay §3](specs/notch-overlay.md) |
+| FR-O4 | **Dynamic Island — sạc pin**: cắm sạc → bung ra 3 s với icon sạc và % pin | [notch-overlay §3](specs/notch-overlay.md) |
+| FR-O5 | **Dynamic Island — âm thanh**: đổi chế độ chuông / rung / im lặng, bật/tắt Không làm phiền, đổi âm lượng → viên thuốc nhỏ với icon và nhãn / thanh âm lượng | [notch-overlay §3](specs/notch-overlay.md) |
+| FR-O6 | **Hiệu ứng chạm**: chạm notch → gợn sóng sáng + viền sáng theo tiến độ nhấn giữ, nháy khi nhận cử chỉ, vệt sáng theo hướng vuốt; viên đen quanh notch co giãn (spring) | [notch-overlay §4](specs/notch-overlay.md) |
+| FR-O7 | Ba tính năng trên có công tắc riêng ở màn **Notch** › **Hiệu ứng**, mặc định tắt; cần **Trợ năng** (overlay vẽ trên status bar). Báo thông báo, island media / thông báo cần quyền truy cập thông báo — dòng Home › Permissions "Media control" đổi thành **Media & notifications**. Totch chỉ đọc **metadata** thông báo (gói, thời điểm, cờ, mức quan trọng, màu), không đọc tiêu đề / nội dung, không lưu. Không vẽ khi xoay ngang hoặc app toàn màn hình | [notch-overlay §1, §5, §6](specs/notch-overlay.md) |
+| FR-O8 | Trợ năng nhận sự kiện `TYPE_WINDOW_STATE_CHANGED` **chỉ của System UI** để biết thanh thông báo đã mở (FR-O1); vẫn không đọc nội dung cửa sổ | [notch-overlay §2](specs/notch-overlay.md) |

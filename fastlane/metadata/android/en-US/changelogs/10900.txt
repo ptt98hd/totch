@@ -1,0 +1,4 @@
+* Notification indicator: the notch border glows while notifications are unseen, in the app's color.
+* Dynamic Island around the notch: now playing (tap for controls), new notifications, charging, sound mode and volume.
+* Touch effects: ripple, glow and bounce when you touch the notch.
+* All off by default (Notch > Effects); they need Accessibility. Only notification metadata is read, never the content.

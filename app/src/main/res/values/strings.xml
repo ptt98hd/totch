@@ -29,7 +29,7 @@
     <string name="shizuku_not_installed">Not installed · optional</string>
     <string name="permission_accessibility">Accessibility</string>
     <string name="permission_notifications">Notifications</string>
-    <string name="permission_media">Media control</string>
+    <string name="permission_media">Media &amp; notifications</string>
     <string name="permission_dnd">Do Not Disturb</string>
     <string name="permission_battery">Unrestricted battery</string>
     <string name="permission_install_updates">Install updates</string>
@@ -295,4 +295,24 @@
     <string name="settings_page_panel_wifi">Wi-Fi panel</string>
     <string name="settings_page_panel_nfc">NFC panel</string>
     <string name="settings_page_panel_volume">Volume panel</string>
+    <!-- Notch overlay (FR-O1…FR-O8) -->
+    <string name="section_effects">Effects</string>
+    <string name="setting_indicator">Notification indicator</string>
+    <string name="setting_indicator_summary">The notch border glows while notifications are unseen</string>
+    <string name="setting_island">Dynamic Island</string>
+    <string name="setting_island_summary">Shows activities around the notch</string>
+    <string name="setting_island_media">Now playing</string>
+    <string name="setting_island_notifications">New notifications</string>
+    <string name="setting_island_charging">Charging</string>
+    <string name="setting_island_sound">Sound</string>
+    <string name="setting_island_sound_summary">Sound mode and volume</string>
+    <string name="setting_touch_effects">Touch effects</string>
+    <string name="setting_touch_effects_summary">Ripple, glow and bounce when you touch the notch</string>
+    <string name="overlay_needs_accessibility">Needs Accessibility</string>
+    <string name="overlay_needs_notification_access">Needs Media &amp; notifications access</string>
+    <string name="island_sound_ring">Ring</string>
+    <string name="island_sound_vibrate">Vibrate</string>
+    <string name="island_sound_silent">Silent</string>
+    <string name="island_dnd_on">DND on</string>
+    <string name="island_dnd_off">DND off</string>
 </resources>

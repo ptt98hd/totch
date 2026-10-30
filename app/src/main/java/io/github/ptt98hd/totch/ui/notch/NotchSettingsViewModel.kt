@@ -5,11 +5,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.ptt98hd.totch.AppContainer
+import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.SettingsRepository
 import io.github.ptt98hd.totch.TouchArea
+import io.github.ptt98hd.totch.core.overlay.IslandActivity
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -43,12 +47,29 @@ fun NotchSetting.reset(s: Settings, auto: ManualRegionDp): Settings = when (this
 
 fun NotchSetting.isDefault(s: Settings, auto: ManualRegionDp): Boolean = reset(s, auto) == s
 
+/** A switch of the Effects section (notch-overlay §6). */
+enum class OverlayFeature { INDICATOR, ISLAND, ISLAND_MEDIA, ISLAND_NOTIFICATIONS, ISLAND_CHARGING, ISLAND_SOUND, TOUCH_EFFECTS }
+
+/** Why an overlay feature cannot show yet (UI-80). */
+enum class OverlayIssue { ACCESSIBILITY, NOTIFICATION_ACCESS }
+
+private val needsNotificationAccess =
+    setOf(OverlayFeature.INDICATOR, OverlayFeature.ISLAND_MEDIA, OverlayFeature.ISLAND_NOTIFICATIONS)
+
 data class NotchSettingsUiState(
     val loading: Boolean = true,
     val settings: Settings = Settings(),
     /** The detected region, or the default one when there is none (landscape). */
     val auto: ManualRegionDp = ManualRegionDp(),
+    val requirements: Requirements = Requirements(),
 ) {
+    /** UI-80: accessibility first, then notification access for the features that read notifications or media. */
+    fun overlayIssue(feature: OverlayFeature): OverlayIssue? = when {
+        !requirements.accessibilityEnabled -> OverlayIssue.ACCESSIBILITY
+        feature in needsNotificationAccess && !requirements.mediaAccessGranted -> OverlayIssue.NOTIFICATION_ACCESS
+        else -> null
+    }
+
     /** UI-33: the region the touch-area sliders show. */
     val area: ManualRegionDp get() = settings.manualRegion ?: auto
 
@@ -59,10 +80,11 @@ data class NotchSettingsUiState(
 class NotchSettingsViewModel(
     private val settingsRepository: SettingsRepository,
     private val touchArea: TouchArea,
+    requirements: Flow<Requirements> = flowOf(Requirements()),
 ) : ViewModel() {
     val state: StateFlow<NotchSettingsUiState> =
-        combine(settingsRepository.settings, touchArea.detectedRegion) { settings, detected ->
-            NotchSettingsUiState(loading = false, settings = settings, auto = detected ?: ManualRegionDp())
+        combine(settingsRepository.settings, touchArea.detectedRegion, requirements) { settings, detected, r ->
+            NotchSettingsUiState(loading = false, settings = settings, auto = detected ?: ManualRegionDp(), requirements = r)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NotchSettingsUiState())
 
     private val auto: ManualRegionDp get() = touchArea.detectedRegion.value ?: ManualRegionDp()
@@ -82,6 +104,20 @@ class NotchSettingsViewModel(
         save { it.copy(manualRegion = region.takeUnless { r -> r == auto }) }
     }
 
+    fun setNotificationIndicator(on: Boolean) = save { it.copy(notificationIndicator = on) }
+    fun setTouchEffects(on: Boolean) = save { it.copy(touchEffects = on) }
+
+    /** UI-79: an island without activities (old data) comes back with all of them. */
+    fun setIsland(on: Boolean) = save {
+        it.copy(island = on, islandActivities = it.islandActivities.ifEmpty { IslandActivity.entries.toSet() })
+    }
+
+    /** UI-79: switching off the last activity switches the island off and keeps that activity for next time. */
+    fun setIslandActivity(activity: IslandActivity, on: Boolean) = save {
+        val activities = if (on) it.islandActivities + activity else it.islandActivities - activity
+        if (activities.isEmpty()) it.copy(island = false) else it.copy(islandActivities = activities)
+    }
+
     fun reset(item: NotchSetting) {
         val auto = auto
         save { item.reset(it, auto) }
@@ -89,7 +125,9 @@ class NotchSettingsViewModel(
 
     companion object {
         fun factory(container: AppContainer) = viewModelFactory {
-            initializer { NotchSettingsViewModel(container.settingsRepository, container.touchArea) }
+            initializer {
+                NotchSettingsViewModel(container.settingsRepository, container.touchArea, container.systemStatus.requirements)
+            }
         }
     }
 }

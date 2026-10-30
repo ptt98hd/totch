@@ -1,6 +1,16 @@
 package io.github.ptt98hd.totch.ui.notch
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.SmartButton
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -12,13 +22,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.R
+import io.github.ptt98hd.totch.core.overlay.IslandActivity
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.common.LocalNotchHighlight
@@ -26,6 +39,7 @@ import io.github.ptt98hd.totch.ui.common.ResetButton
 import io.github.ptt98hd.totch.ui.common.RowDivider
 import io.github.ptt98hd.totch.ui.common.SettingsSection
 import io.github.ptt98hd.totch.ui.common.SliderSetting
+import io.github.ptt98hd.totch.ui.common.SwitchRow
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.withGutters
 import io.github.ptt98hd.totch.ui.theme.TotchTheme
@@ -41,12 +55,20 @@ data class NotchSettingsActions(
     val onReset: (NotchSetting) -> Unit = {},
     /** Unsaved settings while a touch-area slider is dragged (for the live highlight); null when done. */
     val onDraft: (Settings?) -> Unit = {},
+    val onNotificationIndicator: (Boolean) -> Unit = {},
+    val onIsland: (Boolean) -> Unit = {},
+    val onIslandActivity: (IslandActivity, Boolean) -> Unit = { _, _ -> },
+    val onTouchEffects: (Boolean) -> Unit = {},
 )
 
 @Composable
 fun NotchSettingsRoute(container: AppContainer) {
     val vm: NotchSettingsViewModel = viewModel(factory = NotchSettingsViewModel.factory(container))
     val state by vm.state.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(Unit) {
+        container.systemStatus.refresh() // UI-80: accessibility / notification access may have changed
+        onPauseOrDispose { }
+    }
 
     // FR-U8: while this screen is shown the highlight follows the draft of the slider being dragged.
     val highlight = LocalNotchHighlight.current
@@ -68,6 +90,10 @@ fun NotchSettingsRoute(container: AppContainer) {
             onArea = vm::setArea,
             onReset = vm::reset,
             onDraft = { draft = it },
+            onNotificationIndicator = vm::setNotificationIndicator,
+            onIsland = vm::setIsland,
+            onIslandActivity = vm::setIslandActivity,
+            onTouchEffects = vm::setTouchEffects,
         )
     }
     NotchSettingsScreen(state, actions)
@@ -93,6 +119,7 @@ fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActio
         topBar = { TotchTopBar(stringResource(R.string.nav_notch)) },
     ) { padding ->
         LazyColumn(contentPadding = padding.withGutters(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            item(key = "effects") { EffectsSection(state, actions) }
             item(key = "sensitivity") {
                 SettingsSection(stringResource(R.string.section_sensitivity)) {
                     SliderSetting(
@@ -190,6 +217,72 @@ fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActio
                 }
             }
         }
+    }
+}
+
+/** One island activity row: icon, label, optional summary and the feature whose issue it shows (UI-80). */
+private data class IslandRow(
+    val activity: IslandActivity,
+    val feature: OverlayFeature,
+    val icon: ImageVector,
+    @StringRes val title: Int,
+    @StringRes val summary: Int? = null,
+)
+
+private val islandRows = listOf(
+    IslandRow(IslandActivity.MEDIA, OverlayFeature.ISLAND_MEDIA, Icons.Outlined.MusicNote, R.string.setting_island_media),
+    IslandRow(IslandActivity.NOTIFICATIONS, OverlayFeature.ISLAND_NOTIFICATIONS, Icons.Outlined.Notifications, R.string.setting_island_notifications),
+    IslandRow(IslandActivity.CHARGING, OverlayFeature.ISLAND_CHARGING, Icons.Outlined.Bolt, R.string.setting_island_charging),
+    IslandRow(
+        IslandActivity.SOUND, OverlayFeature.ISLAND_SOUND, Icons.AutoMirrored.Outlined.VolumeUp,
+        R.string.setting_island_sound, R.string.setting_island_sound_summary,
+    ),
+)
+
+/** notch-overlay §6: indicator, Dynamic Island (with its activities) and touch effects. */
+@Composable
+private fun EffectsSection(state: NotchSettingsUiState, actions: NotchSettingsActions) {
+    val s = state.settings
+    @Composable
+    fun summary(feature: OverlayFeature, @StringRes normal: Int?): Pair<String?, Boolean> =
+        when (state.overlayIssue(feature)) {
+            OverlayIssue.ACCESSIBILITY -> stringResource(R.string.overlay_needs_accessibility) to true
+            OverlayIssue.NOTIFICATION_ACCESS -> stringResource(R.string.overlay_needs_notification_access) to true
+            null -> normal?.let { stringResource(it) } to false
+        }
+
+    SettingsSection(stringResource(R.string.section_effects)) {
+        val (indicatorSummary, indicatorError) = summary(OverlayFeature.INDICATOR, R.string.setting_indicator_summary)
+        SwitchRow(
+            stringResource(R.string.setting_indicator), s.notificationIndicator, actions.onNotificationIndicator,
+            icon = Icons.Outlined.NotificationsActive, summary = indicatorSummary, error = indicatorError,
+        )
+        RowDivider()
+        val (islandSummary, islandError) = summary(OverlayFeature.ISLAND, R.string.setting_island_summary)
+        SwitchRow(
+            stringResource(R.string.setting_island), s.island, actions.onIsland,
+            icon = Icons.Outlined.SmartButton, summary = islandSummary, error = islandError,
+        )
+        if (s.island) {
+            islandRows.forEach { row ->
+                val (rowSummary, rowError) = summary(row.feature, row.summary)
+                SwitchRow(
+                    stringResource(row.title),
+                    row.activity in s.islandActivities,
+                    { actions.onIslandActivity(row.activity, it) },
+                    icon = row.icon,
+                    summary = rowSummary,
+                    error = rowError,
+                    modifier = Modifier.padding(start = 24.dp),
+                )
+            }
+        }
+        RowDivider()
+        val (effectsSummary, effectsError) = summary(OverlayFeature.TOUCH_EFFECTS, R.string.setting_touch_effects_summary)
+        SwitchRow(
+            stringResource(R.string.setting_touch_effects), s.touchEffects, actions.onTouchEffects,
+            icon = Icons.Outlined.AutoAwesome, summary = effectsSummary, error = effectsError,
+        )
     }
 }
 

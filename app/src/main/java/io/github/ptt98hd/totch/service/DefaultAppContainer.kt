@@ -49,6 +49,12 @@ import io.github.ptt98hd.totch.engine.highlightArea
 import io.github.ptt98hd.totch.engine.notchRegion
 import io.github.ptt98hd.totch.engine.resolveEngineStatus
 import io.github.ptt98hd.totch.locale.AppLocales
+import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.overlay.IslandActivity
+import io.github.ptt98hd.totch.core.settings.activeIslandActivities
+import io.github.ptt98hd.totch.overlay.MediaWatcher
+import io.github.ptt98hd.totch.overlay.OverlayHub
+import io.github.ptt98hd.totch.overlay.SystemEventsReceiver
 import io.github.ptt98hd.totch.shizuku.ShizukuExecutor
 import io.github.ptt98hd.totch.shizuku.ShizukuManager
 import io.github.ptt98hd.totch.shizuku.ShizukuShell
@@ -75,6 +81,9 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
 
     /** Gestures are switched on, as last read from the repository. */
     val settingsEnabled: Boolean get() = settings.value.enabled
+
+    /** Haptic feedback is on (FR-A10), as last read; also used for island taps (notch-overlay §3.4). */
+    val hapticsEnabled: Boolean get() = settings.value.haptics
 
     val display = DisplayMonitor(app, scope)
 
@@ -108,12 +117,23 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
         ),
     )
 
+    /** Notification indicator, Dynamic Island and touch effects (notch-overlay). */
+    val overlay = OverlayHub(app.packageName, settings)
+    val mediaWatcher = MediaWatcher(app, overlay)
+    private val systemEvents = SystemEventsReceiver(app, overlay)
+
+    val feedback = AndroidFeedback(app, installedApps)
+
     val engine: GestureEngine = GestureEngine(
         scope = scope,
         clock = SystemClock::uptimeMillis, // same clock as MotionEvent.eventTime and getevent (CLOCK_MONOTONIC)
         density = display.state.value.density,
-        dispatch = dispatcher::dispatch,
-        feedback = AndroidFeedback(app, installedApps),
+        dispatch = { action ->
+            if (action == Action.Notifications || action == Action.QuickSettings) overlay.onShadeOpened() // NI-5
+            dispatcher.dispatch(action)
+        },
+        feedback = feedback,
+        observer = overlay,
     )
 
     private val accessibilityConnected: StateFlow<Boolean> = accessibility.service.map { it != null }
@@ -158,6 +178,11 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
         scope.launch { accessibilityConnected.collect { engine.canBlockTouches = it } }
         scope.launch { touchSource.collect { engine.reset() } } // a gesture never spans two sources
         scope.launch { localExecutor.warmUp() }
+        scope.launch {
+            settings.map { s -> s.enabled && s.activeIslandActivities().any { it == IslandActivity.CHARGING || it == IslandActivity.SOUND } }
+                .distinctUntilChanged()
+                .collect { systemEvents.setRegistered(it) }
+        }
         scope.launch { syncLanguage() }
         scope.launch { settingsRepository.settings.map { it.updateInterval }.distinctUntilChanged().collect { UpdateScheduler.apply(app, it) } } // UP-11
         // Repository flow (not the defaulted StateFlow) so a sticky restart is never stopped by a placeholder value.

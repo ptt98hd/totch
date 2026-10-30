@@ -352,6 +352,22 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-A45 | Picker › Danh bạ lần đầu | Khung xin quyền; Cho phép → danh sách; Từ chối 2 lần → nút mở trang app | [ ] |
 | MT-A46 | Gán một liên hệ, chạy cử chỉ (Trợ năng / chỉ Shizuku) | Mở liên hệ đó trong app Danh bạ mặc định; tên hiện ở màn Cử chỉ "Liên hệ: <tên>" | [ ] |
 
+## 20. v1.9 — Báo thông báo, Dynamic Island, hiệu ứng chạm
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-O1 | Notch › Hiệu ứng khi Trợ năng tắt / thiếu quyền Media và thông báo | Mô tả màu lỗi "Cần Trợ năng" / "Cần quyền Media và thông báo"; switch vẫn bật/tắt được | [ ] |
+| MT-O2 | Bật Báo thông báo, nhận tin nhắn (Telegram, SMS) | Viền quanh notch sáng nhịp thở theo màu app; kéo thanh thông báo xuống → tắt; xóa thông báo → tắt | [ ] |
+| MT-O3 | Thông báo im lặng / thường trực (nhạc, tải xuống) | Viền không sáng | [ ] |
+| MT-O4 | Bật Dynamic Island, phát nhạc (Spotify / YouTube Music) | Viên đen giãn hai bên notch: ảnh bìa + sóng nhạc; dừng → sau ~5 s co lại | [ ] |
+| MT-O5 | Bấm viên media; bấm Trước / Phát-Dừng / Tiếp; chờ 6 s | Mở rộng có tên bài, nghệ sĩ; nút chạy đúng; tự thu gọn | [ ] |
+| MT-O6 | Nhận thông báo mới khi island bật; bấm viên | Icon app hiện 3 s; bấm → mở thanh thông báo, viền tắt | [ ] |
+| MT-O7 | Cắm sạc | Viên với tia sét xanh và % pin trong 3 s | [ ] |
+| MT-O8 | Đổi Chuông / Rung / Im lặng, bật/tắt Không làm phiền, bấm phím âm lượng | Viên icon + nhãn (2 s); âm lượng → thanh mức (1,5 s) | [ ] |
+| MT-O9 | Bật Hiệu ứng chạm; chạm, giữ, vuốt trái/phải/xuống tại notch | Gợn sóng, viền sáng dần khi giữ, nháy khi chạm, vệt sáng theo hướng vuốt; viên đen phình rồi nảy về; cử chỉ vẫn chạy như cũ | [ ] |
+| MT-O10 | Video toàn màn hình / game; xoay ngang | Không vẽ island / viền | [ ] |
+| MT-O11 | Chỉ Shizuku (Trợ năng tắt) | Không có overlay, cử chỉ vẫn chạy | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)
