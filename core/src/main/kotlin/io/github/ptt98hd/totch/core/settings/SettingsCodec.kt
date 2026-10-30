@@ -2,6 +2,7 @@ package io.github.ptt98hd.totch.core.settings
 
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
+import io.github.ptt98hd.totch.core.overlay.IslandActivity
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -22,7 +23,7 @@ object SettingsCodec {
     fun decode(json: String): Settings =
         runCatching {
             val tree = this.json.parseToJsonElement(json).withoutVibrate()
-            this.json.decodeFromJsonElement(Settings.serializer(), tree).migrated(tree)
+            this.json.decodeFromJsonElement(Settings.serializer(), tree).migrated(tree).withIndicator(tree)
         }
             .getOrDefault(Settings())
             .sanitized()
@@ -37,6 +38,16 @@ object SettingsCodec {
             }
         is JsonArray -> JsonArray(map { it.withoutVibrate() })
         else -> this
+    }
+
+    /** ST-39: 1.9.1 folded the notification indicator switch into the island's notifications activity (FR-O12). */
+    private fun Settings.withIndicator(tree: JsonElement): Settings {
+        val indicator = (tree.jsonObject["notificationIndicator"] as? JsonPrimitive)?.content == "true"
+        return when {
+            !indicator -> this
+            island -> copy(islandActivities = islandActivities + IslandActivity.NOTIFICATIONS)
+            else -> copy(island = true, islandActivities = setOf(IslandActivity.NOTIFICATIONS))
+        }
     }
 
     /**

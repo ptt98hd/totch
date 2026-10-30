@@ -94,9 +94,10 @@ data class Settings(
      * unbound while Totch runs (switched off). Lets Totch turn it back on when Android drops it (FR-D15, DM-53).
      */
     val accessibilityWanted: Boolean = false,
-    /** Border around the notch lights while notifications are unseen (FR-O1). */
-    val notificationIndicator: Boolean = false,
-    /** Dynamic Island around the notch (FR-O2…FR-O5), showing [islandActivities]. */
+    /**
+     * Dynamic Island around the notch (FR-O2…FR-O5), showing [islandActivities]; its notifications activity also lights
+     * the indicator ring while notifications are unseen (FR-O1, FR-O12).
+     */
     val island: Boolean = false,
     val islandActivities: Set<IslandActivity> = IslandActivity.entries.toSet(),
     /** Ripple, glow and squish when the notch is touched (FR-O6). */

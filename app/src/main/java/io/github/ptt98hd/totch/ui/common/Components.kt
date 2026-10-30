@@ -2,10 +2,6 @@ package io.github.ptt98hd.totch.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -16,7 +12,6 @@ import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.ui.text.style.TextAlign
@@ -457,11 +452,7 @@ fun TotchSwitch(
     )
 }
 
-/**
- * FR-U53, FR-U57: the slider of the whole app — the Material 3 track (thick, a gap around the thumb, a stop
- * indicator) with a round thumb that narrows while pressed, as the M3 handle does.
- */
-@OptIn(ExperimentalMaterial3Api::class)
+/** FR-U61: the slider of the whole app — the Material 3 slider with its default thumb and track. */
 @Composable
 fun TotchSlider(
     value: Float,
@@ -471,11 +462,6 @@ fun TotchSlider(
     enabled: Boolean = true,
     onValueChangeFinished: (() -> Unit)? = null,
 ) {
-    val colors = SliderDefaults.colors()
-    val interaction = remember { MutableInteractionSource() }
-    val dragged by interaction.collectIsDraggedAsState()
-    val pressed by interaction.collectIsPressedAsState()
-    val thumbSize by animateDpAsState(if (dragged || pressed) 20.dp else 24.dp, label = "thumb")
     Slider(
         value = value,
         onValueChange = onValueChange,
@@ -483,18 +469,6 @@ fun TotchSlider(
         enabled = enabled,
         valueRange = valueRange,
         onValueChangeFinished = onValueChangeFinished,
-        colors = colors,
-        interactionSource = interaction,
-        thumb = {
-            Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
-                Box(
-                    Modifier
-                        .size(thumbSize)
-                        .background(if (enabled) colors.thumbColor else colors.disabledThumbColor, CircleShape),
-                )
-            }
-        },
-        track = { state -> SliderDefaults.Track(sliderState = state, enabled = enabled, colors = colors) },
     )
 }
 

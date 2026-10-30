@@ -66,4 +66,38 @@ class StringsTest {
         assertEquals("Media & notifications", en["permission_media"])
         assertEquals("Media và thông báo", vi["permission_media"])
     }
+
+    @Test fun `UI-82 descriptions fit on one line`() {
+        val descriptions = listOf(
+            "needs_access", "status_needs_access", "gesture_unavailable", "action_needs_shizuku", "action_needs_dnd",
+            "tile_needs_shizuku", "overlay_needs_accessibility", "overlay_needs_notification_access",
+            "setting_amoled_summary", "setting_start_on_boot_summary", "setting_haptics_summary", "setting_landscape_summary",
+            "setting_update_on_launch_summary", "setting_nav_labels_summary", "setting_island_notifications_summary",
+            "setting_island_summary", "setting_island_sound_summary", "setting_touch_effects_summary",
+            "autostart_description", "donate_summary", "permission_granted", "permission_not_granted",
+            "shizuku_ready", "shizuku_permission_required", "shizuku_not_running", "shizuku_not_installed",
+            "update_idle", "update_checking", "update_up_to_date", "update_available", "update_downloading",
+            "update_installing", "update_failed",
+        )
+        listOf(en, vi).forEach { strings ->
+            descriptions.forEach { key ->
+                val text = strings[key] ?: error("missing $key")
+                val length = text.replace(Regex("""%\d\$[sd]%?%?"""), "").length
+                assert(length <= 30) { "$key is $length chars: $text" }
+            }
+        }
+    }
+
+    @Test fun `UI-82 unavailable reasons read Needs`() {
+        assertEquals("Needs Shizuku", en["action_needs_shizuku"])
+        assertEquals("Needs Do Not Disturb access", en["action_needs_dnd"])
+        assertEquals("Turn on Accessibility in Home", en["gesture_unavailable"])
+        assertEquals("Bật Trợ năng ở Trang chủ", vi["gesture_unavailable"])
+    }
+
+    @Test fun `FR-O12 the indicator is part of the notifications activity`() {
+        assertEquals(null, en["setting_indicator"])
+        assertEquals("Ring glows until seen", en["setting_island_notifications_summary"])
+        assertEquals("Viền sáng tới khi xem", vi["setting_island_notifications_summary"])
+    }
 }

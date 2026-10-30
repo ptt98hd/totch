@@ -29,4 +29,4 @@ fun pressProgress(downMs: Long, nowMs: Long, longPressMs: Long): Float =
 /** OV-1…OV-5: whether the drawing overlay is shown at all. */
 fun overlayVisible(settings: Settings, accessibility: Boolean, rotation: Int, statusBarVisible: Boolean): Boolean =
     settings.enabled && accessibility && rotation == 0 && statusBarVisible &&
-        (settings.notificationIndicator || settings.island || settings.touchEffects)
+        (settings.island || settings.touchEffects)

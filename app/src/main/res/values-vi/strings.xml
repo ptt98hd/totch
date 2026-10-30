@@ -55,7 +55,7 @@
     <string name="group_swipe">Vuốt</string>
     <string name="group_swipe_hold">Vuốt và giữ</string>
     <string name="gesture_switch_cd">Bật hoặc tắt %1$s</string>
-    <string name="gesture_unavailable">Cần quyền Trợ năng (bật ở Trang chủ)</string>
+    <string name="gesture_unavailable">Bật Trợ năng ở Trang chủ</string>
     <string name="action_none">Không làm gì</string>
     <string name="action_back">Quay lại</string>
     <string name="action_home">Màn hình chính</string>
@@ -156,7 +156,7 @@
     <string name="section_system">Hệ thống</string>
     <string name="setting_start_on_boot">Khởi động cùng máy</string>
     <string name="setting_landscape">Nhận cử chỉ khi xoay ngang</string>
-    <string name="setting_start_on_boot_summary">Bật cử chỉ sau khi khởi động lại</string>
+    <string name="setting_start_on_boot_summary">Bật cử chỉ khi khởi động lại</string>
     <string name="setting_haptics_summary">Rung khi thực hiện cử chỉ</string>
     <string name="setting_landscape_summary">Vẫn nhận chạm ở notch khi xoay</string>
     <string name="section_about">Giới thiệu</string>
@@ -164,14 +164,14 @@
     <!-- About (last section of Settings) -->
     <string name="about_version">Phiên bản %1$s</string>
     <string name="update_title">Kiểm tra cập nhật</string>
-    <string name="update_idle">Tải bản mới nhất từ GitHub</string>
+    <string name="update_idle">Bản mới nhất từ GitHub</string>
     <string name="update_checking">Đang kiểm tra…</string>
     <string name="update_up_to_date">Bạn đang dùng bản mới nhất</string>
     <string name="update_available">Đã có bản %1$s</string>
     <string name="update_downloading">Đang tải… %1$d%%</string>
     <string name="update_installing">Xác nhận để cài đặt</string>
     <string name="update_installing_shizuku">Đang cài đặt…</string>
-    <string name="update_failed">Không cập nhật được, chạm để thử lại</string>
+    <string name="update_failed">Lỗi cập nhật, chạm để thử lại</string>
     <string name="update_dialog_title">Totch %1$s</string>
     <string name="update_action">Cập nhật</string>
     <string name="update_later">Để sau</string>
@@ -201,6 +201,7 @@
     <string name="update_retry">Thử lại</string>
     <string name="update_new_badge_cd">Đã có bản mới</string>
     <string name="ok">OK</string>
+    <string name="done">Xong</string>
     <string name="close">Đóng</string>
 
     <string name="section_support">Ủng hộ</string>
@@ -288,17 +289,16 @@
     <string name="settings_page_panel_volume">Bảng âm lượng</string>
     <!-- Notch overlay (FR-O1…FR-O8) -->
     <string name="section_effects">Hiệu ứng</string>
-    <string name="setting_indicator">Báo thông báo</string>
-    <string name="setting_indicator_summary">Viền notch sáng khi có thông báo chưa xem</string>
     <string name="setting_island">Dynamic Island</string>
     <string name="setting_island_summary">Hiện hoạt động quanh notch</string>
     <string name="setting_island_media">Media đang phát</string>
     <string name="setting_island_notifications">Thông báo mới</string>
+    <string name="setting_island_notifications_summary">Viền sáng tới khi xem</string>
     <string name="setting_island_charging">Sạc pin</string>
     <string name="setting_island_sound">Âm thanh</string>
     <string name="setting_island_sound_summary">Chế độ âm thanh và âm lượng</string>
     <string name="setting_touch_effects">Hiệu ứng chạm</string>
-    <string name="setting_touch_effects_summary">Gợn sóng, viền sáng và co giãn khi chạm notch</string>
+    <string name="setting_touch_effects_summary">Gợn sóng và co giãn khi chạm</string>
     <string name="overlay_needs_accessibility">Cần Trợ năng</string>
     <string name="overlay_needs_notification_access">Cần quyền Media và thông báo</string>
     <string name="island_sound_ring">Đổ chuông</string>

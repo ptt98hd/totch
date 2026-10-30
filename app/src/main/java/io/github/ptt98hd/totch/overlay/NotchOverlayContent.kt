@@ -93,16 +93,30 @@ import io.github.ptt98hd.totch.core.overlay.SoundMode
 import io.github.ptt98hd.totch.core.overlay.TouchEffect
 import io.github.ptt98hd.totch.core.overlay.pressProgress
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.platform.LocalView
+import io.github.ptt98hd.totch.core.overlay.IslandMotion
+import io.github.ptt98hd.totch.core.overlay.IslandStep
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 
 private val ChargingGreen = Color(0xFF34C759)
 private const val SQUISH_SCALE = 1.12f
+private const val HALO_ALPHA = 0.55f
+/** Extra width of the dark halo on each side of a touch-effect stroke. */
+private const val HALO_DP = 3
+/** The island's icons fade in once it has mostly grown. */
+private const val BODY_DELAY_MS = 180L
 
 /** A ripple started by a press, in window pixels (= screen pixels, the window sits at the top-left corner). */
 private class Ripple(val center: Offset) {
     val progress = Animatable(0f)
 }
 
-/** Draws [frame] (notch-overlay §2–§4): island pill, indicator ring and touch effects. */
+/** Draws [frame] (notch-overlay §2–§4): island pill with its ring, indicator ring and touch effects. */
 @Composable
 fun NotchOverlayContent(hub: OverlayHub, frame: OverlayFrame) {
     val statusBar by hub.statusBarVisible.collectAsState()
@@ -112,22 +126,49 @@ fun NotchOverlayContent(hub: OverlayHub, frame: OverlayFrame) {
     if (!statusBar) return // OV-4
 
     val accent = colorResource(android.R.color.system_accent1_200)
+    // FR-O10: a light core over a dark halo reads on light and dark status bars alike.
+    val effectCore = colorResource(android.R.color.system_accent1_100)
+    val effectHalo = colorResource(android.R.color.system_accent1_900).copy(alpha = HALO_ALPHA)
     val content = if (frame.island) islandState else IslandContent.Hidden
-    val target = IslandLayout.pill(content, frame.notch, frame.metrics)
+    val indicatorOn = frame.indicator && indicatorState != null
+    val indicatorColor = indicatorState?.color?.let { Color(it) } ?: accent
 
-    // Island shape: spring between states (dampingRatio 0.7).
-    val shapeSpec = spring<Float>(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow)
-    val left by animateFloatAsState(target.left.toFloat(), shapeSpec, label = "left")
-    val right by animateFloatAsState(target.right.toFloat(), shapeSpec, label = "right")
-    val bottom by animateFloatAsState(target.bottom.toFloat(), shapeSpec, label = "bottom")
-    val top = target.top.toFloat()
+    // Island shape: ring around the notch → grow (spring, dampingRatio 0.7) → shrink → ring out (IM-1…IM-3).
+    val target = IslandMotion.target(content, frame.notch, frame.metrics)
+    val shown = target != null
+    val shape = target ?: frame.notch
     val expanded = content is IslandContent.Media && content.expanded
-    val corner by animateFloatAsState(
-        if (expanded) frame.metrics.dp(28).toFloat() else frame.notch.height / 2f,
-        shapeSpec,
-        label = "corner",
-    )
-    val islandAlpha by animateFloatAsState(if (content == IslandContent.Hidden) 0f else 1f, tween(250), label = "alpha")
+    val targetCorner = if (expanded) frame.metrics.dp(28).toFloat() else frame.notch.height / 2f
+    val left = remember { Animatable(frame.notch.left.toFloat()) }
+    val right = remember { Animatable(frame.notch.right.toFloat()) }
+    val bottom = remember { Animatable(frame.notch.bottom.toFloat()) }
+    val corner = remember { Animatable(frame.notch.height / 2f) }
+    val ring = remember { Animatable(0f) }
+    var grown by remember { mutableStateOf(false) }
+    LaunchedEffect(shape, targetCorner, shown) {
+        val steps = IslandMotion.steps(ringLit = ring.value >= 1f, shown = shown)
+        if (!shown || IslandStep.RING_IN in steps) grown = false
+        val shapeSpec = spring<Float>(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow)
+        for (step in steps) when (step) {
+            IslandStep.RING_IN -> ring.animateTo(1f, tween(IslandMotion.RING_IN_MS))
+            IslandStep.MORPH -> coroutineScope {
+                launch { left.animateTo(shape.left.toFloat(), shapeSpec) }
+                launch { right.animateTo(shape.right.toFloat(), shapeSpec) }
+                launch { bottom.animateTo(shape.bottom.toFloat(), shapeSpec) }
+                launch { corner.animateTo(targetCorner, shapeSpec) }
+                if (shown) launch { delay(BODY_DELAY_MS); grown = true }
+            }
+            IslandStep.RING_OUT -> ring.animateTo(0f, tween(IslandMotion.RING_OUT_MS))
+        }
+    }
+    val islandRingColor = when {
+        content is IslandContent.Charging -> ChargingGreen
+        content is IslandContent.Notification -> indicatorColor
+        else -> accent
+    }
+    // Keep the last color while the ring fades out after the content is gone.
+    var ringColor by remember { mutableStateOf(islandRingColor) }
+    SideEffect { if (shown) ringColor = islandRingColor }
 
     // Touch effects (§4): squish while pressed, nudge in the swipe direction, flashes, ripples, streaks.
     val effects = frame.touchEffects
@@ -189,36 +230,62 @@ fun NotchOverlayContent(hub: OverlayHub, frame: OverlayFrame) {
         animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse),
         label = "breath",
     )
-    val indicatorOn = frame.indicator && indicatorState != null
-    val indicatorColor = indicatorState?.color?.let { Color(it) } ?: accent
+
+    // FR-O9: once nothing is drawn, repaint the whole window so no stale pixels stay on the transparent buffer.
+    val view = LocalView.current
+    val pressedNow by rememberUpdatedState(pressed)
+    val indicatorNow by rememberUpdatedState(indicatorOn)
+    val idle by remember {
+        derivedStateOf {
+            !indicatorNow && !pressedNow && ring.value == 0f && squish == 1f && flash.value == 0f && !glowHeld &&
+                ripples.isEmpty() && !streak.isRunning && nudge.value == Offset.Zero
+        }
+    }
+    LaunchedEffect(idle) {
+        if (!idle) return@LaunchedEffect
+        withFrameNanos { }
+        view.rootView.invalidate()
+    }
 
     Box(Modifier.fillMaxSize()) {
         Canvas(Modifier.fillMaxSize()) {
-            val cx = (left + right) / 2f
-            val cy = (top + bottom) / 2f
-            val w = (right - left) * squish
-            val h = (bottom - top) * squish
+            val cx = (left.value + right.value) / 2f
+            val cy = (frame.notch.top + bottom.value) / 2f
+            val w = (right.value - left.value) * squish
+            val h = (bottom.value - frame.notch.top) * squish
             val origin = Offset(cx - w / 2f, cy - h / 2f) + nudge.value
             val size = Size(w, h)
-            val radius = corner * squish
+            val radius = corner.value * squish
 
-            val blobAlpha = maxOf(islandAlpha, if (effects && (pressed || squish > 1.001f)) 1f else 0f)
+            val blobAlpha = maxOf(ring.value, if (effects && (pressed || squish > 1.001f)) 1f else 0f)
             if (blobAlpha > 0f) drawRoundRect(Color.Black.copy(alpha = blobAlpha), origin, size, CornerRadius(radius))
 
-            val ring = frame.metrics.dp(3).toFloat()
-            val ringOrigin = origin - Offset(ring, ring)
-            val ringSize = Size(w + 2 * ring, h + 2 * ring)
-            if (indicatorOn) glowRing(indicatorColor, breathing, ringOrigin, ringSize, radius + ring)
+            val ringWidth = frame.metrics.dp(3).toFloat()
+            val ringOrigin = origin - Offset(ringWidth, ringWidth)
+            val ringSize = Size(w + 2 * ringWidth, h + 2 * ringWidth)
+            if (ring.value > 0f) glowRing(ringColor, ring.value, ringOrigin, ringSize, radius + ringWidth)
+            if (indicatorOn) glowRing(indicatorColor, breathing, ringOrigin, ringSize, radius + ringWidth)
             val touchGlow = if (effects) maxOf(progress, flash.value, if (glowHeld) 1f else 0f) else 0f
-            if (touchGlow > 0f) glowRing(accent, touchGlow, ringOrigin, ringSize, radius + ring)
+            if (touchGlow > 0f) {
+                haloRing(effectHalo, touchGlow, ringOrigin, ringSize, radius + ringWidth)
+                glowRing(effectCore, touchGlow, ringOrigin, ringSize, radius + ringWidth)
+            }
 
             ripples.forEach { r ->
                 val t = r.progress.value
+                val rippleRadius = frame.metrics.dp(8) + t * frame.metrics.dp(48)
+                val core = frame.metrics.dp(3).toFloat()
                 drawCircle(
-                    color = accent.copy(alpha = 0.6f * (1f - t)),
-                    radius = frame.metrics.dp(8) + t * frame.metrics.dp(48),
+                    color = effectHalo.copy(alpha = effectHalo.alpha * (1f - t)),
+                    radius = rippleRadius,
                     center = r.center,
-                    style = Stroke(width = frame.metrics.dp(2).toFloat()),
+                    style = Stroke(width = core + 2 * frame.metrics.dp(HALO_DP)),
+                )
+                drawCircle(
+                    color = effectCore.copy(alpha = 0.95f * (1f - t)),
+                    radius = rippleRadius,
+                    center = r.center,
+                    style = Stroke(width = core),
                 )
             }
             if (effects && streak.value in 0.001f..0.999f) {
@@ -226,28 +293,50 @@ fun NotchOverlayContent(hub: OverlayHub, frame: OverlayFrame) {
                 val length = frame.metrics.dp(64).toFloat()
                 val start = Offset(cx, cy) + streakDir * (t * length)
                 val end = start + streakDir * frame.metrics.dp(28).toFloat()
-                drawLine(
-                    brush = Brush.linearGradient(listOf(accent.copy(alpha = 0f), accent.copy(alpha = 1f - t)), start, end),
-                    start = start,
-                    end = end,
-                    strokeWidth = frame.metrics.dp(4).toFloat(),
-                    cap = StrokeCap.Round,
-                )
+                val core = frame.metrics.dp(5).toFloat()
+                listOf(effectHalo to core + 2 * frame.metrics.dp(HALO_DP), effectCore to core).forEach { (color, width) ->
+                    drawLine(
+                        brush = Brush.linearGradient(
+                            listOf(color.copy(alpha = 0f), color.copy(alpha = color.alpha * (1f - t))),
+                            start,
+                            end,
+                        ),
+                        start = start,
+                        end = end,
+                        strokeWidth = width,
+                        cap = StrokeCap.Round,
+                    )
+                }
             }
         }
 
+        // FR-O9: fill the window so the island's layer bounds cover everything drawn in it.
         AnimatedContent(
-            targetState = content,
-            transitionSpec = { fadeIn(tween(200, delayMillis = 120)) togetherWith fadeOut(tween(100)) },
+            targetState = if (grown) content else IslandContent.Hidden,
+            modifier = Modifier.fillMaxSize(),
+            transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(100)) },
             contentKey = { it::class to (it as? IslandContent.Media)?.expanded },
             label = "island",
         ) { shown ->
-            if (shown != IslandContent.Hidden) {
-                val pill = IslandLayout.pill(shown, frame.notch, frame.metrics)
-                IslandBody(hub, shown, pill, frame, indicatorColor, accent)
+            Box(Modifier.fillMaxSize()) {
+                if (shown != IslandContent.Hidden) {
+                    val pill = IslandLayout.pill(shown, frame.notch, frame.metrics)
+                    IslandBody(hub, shown, pill, frame, indicatorColor, accent)
+                }
             }
         }
     }
+}
+
+/** FR-O10: the dark halo under a touch glow, wider than [glowRing] so it outlines it on light backgrounds. */
+private fun DrawScope.haloRing(color: Color, alpha: Float, origin: Offset, size: Size, radius: Float) {
+    drawRoundRect(
+        color = color.copy(alpha = (color.alpha * alpha).coerceIn(0f, 1f)),
+        topLeft = origin,
+        size = size,
+        cornerRadius = CornerRadius(radius),
+        style = Stroke(width = (2.5f + 2 * HALO_DP) * density),
+    )
 }
 
 /** A glowing outline: two soft wide strokes under a sharp one. */

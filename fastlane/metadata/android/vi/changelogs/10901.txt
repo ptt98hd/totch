@@ -1,0 +1,6 @@
+* Sửa lỗi lưu ảnh ở notch sau Dynamic Island hoặc hiệu ứng chạm.
+* Island: vòng sáng quanh notch, giãn ra hai bên rồi thu lại.
+* Gộp Báo thông báo vào hoạt động Thông báo mới của island.
+* Hiệu ứng chạm rõ hơn trên cả nền sáng lẫn tối.
+* Hoạt động của island chỉnh trong hộp thoại (chạm vào dòng khi đang bật).
+* Mô tả ngắn không bị cắt chữ, thanh trượt mặc định, dòng Tự khởi chạy đồng nhất.

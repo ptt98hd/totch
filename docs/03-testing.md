@@ -59,6 +59,8 @@ Mục tiêu độ phủ: `:core` ≥ 90% dòng (NFR-6).
 | settings (ST-35, ST-36)            | `core/.../settings/SettingsCodecTest`                                                   |
 | actions (SP-3, IN-6, CT-1), ui (UI-73…UI-77) | `app/.../ui/picker/ActionPickerViewModelTest`, `IntentGroupingTest`, `ContactFilterTest`, `app/.../ui/common/ActionCatalogTest`, `StringsTest` |
 | notch-overlay (OV-\*, NI-\*, IS-\*, IG-\*, TE-\*), settings (ST-37, ST-38) | `core/.../overlay/OverlayVisibilityTest`, `NotificationIndicatorTest`, `IslandControllerTest`, `IslandLayoutTest`, `TouchEffectTest`, `core/.../settings/SettingsCodecTest` |
+| notch-overlay v1.9.1 (IM-\*), settings (ST-39) | `core/.../overlay/IslandMotionTest`, `core/.../settings/SettingsCodecTest` |
+| ui (UI-82) | `app/.../ui/common/StringsTest` |
 | notch-overlay (EN-16…EN-18), ui (UI-78…UI-81) | `app/.../engine/GestureEngineTest`, `app/.../ui/notch/NotchSettingsViewModelTest`, `app/.../ui/common/StringsTest` |
 
 ## 4. Checklist thủ công trước release

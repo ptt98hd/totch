@@ -1,0 +1,6 @@
+* Fixed leftover images at the notch after the Dynamic Island or touch effects.
+* Island: a ring lights around the notch, grows to the sides, then shrinks back.
+* Notification indicator merged into the island's New notifications activity.
+* Touch effects are easier to see on light and dark backgrounds.
+* Island activities are set in a dialog (tap the row when it is on).
+* Shorter descriptions, default Material sliders, tidier Auto-start row.

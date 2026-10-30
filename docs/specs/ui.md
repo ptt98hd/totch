@@ -26,6 +26,11 @@ Yêu cầu: FR-U1…FR-U42, FR-A20, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-
   dùng chung `TotchListItem`: cao tối thiểu `RowHeight` = 72 dp (bằng nhau dù có hay không có mô tả), icon trái 40 dp,
   tiêu đề và mô tả `maxLines = 1` + `TextOverflow.Ellipsis`. Thanh trượt (màn Notch) và dòng trong hộp thoại chọn không
   phải dòng danh sách.
+- **Mô tả ngắn** (v1.9.1, FR-U60): mọi chuỗi chỉ dùng làm mô tả (dòng phụ) — `*_summary`, `*_description` của dòng,
+  lý do không khả dụng (`needs_access`, `action_needs_*`, `gesture_unavailable`, `overlay_needs_*`), trạng thái Shizuku /
+  quyền / cập nhật hiện ở dòng — dài **≤ 30 ký tự** ở cả en và vi (với `%1$s` không tính phần tham số), để vừa một dòng
+  cạnh icon + switch trên màn 360 dp. Lý do không khả dụng đổi "Requires …" → "Needs …". Dòng phụ ghép có tên do người
+  dùng / app đặt (tên hành động, tên app) vẫn có thể bị "…" khi tên dài.
 - Chuỗi trong `strings.xml` (en) và `values-vi/strings.xml`.
 
 | ID | Tiêu chí |
@@ -35,6 +40,7 @@ Yêu cầu: FR-U1…FR-U42, FR-A20, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-
 | UI-43 | Chuyển tab: hướng trượt = dấu của (chỉ số tab đích − chỉ số tab nguồn) |
 | UI-44 | (v1.7) Top bar: bên phải đúng 2 nút — Check for updates (mở hộp thoại cập nhật, update §8) rồi Buy me a coffee (mở hộp thoại ủng hộ) |
 | UI-45 | (v1.7) Mọi dòng danh sách cao ≥ 72 dp, tiêu đề và mô tả một dòng (kiểm thủ công MT-U40) |
+| UI-82 | (v1.9.1, FR-U60) Các chuỗi mô tả ở trên dài ≤ 30 ký tự, en và vi (kiểm bằng `StringsTest`) |
 | UI-70 | (v1.8.1, FR-U49) `navLabels = false` → bottom bar không có nhãn; `true` → có nhãn (kiểm thủ công MT-U50) |
 
 ### Buy me a coffee (v1.7 — FR-U40, prototype)
@@ -103,7 +109,8 @@ development" / "Ủng hộ phát triển Totch", chevron (›).
   quyền Shizuku; còn lại → mở app Shizuku (hoặc trang web khi chưa cài).
   v1.8.2 (FR-U59): dưới Shizuku là dòng **Auto-start** / **Tự khởi chạy** (icon `RestartAlt`, mô tả "Let Totch run in
   the background" / "Cho Totch chạy nền", chevron) — chỉ hiện khi `OemSettings` tìm được trang của hãng
-  ([detection-modes §9](detection-modes.md)); bấm → mở trang đó.
+  ([detection-modes §9](detection-modes.md)); bấm → mở trang đó. v1.9.1 (FR-U62): icon trong **box tonal bo góc 40 dp**
+  như dòng Shizuku / quyền (thay icon tròn), mô tả "Let Totch run in background".
 - **Permissions**: mỗi dòng như thẻ Totch nhưng icon là **biểu tượng quyền** (box tonal), tên quyền, mô tả
   "Granted" / "Not granted", switch. Bật/tắt → `SystemStatus.setPermission` (qua Shizuku); trả về false → mở trang
   hệ thống (Notifications khi chưa hỏi lần nào → hộp thoại runtime).
@@ -147,8 +154,8 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
     nguyên. Switch không bao giờ mở picker.
 - v1.3: bỏ nút **Lặp lại** (FR-G11).
 - Swipe down, Swipe down & hold bị vô hiệu (mờ, không bấm được, switch **tắt** + disabled) với nhãn "Cần quyền Trợ năng
-  (bật ở Home)" khi Trợ năng **chưa** bật; Trợ năng đang bật → dùng như mọi cử chỉ khác (v1.5, FR-G14).
-- v1.8 (FR-U44): không có Trợ năng lẫn Shizuku → **mọi** cử chỉ vô hiệu như trên, nhãn "Requires Accessibility or
+  (bật ở Home)" (v1.9.1: "Turn on Accessibility in Home" / "Bật Trợ năng ở Trang chủ") khi Trợ năng **chưa** bật; Trợ năng đang bật → dùng như mọi cử chỉ khác (v1.5, FR-G14).
+- v1.8 (FR-U44): không có Trợ năng lẫn Shizuku → **mọi** cử chỉ vô hiệu như trên, nhãn "Needs Accessibility or
   Shizuku" / "Cần Trợ năng hoặc Shizuku". Cử chỉ có hành động đã gán mà hành động không khả dụng (`Capabilities.need`,
   bảng dưới) → switch **tắt** + disabled, mô tả "<hành động> · <lý do>" màu lỗi; dòng vẫn chạm được để mở picker chọn
   hành động khác.
@@ -190,7 +197,7 @@ mục mới như Intents, Settings… mà nhãn không bị hẹp lại).~~ Nộ
 
 | Mục | Nội dung |
 |---|---|
-| Basic (v1.8.1, FR-U46: trước là System; en **Basic**, vi **Cơ bản**, icon `Category`) | v1.6.3 (FR-U34, FR-U35): ô tìm kiếm như tab Applications, rồi 6 nhóm (bảng dưới). ~~Không có "Không làm gì".~~ v1.8 (FR-U43): dòng **Not set** / **Chưa đặt** (icon `Block`, một card riêng không tiêu đề) ở đầu danh sách, ẩn khi query không khớp tên của nó. Hành động âm thanh (trừ âm lượng) có dòng phụ "Requires Do Not Disturb access" khi chưa có quyền (FR-A18) |
+| Basic (v1.8.1, FR-U46: trước là System; en **Basic**, vi **Cơ bản**, icon `Category`) | v1.6.3 (FR-U34, FR-U35): ô tìm kiếm như tab Applications, rồi 6 nhóm (bảng dưới). ~~Không có "Không làm gì".~~ v1.8 (FR-U43): dòng **Not set** / **Chưa đặt** (icon `Block`, một card riêng không tiêu đề) ở đầu danh sách, ẩn khi query không khớp tên của nó. Hành động âm thanh (trừ âm lượng) có dòng phụ "Needs Do Not Disturb access" khi chưa có quyền (FR-A18) |
 | Applications | Ô tìm kiếm + danh sách app (icon, tên, radio) |
 
 **Ô tìm kiếm + loại hành động** (v1.8.2, FR-U58 — thay ô chọn tab của FR-U47 và ô tìm kiếm riêng của từng tab):
@@ -212,8 +219,8 @@ một ô duy nhất dưới hàng tiêu đề, cao 48 dp, bo tròn hoàn toàn, 
 ~~Ô tìm kiếm (v1.7, FR-U38):~~ (v1.7, FR-U38 — thay ở v1.8.2:) `CompactSearchField` cao 44 dp (thay `SearchBar` 56 dp), bo tròn hoàn toàn, nền
 `surfaceContainerHigh`, icon kính lúp 20 dp, nút xóa khi có chữ, bàn phím `ImeAction.Search` (bấm → ẩn bàn phím).
 
-Hành động chỉ chạy qua Shizuku (v1.7, FR-A20 — actions §14) có dòng phụ "Requires Shizuku" / "Cần Shizuku" khi Shizuku
-chưa sẵn sàng; ở tab Tiles dòng phụ thành "<tên app> · Requires Shizuku".
+Hành động chỉ chạy qua Shizuku (v1.7, FR-A20 — actions §14) có dòng phụ "Needs Shizuku" / "Cần Shizuku" khi Shizuku
+chưa sẵn sàng; ở tab Tiles dòng phụ thành "<tên app> · Needs Shizuku".
 
 Khả dụng (v1.8, FR-U44 — `Capabilities` từ `Requirements`: `accessibility`, `shizuku` = running && granted,
 `dndAccess`). `Capabilities.need(action)`:
@@ -221,10 +228,10 @@ Khả dụng (v1.8, FR-U44 — `Capabilities` từ `Requirements`: `accessibilit
 | Hành động (`ActionRequirements.of`) | Không khả dụng khi | `Need` | Lý do (en / vi) |
 |---|---|---|---|
 | `None` | không bao giờ | — | — |
-| LOCAL, trong `ActionCatalog.needsDndAccess` | `!dndAccess` | `DND` | Requires Do Not Disturb access / Cần quyền Không làm phiền |
+| LOCAL, trong `ActionCatalog.needsDndAccess` | `!dndAccess` | `DND` | Needs Do Not Disturb access / Cần quyền Không làm phiền |
 | LOCAL khác | không bao giờ | — | — |
-| {ACCESSIBILITY, SHIZUKU} (điều hướng, khóa, chụp, mở app / shortcut / activity…) | `!accessibility && !shizuku` | `ACCESS` | Requires Accessibility or Shizuku / Cần Trợ năng hoặc Shizuku |
-| {SHIZUKU} (FR-A20) | `!shizuku` | `SHIZUKU` | Requires Shizuku / Cần Shizuku |
+| {ACCESSIBILITY, SHIZUKU} (điều hướng, khóa, chụp, mở app / shortcut / activity…) | `!accessibility && !shizuku` | `ACCESS` | Needs Accessibility or Shizuku / Cần Trợ năng hoặc Shizuku |
+| {SHIZUKU} (FR-A20) | `!shizuku` | `SHIZUKU` | Needs Shizuku / Cần Shizuku |
 
 Dòng không khả dụng ở mọi tab: **vô hiệu** (mờ 38%, radio disabled, không chọn được), dòng phụ = lý do (tab Tiles:
 "<tên app> · <lý do>"). `select(action)` bỏ qua hành động không khả dụng.
@@ -290,7 +297,11 @@ chuyển sang Settings, bỏ section Phản hồi):
 
 v1.6 (FR-U28): các slider trong một section ngăn bằng `RowDivider` (thụt lề hai bên như Settings).
 
-v1.8.2 (FR-U57): `TotchSlider` dùng **track mặc định của Material 3** (`SliderDefaults.Track`: cao 16 dp, khe 6 dp quanh
+v1.9.1 (FR-U61): `TotchSlider` = `Slider` của Material 3 với **nút kéo và track mặc định** (`SliderDefaults.Thumb`,
+`SliderDefaults.Track`), không tùy biến; vẫn là component chung của mọi thanh trượt. Thay mô tả v1.8.2 và v1.8.1 dưới
+đây.
+
+~~v1.8.2 (FR-U57):~~ `TotchSlider` dùng **track mặc định của Material 3** (`SliderDefaults.Track`: cao 16 dp, khe 6 dp quanh
 nút kéo, chấm dừng ở cuối) và nút kéo **hình tròn** 24 dp màu `primary` (20 dp khi đang kéo / nhấn, như nút kéo M3 thu
 hẹp khi kéo), không bóng. Thay mô tả v1.8.1 dưới đây.
 
@@ -331,6 +342,8 @@ Giá trị đã lưu lệch nấc (vd. vùng tự phát hiện rộng 87 dp) v�
 | UI-34 | Setter độ nhạy / padding lưu đúng field (kẹp bởi repository) |
 | UI-35 | `snapToStep(v, range, step)` = `round(v/step)·step`, kẹp trong `range` (hai đầu thang luôn chọn được, vd. padding 1, 5, 10) |
 | UI-36 | `stepBy(v, delta, range)` = `v + delta` kẹp trong `range` |
+
+v1.9.1 (FR-U63): dòng Dynamic Island + hộp thoại hoạt động — [notch-overlay §6](notch-overlay.md).
 
 v1.9 (FR-O7): section **Hiệu ứng** ở đầu màn — xem [notch-overlay §6](notch-overlay.md) (UI-78…UI-81).
 

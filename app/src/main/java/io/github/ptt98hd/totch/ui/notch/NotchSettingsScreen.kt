@@ -2,7 +2,7 @@ package io.github.ptt98hd.totch.ui.notch
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -12,7 +12,10 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.SmartButton
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,7 +59,6 @@ data class NotchSettingsActions(
     val onReset: (NotchSetting) -> Unit = {},
     /** Unsaved settings while a touch-area slider is dragged (for the live highlight); null when done. */
     val onDraft: (Settings?) -> Unit = {},
-    val onNotificationIndicator: (Boolean) -> Unit = {},
     val onIsland: (Boolean) -> Unit = {},
     val onIslandActivity: (IslandActivity, Boolean) -> Unit = { _, _ -> },
     val onTouchEffects: (Boolean) -> Unit = {},
@@ -90,7 +93,6 @@ fun NotchSettingsRoute(container: AppContainer) {
             onArea = vm::setArea,
             onReset = vm::reset,
             onDraft = { draft = it },
-            onNotificationIndicator = vm::setNotificationIndicator,
             onIsland = vm::setIsland,
             onIslandActivity = vm::setIslandActivity,
             onTouchEffects = vm::setTouchEffects,
@@ -231,7 +233,10 @@ private data class IslandRow(
 
 private val islandRows = listOf(
     IslandRow(IslandActivity.MEDIA, OverlayFeature.ISLAND_MEDIA, Icons.Outlined.MusicNote, R.string.setting_island_media),
-    IslandRow(IslandActivity.NOTIFICATIONS, OverlayFeature.ISLAND_NOTIFICATIONS, Icons.Outlined.Notifications, R.string.setting_island_notifications),
+    IslandRow(
+        IslandActivity.NOTIFICATIONS, OverlayFeature.ISLAND_NOTIFICATIONS, Icons.Outlined.Notifications,
+        R.string.setting_island_notifications, R.string.setting_island_notifications_summary, // FR-O12
+    ),
     IslandRow(IslandActivity.CHARGING, OverlayFeature.ISLAND_CHARGING, Icons.Outlined.Bolt, R.string.setting_island_charging),
     IslandRow(
         IslandActivity.SOUND, OverlayFeature.ISLAND_SOUND, Icons.AutoMirrored.Outlined.VolumeUp,
@@ -239,7 +244,7 @@ private val islandRows = listOf(
     ),
 )
 
-/** notch-overlay §6: indicator, Dynamic Island (with its activities) and touch effects. */
+/** notch-overlay §6: Dynamic Island (its activities in a dialog, FR-U63; the indicator is one of them, FR-O12) and touch effects. */
 @Composable
 private fun EffectsSection(state: NotchSettingsUiState, actions: NotchSettingsActions) {
     val s = state.settings
@@ -252,30 +257,35 @@ private fun EffectsSection(state: NotchSettingsUiState, actions: NotchSettingsAc
         }
 
     SettingsSection(stringResource(R.string.section_effects)) {
-        val (indicatorSummary, indicatorError) = summary(OverlayFeature.INDICATOR, R.string.setting_indicator_summary)
-        SwitchRow(
-            stringResource(R.string.setting_indicator), s.notificationIndicator, actions.onNotificationIndicator,
-            icon = Icons.Outlined.NotificationsActive, summary = indicatorSummary, error = indicatorError,
-        )
-        RowDivider()
         val (islandSummary, islandError) = summary(OverlayFeature.ISLAND, R.string.setting_island_summary)
+        var islandDialog by remember { mutableStateOf(false) }
         SwitchRow(
             stringResource(R.string.setting_island), s.island, actions.onIsland,
             icon = Icons.Outlined.SmartButton, summary = islandSummary, error = islandError,
+            onClick = if (s.island) ({ islandDialog = true }) else null, // FR-U63
         )
-        if (s.island) {
-            islandRows.forEach { row ->
-                val (rowSummary, rowError) = summary(row.feature, row.summary)
-                SwitchRow(
-                    stringResource(row.title),
-                    row.activity in s.islandActivities,
-                    { actions.onIslandActivity(row.activity, it) },
-                    icon = row.icon,
-                    summary = rowSummary,
-                    error = rowError,
-                    modifier = Modifier.padding(start = 24.dp),
-                )
-            }
+        if (islandDialog && s.island) {
+            AlertDialog(
+                onDismissRequest = { islandDialog = false },
+                title = { Text(stringResource(R.string.setting_island)) },
+                text = {
+                    Column {
+                        islandRows.forEach { row ->
+                            val (rowSummary, rowError) = summary(row.feature, row.summary)
+                            SwitchRow(
+                                stringResource(row.title),
+                                row.activity in s.islandActivities,
+                                { actions.onIslandActivity(row.activity, it) },
+                                icon = row.icon,
+                                summary = rowSummary,
+                                error = rowError,
+                                containerColor = Color.Transparent,
+                            )
+                        }
+                    }
+                },
+                confirmButton = { TextButton(onClick = { islandDialog = false }) { Text(stringResource(R.string.done)) } },
+            )
         }
         RowDivider()
         val (effectsSummary, effectsError) = summary(OverlayFeature.TOUCH_EFFECTS, R.string.setting_touch_effects_summary)

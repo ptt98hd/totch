@@ -33,7 +33,7 @@ class TouchEffectTest {
 }
 
 class OverlayVisibilityTest {
-    private val on = Settings(enabled = true, notificationIndicator = true)
+    private val on = Settings(enabled = true, island = true)
 
     private fun visible(s: Settings = on, a11y: Boolean = true, rotation: Int = 0, statusBar: Boolean = true) =
         overlayVisible(s, a11y, rotation, statusBar)
@@ -48,7 +48,6 @@ class OverlayVisibilityTest {
 
     @Test fun `OV-5 any feature on`() {
         assertTrue(visible())
-        assertTrue(visible(Settings(enabled = true, island = true)))
         assertTrue(visible(Settings(enabled = true, touchEffects = true)))
         assertFalse(visible(Settings(enabled = true)))
     }
