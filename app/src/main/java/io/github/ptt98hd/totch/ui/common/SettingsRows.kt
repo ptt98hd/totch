@@ -58,14 +58,22 @@ fun SwitchRow(
     /** The summary is a reason in the error color (UI-80). */
     error: Boolean = false,
     modifier: Modifier = Modifier,
+    /** Set → tapping the row runs this and only the switch toggles (FR-U63). */
+    onClick: (() -> Unit)? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
     TotchListItem(
         headline = title,
-        modifier = modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
+        modifier = if (onClick != null) {
+            modifier.clickable(onClick = onClick)
+        } else {
+            modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+        },
         supporting = summary,
         supportingColor = if (error) MaterialTheme.colorScheme.error else Color.Unspecified,
         leading = icon?.let { { TonalIcon(it) } },
-        trailing = { TotchSwitch(checked = checked, onCheckedChange = null) },
+        trailing = { TotchSwitch(checked = checked, onCheckedChange = if (onClick != null) onCheckedChange else null) },
+        containerColor = containerColor,
     )
 }
 

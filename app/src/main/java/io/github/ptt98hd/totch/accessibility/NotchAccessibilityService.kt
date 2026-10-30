@@ -16,6 +16,7 @@ import android.view.accessibility.AccessibilityEvent
 import io.github.ptt98hd.totch.EngineStatus
 import io.github.ptt98hd.totch.TotchApp
 import io.github.ptt98hd.totch.core.model.Rect
+import io.github.ptt98hd.totch.core.overlay.IslandActivity
 import io.github.ptt98hd.totch.core.overlay.IslandContent
 import io.github.ptt98hd.totch.core.overlay.IslandHit
 import io.github.ptt98hd.totch.core.overlay.IslandLayout
@@ -23,6 +24,7 @@ import io.github.ptt98hd.totch.core.overlay.IslandMetrics
 import io.github.ptt98hd.totch.core.overlay.IslandTap
 import io.github.ptt98hd.totch.core.overlay.overlayVisible
 import io.github.ptt98hd.totch.core.model.TouchEvent
+import io.github.ptt98hd.totch.core.settings.activeIslandActivities
 import io.github.ptt98hd.totch.core.settings.needsTouchBlocking
 import io.github.ptt98hd.totch.engine.TouchSource
 import io.github.ptt98hd.totch.overlay.NotchOverlayWindow
@@ -60,7 +62,11 @@ class NotchAccessibilityService : AccessibilityService() {
         // notch-overlay §1: the drawing window, while a feature is on (OV-1…OV-5; OV-4 is checked inside).
         val frames = combine(platform.settingsRepository.settings, platform.touchArea.area, platform.display.state) { s, area, d ->
             area?.takeIf { overlayVisible(s, accessibility = true, rotation = d.rotation, statusBarVisible = true) }?.let {
-                OverlayFrame(it.notch, IslandMetrics(d.widthPx, d.density), s.notificationIndicator, s.island, s.touchEffects, s.longPressMs)
+                OverlayFrame(
+                    it.notch, IslandMetrics(d.widthPx, d.density),
+                    indicator = IslandActivity.NOTIFICATIONS in s.activeIslandActivities(), // FR-O12
+                    island = s.island, touchEffects = s.touchEffects, longPressMs = s.longPressMs,
+                )
             }
         }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, null)
         scope.launch { frames.collect(visuals::update) }

@@ -366,7 +366,7 @@ rung phản hồi của cử chỉ là xác nhận.
 
 Từ v1.7 Shizuku là tùy chọn (FR-D13), nên picker báo trước hành động nào không chạy được khi thiếu Shizuku: hành động
 có `ActionRequirements.of(a) == {SHIZUKU}` (§1) — `ClickTile`, `OneHandedMode`, độ sáng, tự xoay và kết nối. Dòng của
-hành động đó có mô tả "Requires Shizuku" / "Cần Shizuku" khi Shizuku chưa sẵn sàng (đang chạy **và** đã cấp quyền).
+hành động đó có mô tả "Needs Shizuku" / "Cần Shizuku" khi Shizuku chưa sẵn sàng (đang chạy **và** đã cấp quyền).
 Vẫn chọn được (người dùng có thể bật Shizuku sau); khi chạy mà thiếu Shizuku, dispatcher báo lỗi như cũ (FR-A9).
 
 | ID | Tiêu chí |

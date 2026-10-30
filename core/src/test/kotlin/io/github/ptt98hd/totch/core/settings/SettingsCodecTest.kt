@@ -280,7 +280,6 @@ class SettingsCodecTest {
 
     @Test fun `ST-37 overlay features default off and round trip`() {
         val d = Settings()
-        assertFalse(d.notificationIndicator)
         assertFalse(d.island)
         assertFalse(d.touchEffects)
         assertEquals(IslandActivity.entries.toSet(), d.islandActivities)
@@ -288,12 +287,24 @@ class SettingsCodecTest {
         val s = Settings(
             island = true,
             islandActivities = setOf(IslandActivity.MEDIA, IslandActivity.SOUND),
-            notificationIndicator = true,
             touchEffects = true,
         )
         assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
         val json = SettingsCodec.encode(s)
         assertTrue(""""media"""" in json && """"sound"""" in json, json)
+        assertFalse("notificationIndicator" in json, json)
+    }
+
+    @Test fun `ST-39 the 1_9_0 indicator becomes the notifications activity`() {
+        val alone = SettingsCodec.decode("""{"notificationIndicator":true}""")
+        assertTrue(alone.island)
+        assertEquals(setOf(IslandActivity.NOTIFICATIONS), alone.islandActivities)
+        val withIsland = SettingsCodec.decode("""{"notificationIndicator":true,"island":true,"islandActivities":["media"]}""")
+        assertTrue(withIsland.island)
+        assertEquals(setOf(IslandActivity.MEDIA, IslandActivity.NOTIFICATIONS), withIsland.islandActivities)
+        val off = SettingsCodec.decode("""{"notificationIndicator":false,"islandActivities":["media"]}""")
+        assertFalse(off.island)
+        assertEquals(setOf(IslandActivity.MEDIA), off.islandActivities)
     }
 
     @Test fun `ST-38 active island activities`() {

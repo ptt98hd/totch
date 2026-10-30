@@ -110,13 +110,11 @@ class NotchSettingsViewModelTest {
     fun `UI-78 overlay switches are persisted`() = runTest {
         val repo = FakeSettingsRepository(custom)
         val vm = NotchSettingsViewModel(repo, FakeTouchArea())
-        vm.setNotificationIndicator(true)
         vm.setIsland(true)
         vm.setIslandActivity(IslandActivity.CHARGING, false)
         vm.setTouchEffects(true)
         assertEquals(
             custom.copy(
-                notificationIndicator = true,
                 island = true,
                 islandActivities = IslandActivity.entries.toSet() - IslandActivity.CHARGING,
                 touchEffects = true,
@@ -147,7 +145,7 @@ class NotchSettingsViewModelTest {
             OverlayFeature.entries.forEach { assertEquals(OverlayIssue.ACCESSIBILITY, none.overlayIssue(it), "$it") }
             requirements.value = Requirements(accessibilityEnabled = true)
             val a11y = expectMostRecentItem()
-            val needsAccess = setOf(OverlayFeature.INDICATOR, OverlayFeature.ISLAND_MEDIA, OverlayFeature.ISLAND_NOTIFICATIONS)
+            val needsAccess = setOf(OverlayFeature.ISLAND_MEDIA, OverlayFeature.ISLAND_NOTIFICATIONS)
             OverlayFeature.entries.forEach {
                 assertEquals(if (it in needsAccess) OverlayIssue.NOTIFICATION_ACCESS else null, a11y.overlayIssue(it), "$it")
             }

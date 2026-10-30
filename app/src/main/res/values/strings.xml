@@ -55,7 +55,7 @@
     <string name="group_swipe">Swipe</string>
     <string name="group_swipe_hold">Swipe &amp; hold</string>
     <string name="gesture_switch_cd">%1$s on or off</string>
-    <string name="gesture_unavailable">Requires Accessibility (turn it on in Home)</string>
+    <string name="gesture_unavailable">Turn on Accessibility in Home</string>
     <string name="action_none">Nothing</string>
     <string name="action_back">Back</string>
     <string name="action_home">Home</string>
@@ -92,10 +92,10 @@
     <string name="action_mobile_data">Toggle mobile data</string>
     <string name="action_airplane">Toggle airplane mode</string>
     <string name="action_location">Toggle location</string>
-    <string name="action_needs_dnd">Requires Do Not Disturb access</string>
-    <string name="needs_access">Requires Accessibility or Shizuku</string>
-    <string name="action_needs_shizuku">Requires Shizuku</string>
-    <string name="tile_needs_shizuku">%1$s · Requires Shizuku</string>
+    <string name="action_needs_dnd">Needs Do Not Disturb access</string>
+    <string name="needs_access">Needs Accessibility or Shizuku</string>
+    <string name="action_needs_shizuku">Needs Shizuku</string>
+    <string name="tile_needs_shizuku">%1$s · Needs Shizuku</string>
     <string name="app_not_installed">Not installed</string>
     <string name="group_system">System</string>
     <string name="group_media">Media</string>
@@ -160,13 +160,13 @@
     <string name="setting_landscape">Gestures in landscape</string>
     <string name="setting_start_on_boot_summary">Turn gestures on after restart</string>
     <string name="setting_haptics_summary">Vibrate when a gesture runs</string>
-    <string name="setting_landscape_summary">Keep the notch active when rotated</string>
+    <string name="setting_landscape_summary">Keep working when rotated</string>
     <string name="section_about">About</string>
 
     <!-- About (last section of Settings) -->
     <string name="about_version">Version %1$s</string>
     <string name="update_title">Check for updates</string>
-    <string name="update_idle">Get the latest version from GitHub</string>
+    <string name="update_idle">Latest version from GitHub</string>
     <string name="update_checking">Checking…</string>
     <string name="update_up_to_date">You have the latest version</string>
     <string name="update_available">Version %1$s is available</string>
@@ -207,6 +207,7 @@
     <string name="update_retry">Retry</string>
     <string name="update_new_badge_cd">New version available</string>
     <string name="ok">OK</string>
+    <string name="done">Done</string>
     <string name="close">Close</string>
 
     <!-- v1.7: Buy me a coffee (prototype, FR-U40) -->
@@ -219,7 +220,7 @@
     <string name="donate_url" translatable="false">https://buymeacoffee.com/ptt98hd</string>
     <!-- v1.8.1 -->
     <string name="setting_nav_labels">Show navigation labels</string>
-    <string name="setting_nav_labels_summary">Text under the bottom bar icons</string>
+    <string name="setting_nav_labels_summary">Text under bottom bar icons</string>
     <string name="update_version_change" translatable="false">%1$s → %2$s</string>
     <string name="update_whats_new">What’s new</string>
     <!-- v1.8.2 -->
@@ -227,7 +228,7 @@
     <string name="picker_type_cd">Action type: %1$s</string>
     <string name="permission_keep_unused">Keep when unused</string>
     <string name="autostart_title">Auto-start</string>
-    <string name="autostart_description">Let Totch run in the background</string>
+    <string name="autostart_description">Let Totch run in background</string>
 
     <!-- v1.8.3: Settings pages, intents, contacts (FR-A21…FR-A23) -->
     <string name="tab_settings">Settings</string>
@@ -297,19 +298,18 @@
     <string name="settings_page_panel_volume">Volume panel</string>
     <!-- Notch overlay (FR-O1…FR-O8) -->
     <string name="section_effects">Effects</string>
-    <string name="setting_indicator">Notification indicator</string>
-    <string name="setting_indicator_summary">The notch border glows while notifications are unseen</string>
     <string name="setting_island">Dynamic Island</string>
-    <string name="setting_island_summary">Shows activities around the notch</string>
+    <string name="setting_island_summary">Activities around the notch</string>
     <string name="setting_island_media">Now playing</string>
     <string name="setting_island_notifications">New notifications</string>
+    <string name="setting_island_notifications_summary">Ring glows until seen</string>
     <string name="setting_island_charging">Charging</string>
     <string name="setting_island_sound">Sound</string>
     <string name="setting_island_sound_summary">Sound mode and volume</string>
     <string name="setting_touch_effects">Touch effects</string>
-    <string name="setting_touch_effects_summary">Ripple, glow and bounce when you touch the notch</string>
+    <string name="setting_touch_effects_summary">Ripple and bounce on touch</string>
     <string name="overlay_needs_accessibility">Needs Accessibility</string>
-    <string name="overlay_needs_notification_access">Needs Media &amp; notifications access</string>
+    <string name="overlay_needs_notification_access">Needs Media &amp; notifications</string>
     <string name="island_sound_ring">Ring</string>
     <string name="island_sound_vibrate">Vibrate</string>
     <string name="island_sound_silent">Silent</string>

@@ -84,13 +84,13 @@ sealed interface UpdateState {
 
 | Trạng thái | Mô tả dòng Check for updates (en / vi) |
 |---|---|
-| Idle | Get the latest version from GitHub / Tải bản mới nhất từ GitHub |
+| Idle | Latest version from GitHub / Bản mới nhất từ GitHub (v1.9.1, FR-U60) |
 | Checking | Checking… / Đang kiểm tra… |
 | UpToDate | You have the latest version / Bạn đang dùng bản mới nhất |
 | Available | Version X.Y.Z is available / Đã có bản X.Y.Z |
 | Downloading | Downloading… N% / Đang tải… N% |
 | Installing | Confirm to install / Xác nhận để cài đặt |
-| Failed | Couldn't update, tap to retry / Không cập nhật được, chạm để thử lại |
+| Failed | Couldn’t update, tap to retry / Lỗi cập nhật, chạm để thử lại (v1.9.1) |
 
 | ID | Tiêu chí |
 |---|---|

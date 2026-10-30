@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), v1.8.3 (§21), **v1.9** (§22) · Cập nhật: 2026-10-30
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), v1.8.3 (§21), v1.9 (§22), **v1.9.1** (§23) · Cập nhật: 2026-10-30
 
 ## 1. Tầm nhìn
 
@@ -319,3 +319,16 @@ tham chiếu ID tương ứng.
 | FR-O6 | **Hiệu ứng chạm**: chạm notch → gợn sóng sáng + viền sáng theo tiến độ nhấn giữ, nháy khi nhận cử chỉ, vệt sáng theo hướng vuốt; viên đen quanh notch co giãn (spring) | [notch-overlay §4](specs/notch-overlay.md) |
 | FR-O7 | Ba tính năng trên có công tắc riêng ở màn **Notch** › **Hiệu ứng**, mặc định tắt; cần **Trợ năng** (overlay vẽ trên status bar). Báo thông báo, island media / thông báo cần quyền truy cập thông báo — dòng Home › Permissions "Media control" đổi thành **Media & notifications**. Totch chỉ đọc **metadata** thông báo (gói, thời điểm, cờ, mức quan trọng, màu), không đọc tiêu đề / nội dung, không lưu. Không vẽ khi xoay ngang hoặc app toàn màn hình | [notch-overlay §1, §5, §6](specs/notch-overlay.md) |
 | FR-O8 | Trợ năng nhận sự kiện `TYPE_WINDOW_STATE_CHANGED` **chỉ của System UI** để biết thanh thông báo đã mở (FR-O1); vẫn không đọc nội dung cửa sổ | [notch-overlay §2](specs/notch-overlay.md) |
+
+## 23. Phiên bản 1.9.1
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-O9 | **Sửa lỗi lưu ảnh**: sau khi Dynamic Island / hiệu ứng chạm kết thúc, vùng notch phải trong suốt hoàn toàn — không còn sót icon, viên đen, viền hay gợn sóng | [notch-overlay §1](specs/notch-overlay.md) |
+| FR-O10 | Hiệu ứng chạm **rõ ở cả nền sáng lẫn tối**: mỗi nét vẽ hai lớp — lõi sáng và quầng tối bao ngoài. Sửa FR-O6 phần màu | [notch-overlay §4](specs/notch-overlay.md) |
+| FR-O11 | Dynamic Island và Báo thông báo chuyển động theo trình tự: **vòng sáng hiện quanh notch** → viên **giãn ra hai bên** → **thu lại** về notch → vòng sáng tắt; vòng sáng hiện **suốt** từ đầu đến cuối. ~~Thông báo mới khi island không hiện gì → Báo thông báo cũng bung ra một nhịp~~ (thay bằng FR-O12) | [notch-overlay §3.5](specs/notch-overlay.md) |
+| FR-O12 | **Gộp Báo thông báo vào Dynamic Island**: bỏ công tắc Báo thông báo riêng; hoạt động **Thông báo mới** của island gồm cả hai — thông báo mới → island bung ra với icon app (vòng sáng màu app), thu lại, rồi **vòng sáng nhịp thở quanh notch** tới khi xem. Cấu hình cũ: đang bật Báo thông báo → bật island với hoạt động Thông báo (thêm vào danh sách nếu island đã bật). Sửa FR-O1, FR-O3, FR-O7 | [notch-overlay §2, §5, §6](specs/notch-overlay.md) |
+| FR-U60 | Mọi **mô tả** (dòng phụ của hàng cài đặt / quyền / cử chỉ) đủ ngắn để **không bị cắt chữ**: tối đa 30 ký tự, cả tiếng Anh và tiếng Việt | [ui §1](specs/ui.md) |
+| FR-U61 | Thanh trượt dùng **nút kéo mặc định của Material 3** (không tùy biến). Thay FR-U53 và phần nút kéo của FR-U57 | [ui §3](specs/ui.md) |
+| FR-U62 | Home › Nâng cao: dòng **Auto-start** hiển thị **đồng nhất** với các dòng khác trong Home (icon trong ô vuông bo góc 40 dp như Shizuku / quyền), giữ mũi tên mở trang | [ui §3](specs/ui.md) |
+| FR-U63 | Notch › Hiệu ứng: dòng **Dynamic Island** giữ switch; bỏ 4 dòng con. Khi island **đang bật**, chạm vào dòng (ngoài switch) → **hộp thoại** bật/tắt từng hoạt động (Media, Thông báo, Sạc pin, Âm thanh); khi tắt, chạm dòng = bật | [notch-overlay §6](specs/notch-overlay.md) |

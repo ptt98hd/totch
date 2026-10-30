@@ -210,7 +210,7 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | ID | Kịch bản | Kỳ vọng | KQ |
 |---|---|---|---|
 | MT-A1 | Bật Trợ năng, gán Swipe down → Thông báo, vuốt xuống tại notch | Dòng Swipe down bấm được; vuốt xuống tại notch **không** kéo thanh thông báo của hệ thống mà chạy hành động đúng 1 lần; vuốt xuống ngoài notch vẫn kéo thanh thông báo | [ ] |
-| MT-A2 | Tắt Trợ năng | Swipe down / Swipe down & hold mờ lại, nhãn "Requires Accessibility"; vuốt xuống ở notch kéo thanh thông báo như cũ | [ ] |
+| MT-A2 | Tắt Trợ năng | Swipe down / Swipe down & hold mờ lại, nhãn "Turn on Accessibility in Home"; vuốt xuống ở notch kéo thanh thông báo như cũ | [ ] |
 | MT-A3 | Tắt switch Thông báo ở Home (13+, Shizuku sẵn sàng) | Hộp thoại xác nhận; đồng ý → Totch đóng rồi tự mở lại sau ~1 s, quyền Thông báo "Not granted", cử chỉ vẫn chạy | [ ] |
 | MT-A4 | Picker tab Activities | App thu gọn; mở rộng → activity (nhãn + tên lớp); chọn một activity → cử chỉ mở đúng activity (cả khi chỉ có Shizuku, và khi có Trợ năng) | [ ] |
 | MT-A5 | Settings | System đầu tiên (Haptic feedback, Gestures in landscape, Start on boot), rồi Appearance, About; mọi dòng có icon, có đường kẻ giữa các dòng; tab Notch không còn Feedback | [ ] |
@@ -367,6 +367,19 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-O9 | Bật Hiệu ứng chạm; chạm, giữ, vuốt trái/phải/xuống tại notch | Gợn sóng, viền sáng dần khi giữ, nháy khi chạm, vệt sáng theo hướng vuốt; viên đen phình rồi nảy về; cử chỉ vẫn chạy như cũ | [ ] |
 | MT-O10 | Video toàn màn hình / game; xoay ngang | Không vẽ island / viền | [ ] |
 | MT-O11 | Chỉ Shizuku (Trợ năng tắt) | Không có overlay, cử chỉ vẫn chạy | [ ] |
+
+## 21. v1.9.1
+
+| ID | Bước | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-O12 | Bật island + hiệu ứng chạm; cắm sạc, đổi âm lượng, chạm / vuốt notch nhiều lần; chờ kết thúc | Vùng notch trong suốt hoàn toàn: không sót icon, viên đen, viền, gợn sóng (FR-O9) | [ ] |
+| MT-O13 | Cắm sạc / nhận thông báo khi island bật | Vòng sáng hiện quanh notch → viên giãn hai bên → nội dung → thu về notch → vòng sáng tắt; vòng sáng hiện suốt (FR-O11) | [ ] |
+| MT-O14 | Island bật với Thông báo mới; nhận tin nhắn; cập nhật từ 1.9.0 với Báo thông báo đang bật | Island bung icon app rồi thu lại, viền nhịp thở tới khi kéo thanh thông báo (FR-O12); không còn dòng Báo thông báo; cấu hình cũ → island bật với Thông báo mới | [ ] |
+| MT-O15 | Hiệu ứng chạm trên app nền trắng (Cài đặt, light mode) và nền đen (dark mode) | Gợn sóng, viền, vệt sáng đều nhìn rõ (FR-O10) | [ ] |
+| MT-U60 | Duyệt Home, Gestures, Notch, Settings (en và vi, màn 360 dp) | Không mô tả nào bị "…" (trừ tên app / hành động dài) | [ ] |
+| MT-U61 | Kéo các thanh trượt màn Notch | Nút kéo mặc định Material 3 | [ ] |
+| MT-U62 | Home › Nâng cao trên máy có Tự khởi chạy | Icon trong ô vuông bo góc như Shizuku | [ ] |
+| MT-U63 | Notch › Hiệu ứng: island tắt → chạm dòng; island bật → chạm dòng; tắt hết hoạt động trong hộp thoại | Tắt: chạm = bật. Bật: mở hộp thoại 4 switch. Tắt hoạt động cuối → island tắt, hộp thoại đóng | [ ] |
 
 ## Lịch sử kết quả
 

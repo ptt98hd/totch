@@ -48,13 +48,13 @@ fun NotchSetting.reset(s: Settings, auto: ManualRegionDp): Settings = when (this
 fun NotchSetting.isDefault(s: Settings, auto: ManualRegionDp): Boolean = reset(s, auto) == s
 
 /** A switch of the Effects section (notch-overlay §6). */
-enum class OverlayFeature { INDICATOR, ISLAND, ISLAND_MEDIA, ISLAND_NOTIFICATIONS, ISLAND_CHARGING, ISLAND_SOUND, TOUCH_EFFECTS }
+enum class OverlayFeature { ISLAND, ISLAND_MEDIA, ISLAND_NOTIFICATIONS, ISLAND_CHARGING, ISLAND_SOUND, TOUCH_EFFECTS }
 
 /** Why an overlay feature cannot show yet (UI-80). */
 enum class OverlayIssue { ACCESSIBILITY, NOTIFICATION_ACCESS }
 
 private val needsNotificationAccess =
-    setOf(OverlayFeature.INDICATOR, OverlayFeature.ISLAND_MEDIA, OverlayFeature.ISLAND_NOTIFICATIONS)
+    setOf(OverlayFeature.ISLAND_MEDIA, OverlayFeature.ISLAND_NOTIFICATIONS)
 
 data class NotchSettingsUiState(
     val loading: Boolean = true,
@@ -104,7 +104,6 @@ class NotchSettingsViewModel(
         save { it.copy(manualRegion = region.takeUnless { r -> r == auto }) }
     }
 
-    fun setNotificationIndicator(on: Boolean) = save { it.copy(notificationIndicator = on) }
     fun setTouchEffects(on: Boolean) = save { it.copy(touchEffects = on) }
 
     /** UI-79: an island without activities (old data) comes back with all of them. */

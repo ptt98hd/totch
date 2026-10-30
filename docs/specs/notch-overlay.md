@@ -1,4 +1,4 @@
-# Spec: Lớp hiển thị quanh notch (v1.9 — FR-O1…FR-O8)
+# Spec: Lớp hiển thị quanh notch (v1.9 — FR-O1…FR-O8; v1.9.1 — FR-O9…FR-O11, FR-U63)
 
 Yêu cầu: FR-O1…FR-O8 ([01 §22](../01-requirements.md)) · Module: `:core` (`io.github.ptt98hd.totch.core.overlay`: logic
 thuần) + `:app` (`overlay/`: overlay, nguồn dữ liệu Android)
@@ -21,7 +21,7 @@ báo còn cần **quyền truy cập thông báo** (`MediaListenerService`, dòn
 | OV-2 | Trợ năng chưa kết nối | `false` |
 | OV-3 | `rotation ≠ 0` | `false` (vùng notch chỉ có ở hướng dọc, như highlight) |
 | OV-4 | status bar đang ẩn (app toàn màn hình: video, game) | `false` — không đè lên nội dung toàn màn hình |
-| OV-5 | `enabled`, Trợ năng, `rotation = 0`, status bar hiện, và **ít nhất một** trong `notificationIndicator`, `island`, `touchEffects` bật | `true`; cả ba tắt → `false` |
+| OV-5 | `enabled`, Trợ năng, `rotation = 0`, status bar hiện, và **ít nhất một** trong `island`, `touchEffects` bật (v1.9.1: bỏ `notificationIndicator`, FR-O12) | `true`; cả hai tắt → `false` |
 
 Hình học dùng **vùng notch không padding** (`HighlightArea.notch`, notch-region §FR-R7) — vùng người dùng đã căn bằng
 slider Vị trí / Kích thước, nên viền và island bám đúng camera.
@@ -35,7 +35,20 @@ Cửa sổ:
   Shizuku và không cần chặn chạm, cửa sổ chỉ tồn tại lúc island bấm được (chạm tại notch lúc đó bị nuốt, nhưng cử chỉ vẫn
   nhận qua `getevent`).
 
+**Không lưu ảnh** (v1.9.1, FR-O9). Bản 1.9.0 để sót icon / viên đen / viền tại notch sau khi island hoặc hiệu ứng chạm
+kết thúc: nội dung island đặt bằng `offset` nằm **ngoài** bounds của layer `AnimatedContent` (layer nhỏ ở góc trái trên),
+nên khi layer mờ dần, HWUI chỉ vẽ lại vùng bounds (damage) → điểm ảnh cũ trên buffer của cửa sổ trong suốt còn nguyên.
+Quy tắc:
+- Mọi thứ trong cửa sổ vẽ nằm **trong** bounds của node chứa nó: `AnimatedContent` và lớp chứa nội dung island
+  `fillMaxSize()`.
+- Khi lớp vẽ chuyển sang **rảnh** (không island, không vòng sáng, không viền thông báo, không hiệu ứng đang chạy), sau
+  frame cuối cửa sổ được `invalidate()` **toàn bộ** một lần → buffer được xóa sạch.
+
 ## 2. Viền báo thông báo (FR-O1, NI-*)
+
+v1.9.1 (FR-O12): không còn công tắc riêng — viền chạy khi **island bật và có hoạt động `NOTIFICATIONS`**
+(`IslandActivity.NOTIFICATIONS in activeIslandActivities()`). Thông báo mới → island Thông báo (§3) bung ra rồi thu
+lại, vòng sáng ở lại quanh notch và nhịp thở tới khi xem.
 
 Còn thông báo **chưa xem** → viền quanh notch phát sáng, **nhịp thở** (alpha 0.35 ↔ 1, chu kỳ 2 s), màu theo app của
 thông báo mới nhất (màu nhấn `Notification.color`), không có màu → màu nhấn Monet (`system_accent1_200`). Tắt khi người
@@ -119,6 +132,37 @@ sealed interface IslandContent {
 Media mở rộng: island rộng gần hết màn hình, ảnh bìa 56 dp, tên bài + nghệ sĩ (một dòng, "…"), hàng nút
 **Trước · Phát/Dừng · Tiếp** (điều khiển `MediaController.transportControls` của phiên đang hiện).
 
+### 3.5 Chuyển động vòng sáng → giãn → thu (v1.9.1, FR-O11, IM-*)
+
+Island (và nhịp **bung** của Báo thông báo) đi theo trình tự, **vòng sáng** (glow ring như §2, không nhịp thở) bao
+quanh viên đen **suốt** từ đầu tới cuối:
+1. `RING_IN` — vòng sáng hiện dần quanh **vùng notch** (viên = notch), `RING_IN_MS` = 220 ms.
+2. `MORPH` — viên giãn ra hai bên tới hình đích (lò xo như §3); vòng sáng bám theo viên.
+3. Hết nội dung: `MORPH` về notch (thu lại), rồi `RING_OUT` — vòng sáng tắt dần, `RING_OUT_MS` = 280 ms.
+
+Đổi nội dung khi đang hiện → chỉ `MORPH` (vòng sáng giữ nguyên). Nội dung của viên (icon, chữ) hiện sau khi giãn và mờ
+đi trước khi thu. Màu vòng sáng: island thông báo → màu của thông báo (như §2); sạc → xanh lá; khác → màu
+nhấn Monet.
+
+~~Nhịp bung của Báo thông báo (flare)~~ — bỏ ở FR-O12: viền là một phần của island Thông báo, island đã tự bung ra.
+
+```kotlin
+enum class IslandStep { RING_IN, MORPH, RING_OUT }
+object IslandMotion {
+    const val RING_IN_MS = 220; const val RING_OUT_MS = 280
+    fun steps(ringLit: Boolean, shown: Boolean): List<IslandStep>          // ringLit: vòng sáng đang sáng đủ
+    fun target(content: IslandContent, notch: Rect, m: IslandMetrics): Rect?  // null = không có gì để hiện
+}
+```
+
+| ID | Given | Then |
+|---|---|---|
+| IM-1 | `steps(ringLit = false, shown = true)` | `[RING_IN, MORPH]` — vòng sáng trước, giãn sau |
+| IM-2 | `steps(ringLit = true, shown = true)` | `[MORPH]` |
+| IM-3 | `steps(_, shown = false)` | `[MORPH, RING_OUT]` — thu về notch trước, tắt vòng sáng sau |
+| IM-4 | `target(content ≠ Hidden, …)` | `IslandLayout.pill(content, …)` |
+| IM-5 | `target(Hidden, …)` | `null` |
+
 ### 3.2 `IslandController` (`:core`, IS-*)
 
 Thuần, thời gian qua tham số như `GestureRecognizer` (một timer, NFR-3).
@@ -196,7 +240,10 @@ Khi chạm vào notch (vùng chạm có padding):
 - **Co giãn**: viên đen quanh notch (island, kể cả khi `Hidden` thì là chính vùng notch) phình **+12 %** khi chạm xuống và
   nảy về (spring) khi nhả; vuốt → lệch `dp(6)` theo hướng vuốt rồi nảy về.
 
-Màu hiệu ứng = màu nhấn Monet (`system_accent1_200`). Chỉ khi chạm **bắt đầu trong vùng chạm**; hiệu ứng không đổi việc
+~~Màu hiệu ứng = màu nhấn Monet (`system_accent1_200`).~~ v1.9.1 (FR-O10): mỗi nét (gợn sóng, viền sáng, vệt sáng) vẽ
+**hai lớp**: **quầng tối** `system_accent1_900` alpha 0.55, rộng hơn lõi 3 dp mỗi bên, rồi **lõi sáng**
+`system_accent1_100` — lõi nổi trên nền tối, quầng nổi trên nền sáng (status bar sáng / tối tùy app, không theo theme hệ
+thống). Gợn sóng: lõi 3 dp alpha 0.95 → 0; vệt sáng: lõi 5 dp. Chỉ khi chạm **bắt đầu trong vùng chạm**; hiệu ứng không đổi việc
 nhận cử chỉ.
 
 Engine báo cho lớp hiển thị qua `EngineObserver` (`:app`, `engine/`):
@@ -224,8 +271,7 @@ fun pressProgress(downMs: Long, nowMs: Long, longPressMs: Long): Float
 ## 5. Cài đặt (ST-37, ST-38)
 
 ```kotlin
-// Settings, v1.9
-val notificationIndicator: Boolean = false,                    // FR-O1
+// Settings, v1.9 (v1.9.1, FR-O12: bỏ notificationIndicator — viền thuộc hoạt động NOTIFICATIONS)
 val island: Boolean = false,                                   // FR-O2…FR-O5
 val islandActivities: Set<IslandActivity> = IslandActivity.entries.toSet(),
 val touchEffects: Boolean = false,                             // FR-O6
@@ -234,25 +280,31 @@ fun Settings.activeIslandActivities(): Set<IslandActivity> = if (island) islandA
 
 | ID | Tiêu chí |
 |---|---|
-| ST-37 | `Settings()`: ba công tắc `false`, `islandActivities` = cả 4; JSON 1.8.3 (không có key) → mặc định; round-trip với `island=true`, `islandActivities={MEDIA, SOUND}`, `notificationIndicator=true`, `touchEffects=true`; JSON enum `"media"`, `"sound"` |
+| ST-37 | `Settings()`: `island`, `touchEffects` `false`, `islandActivities` = cả 4; JSON 1.8.3 (không có key) → mặc định; round-trip với `island=true`, `islandActivities={MEDIA, SOUND}`, `touchEffects=true`; JSON enum `"media"`, `"sound"` |
 | ST-38 | `activeIslandActivities()` = `islandActivities` khi `island`, ngược lại `∅` |
+| ST-39 | (v1.9.1, FR-O12) JSON 1.9.0 có `"notificationIndicator": true`: `island = false` → `island = true`, `islandActivities = {NOTIFICATIONS}`; `island = true` → thêm `NOTIFICATIONS` vào `islandActivities`. `false` / không có key → không đổi. JSON mới không còn key này |
 
 ## 6. Giao diện (UI-78…UI-81)
 
 Màn **Notch**: section mới **Hiệu ứng** / **Effects** ở **đầu** (trên Độ nhạy):
-1. **Notification indicator** / **Báo thông báo** — "Viền notch sáng khi có thông báo chưa xem"
-2. **Dynamic Island** — "Hiện hoạt động quanh notch"; khi bật, ngay dưới là 4 dòng con (switch, thụt lề):
-   **Media đang phát**, **Thông báo mới**, **Sạc pin**, **Âm thanh** (chế độ âm & âm lượng)
+1. ~~**Notification indicator** / **Báo thông báo**~~ — bỏ ở v1.9.1 (FR-O12); dòng **Thông báo mới** trong hộp thoại
+   island có mô tả "Ring glows until seen" / "Viền sáng tới khi xem"
+2. **Dynamic Island** — "Hiện hoạt động quanh notch". ~~Khi bật, ngay dưới là 4 dòng con (switch, thụt lề)~~ v1.9.1
+   (FR-U63): dòng chỉ có switch; khi island **bật**, chạm dòng (ngoài switch) → hộp thoại **Dynamic Island** với 4 dòng
+   switch: **Media đang phát**, **Thông báo mới**, **Sạc pin**, **Âm thanh** (chế độ âm & âm lượng), mỗi dòng có lý do
+   thiếu điều kiện như dưới; nút **Xong**. Island tắt → chạm dòng = bật switch. Tắt hoạt động cuối cùng (UI-79) → island
+   tắt, hộp thoại đóng.
 3. **Touch effects** / **Hiệu ứng chạm** — "Gợn sóng và co giãn khi chạm notch"
 
 Thiếu điều kiện → switch vẫn bật/tắt được (để chuẩn bị trước) nhưng mô tả đổi thành lý do, màu lỗi:
-"Cần Trợ năng" (cả ba); "Cần quyền Media và thông báo" (Báo thông báo, island Media, island Thông báo).
+"Cần Trợ năng" (cả ba); "Cần quyền Media và thông báo" (Báo thông báo, island Media, island Thông báo). v1.9.1 (FR-U60):
+mô tả rút gọn — "Viền sáng khi có thông báo", "Gợn sóng và co giãn khi chạm", en "Needs Media & notifications".
 
 | ID | Tiêu chí |
 |---|---|
-| UI-78 | `NotchSettingsViewModel`: `setNotificationIndicator`, `setIsland`, `setIslandActivity(a, on)`, `setTouchEffects` lưu đúng field, field khác giữ nguyên |
+| UI-78 | `NotchSettingsViewModel`: ~~`setNotificationIndicator`~~ (bỏ ở v1.9.1), `setIsland`, `setIslandActivity(a, on)`, `setTouchEffects` lưu đúng field, field khác giữ nguyên |
 | UI-79 | `setIslandActivity(a, false)` khi `a` là hoạt động cuối cùng còn bật → `island = false`, `islandActivities` giữ nguyên `{a}` (không bao giờ lưu tập rỗng); `setIsland(true)` khi `islandActivities` rỗng (dữ liệu cũ) → bật lại cả 4 |
-| UI-80 | `NotchSettingsUiState.overlayIssue(feature)`: Trợ năng chưa bật → `ACCESSIBILITY` (ưu tiên); có Trợ năng nhưng thiếu quyền thông báo, với Báo thông báo / Media / Thông báo → `NOTIFICATION_ACCESS`; Sạc / Âm thanh / Hiệu ứng chạm không cần quyền thông báo → `null` |
+| UI-80 | `NotchSettingsUiState.overlayIssue(feature)`: Trợ năng chưa bật → `ACCESSIBILITY` (ưu tiên); có Trợ năng nhưng thiếu quyền thông báo, với ~~Báo thông báo /~~ Media / Thông báo → `NOTIFICATION_ACCESS`; Sạc / Âm thanh / Hiệu ứng chạm không cần quyền thông báo → `null` |
 | UI-81 | Home › Permissions: dòng `MEDIA_ACCESS` (luôn hiện) đổi nhãn thành **Media & notifications** / **Media và thông báo**; nhãn service listener trong cài đặt hệ thống: **Totch media & notifications** / **Totch media và thông báo** (kiểm bằng `StringsTest`) |
 
 ## 7. Ngoài phạm vi / giới hạn

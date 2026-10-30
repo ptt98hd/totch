@@ -42,7 +42,6 @@ import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.foundation.clickable
 import io.github.ptt98hd.totch.service.OemSettings
-import io.github.ptt98hd.totch.ui.common.TonalIcon
 import io.github.ptt98hd.totch.ui.common.TotchListItem
 import io.github.ptt98hd.totch.ui.common.openAutostartSettings
 import io.github.ptt98hd.totch.ui.common.openKeepWhenUnusedSettings
@@ -339,14 +338,24 @@ private fun ShizukuRow(status: ShizukuStatus, installed: Boolean, onClick: () ->
     )
 }
 
-/** FR-U59: the maker's auto-start / background manager. */
+/** FR-U59: the maker's auto-start / background manager; drawn like the Shizuku and permission rows (FR-U62). */
 @Composable
 private fun AutostartRow(onClick: () -> Unit) {
     TotchListItem(
         headline = stringResource(R.string.autostart_title),
         modifier = Modifier.clickable(onClick = onClick),
         supporting = stringResource(R.string.autostart_description),
-        leading = { TonalIcon(Icons.Outlined.RestartAlt) },
+        supportingColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        leading = {
+            IconBox(size = 40.dp) {
+                Icon(
+                    Icons.Outlined.RestartAlt,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+        },
         trailing = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) },
     )
 }
