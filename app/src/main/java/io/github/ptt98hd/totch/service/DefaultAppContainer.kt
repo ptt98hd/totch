@@ -10,11 +10,17 @@ import io.github.ptt98hd.totch.Permission
 import io.github.ptt98hd.totch.core.action.PermissionCommands
 import io.github.ptt98hd.totch.AppActivities
 import io.github.ptt98hd.totch.AppShortcuts
+import io.github.ptt98hd.totch.AppIntents
+import io.github.ptt98hd.totch.ContactSource
+import io.github.ptt98hd.totch.SettingsPageSource
 import io.github.ptt98hd.totch.TouchArea
 import io.github.ptt98hd.totch.HighlightArea
 import io.github.ptt98hd.totch.accessibility.AccessibilityBridge
 import io.github.ptt98hd.totch.accessibility.AccessibilityExecutor
 import io.github.ptt98hd.totch.action.AndroidFeedback
+import io.github.ptt98hd.totch.action.ContentResolverContacts
+import io.github.ptt98hd.totch.action.ManifestAppIntents
+import io.github.ptt98hd.totch.action.PackageManagerSettingsPages
 import io.github.ptt98hd.totch.action.LocalExecutor
 import io.github.ptt98hd.totch.action.PackageManagerAppActivities
 import io.github.ptt98hd.totch.action.PackageManagerAppShortcuts
@@ -140,6 +146,9 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     override val appShortcuts: AppShortcuts = PackageManagerAppShortcuts(app.packageManager)
     override val appActivities: AppActivities = PackageManagerAppActivities(app.packageManager)
     override val quickSettingsTiles: QuickSettingsTiles = PackageManagerQuickSettingsTiles(app.packageManager, app.packageName)
+    override val settingsPageSource: SettingsPageSource = PackageManagerSettingsPages(app.packageManager)
+    override val appIntents: AppIntents = ManifestAppIntents(app)
+    override val contactSource: ContactSource = ContentResolverContacts(app)
     override val appUpdater: AppUpdater = GitHubAppUpdater(app, ShizukuInstaller(app, shell)::install)
     override val updates = UpdateController(appUpdater, BuildConfig.VERSION_NAME, scope)
 

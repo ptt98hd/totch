@@ -82,6 +82,10 @@ fun Context.openKeepWhenUnusedSettings() {
     }
 }
 
+/** FR-A23: Totch's app info page, to grant a permission the user denied for good. */
+fun Context.openAppDetails() =
+    safeStart(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
+
 /** FR-U59: the maker's auto-start page found by [OemSettings], else Totch's app info page. */
 fun Context.openAutostartSettings() {
     val page = OemSettings.autostartIntent(this)

@@ -1,6 +1,6 @@
 # Spec: Hành động & điều phối (`ActionDispatcher`)
 
-Yêu cầu: FR-A1…FR-A20 (v1.7) · Module: `:core` (logic) + `:app` (executor)
+Yêu cầu: FR-A1…FR-A23 (v1.8.3) · Module: `:core` (logic) + `:app` (executor)
 
 ## 1. Ma trận khả năng — `ActionRequirements.of(action)`
 
@@ -11,7 +11,9 @@ Yêu cầu: FR-A1…FR-A20 (v1.7) · Module: `:core` (logic) + `:app` (executor)
 | `ToggleTorch`, `MediaPlayPause`, `MediaNext`, `MediaPrevious`, `VolumeUp`, `VolumeDown`, `VolumePanel` | {LOCAL} |
 | `ClickTile`, `OneHandedMode` (v1.6) | {SHIZUKU} |
 | (v1.6.3) `BrightnessUp`, `BrightnessDown`, `ToggleAutoBrightness`, `ToggleAutoRotate`, `ToggleWifi`, `ToggleBluetooth`, `ToggleMobileData`, `ToggleAirplaneMode`, `ToggleLocation` | {SHIZUKU} |
-| (v1.6.3) `RingerNormal`, `RingerVibrate`, `RingerSilent`, `CycleRingerMode`, `ToggleDnd` | {LOCAL} |
+| (v1.6.3) `RingerNormal`, `RingerSilent`, `CycleRingerMode`, `ToggleDnd` (v1.8.3: bỏ `RingerVibrate`) | {LOCAL} |
+| (v1.8.3) `OpenSettings`, `OpenContact`, `SendIntent(target = ACTIVITY)` | {ACCESSIBILITY, SHIZUKU} |
+| (v1.8.3) `SendIntent(target = BROADCAST)` | {LOCAL} |
 
 ## 2. Điều phối
 
@@ -37,6 +39,7 @@ Yêu cầu: FR-A1…FR-A20 (v1.7) · Module: `:core` (logic) + `:app` (executor)
 | AD-11 | `OneHandedMode` có requirements {SHIZUKU} (v1.6, FR-A16) |
 | AD-10 | `ClickTile` có requirements {SHIZUKU} (v1.6, FR-A15): chỉ có Trợ năng → `Failed("unavailable")` |
 | AD-12 | (v1.6.3) Hành động màn hình và kết nối có requirements {SHIZUKU}; hành động âm thanh có {LOCAL} |
+| AD-13 | (v1.8.3) `OpenSettings`, `OpenContact`, `SendIntent(…, ACTIVITY)` có {ACCESSIBILITY, SHIZUKU}; `SendIntent(…, BROADCAST)` có {LOCAL} |
 
 Action mới (v1.1):
 ```kotlin
@@ -292,18 +295,19 @@ Chỉ Shizuku (ghi `Settings.System` cần `WRITE_SETTINGS`, Totch không xin qu
 - Bật/tắt dùng script chung `toggle` (§13): độ sáng tự động `system screen_brightness_mode` (1 = tự động), tự động xoay
   `system accelerometer_rotation` (1 = bật); bật/tắt bằng `settings put system <key> 1|0`.
 
-## 12. Chế độ âm thanh (v1.6.3 — FR-A18)
+## 12. Chế độ âm thanh (v1.6.3 — FR-A18; v1.8.3 bỏ Rung)
 
 ```kotlin
-@SerialName("ringer_normal")  data object RingerNormal : Action
-@SerialName("ringer_vibrate") data object RingerVibrate : Action
-@SerialName("ringer_silent")  data object RingerSilent : Action
-@SerialName("ringer_cycle")   data object CycleRingerMode : Action
+@SerialName("ringer_normal")  data object RingerNormal : Action      // "Ring mode" / "Chế độ đổ chuông"
+@SerialName("ringer_silent")  data object RingerSilent : Action      // "Silent mode" / "Chế độ im lặng"
+@SerialName("ringer_cycle")   data object CycleRingerMode : Action   // "Cycle sound mode": Ring ↔ Silent
 @SerialName("dnd")            data object ToggleDnd : Action
 
-enum class RingerMode { NORMAL, VIBRATE, SILENT }                       // core.action
-object SoundModes { fun next(current: RingerMode, canVibrate: Boolean): RingerMode }
+enum class RingerMode { NORMAL, VIBRATE, SILENT }                       // core.action — VIBRATE: chế độ hiện tại do người dùng đặt
+object SoundModes { fun next(current: RingerMode): RingerMode }
 ```
+
+v1.8.3: bỏ `RingerVibrate` (`"ringer_vibrate"`); JSON cũ có hành động này được đọc thành `RingerSilent` (ST-35).
 
 `LocalExecutor`: `AudioManager.setRingerMode`, `NotificationManager.setInterruptionFilter`. Android chặn mọi thay đổi có
 thể bật/tắt Không làm phiền (im lặng, hoặc đổi chế độ khi đang Không làm phiền) nếu app chưa có **quyền truy cập Không
@@ -311,17 +315,17 @@ làm phiền** → cần quyền đó (Home › Permissions, detection-modes §6
 Android 12, nên không có đường Shizuku. Chưa có quyền → `Failed` → toast (FR-A9); picker hiện dòng phụ "Cần quyền
 Không làm phiền" dưới các hành động này.
 
-- `RingerNormal` / `RingerVibrate` / `RingerSilent`: `setRingerMode(NORMAL|VIBRATE|SILENT)`.
-- `CycleRingerMode`: `setRingerMode(next(hiện tại, hasVibrator))`.
+- `RingerNormal` / `RingerSilent`: `setRingerMode(NORMAL|SILENT)`.
+- `CycleRingerMode`: `setRingerMode(next(hiện tại))` — chỉ qua lại Đổ chuông ↔ Im lặng.
 - `ToggleDnd`: bộ lọc hiện tại `INTERRUPTION_FILTER_ALL` (hoặc `UNKNOWN`) → `INTERRUPTION_FILTER_PRIORITY`; còn lại →
   `INTERRUPTION_FILTER_ALL`.
 - Hệ thống không hiện gì khi đổi chế độ; rung phản hồi của cử chỉ là xác nhận.
 
 | ID | Tiêu chí |
 |---|---|
-| SM-1 | `next(NORMAL, true) = VIBRATE`, `next(VIBRATE, true) = SILENT`, `next(SILENT, true) = NORMAL` |
-| SM-2 | Không có bộ rung: `next(NORMAL, false) = SILENT`, `next(VIBRATE, false) = SILENT`, `next(SILENT, false) = NORMAL` |
-| SM-3 | `LocalExecutor.supports` đúng cho 5 hành động âm thanh; `ShellCommands.of` trả `null` cho chúng |
+| SM-1 | ~~`next(NORMAL, true) = VIBRATE`…~~ (v1.8.3) `next(NORMAL) = SILENT`, `next(SILENT) = NORMAL` |
+| SM-2 | ~~Không có bộ rung…~~ (v1.8.3) `next(VIBRATE) = NORMAL` (đang rung do người dùng tự đặt → đổ chuông) |
+| SM-3 | `LocalExecutor.supports` đúng cho 4 hành động âm thanh; `ShellCommands.of` trả `null` cho chúng |
 
 ## 13. Kết nối (v1.6.3 — FR-A19)
 
@@ -368,3 +372,99 @@ Vẫn chọn được (người dùng có thể bật Shizuku sau); khi chạy m
 | ID | Tiêu chí |
 |---|---|
 | AR-10 | `ActionPickerUiState.needsShizuku(a)` đúng khi `of(a) == {SHIZUKU}` và Shizuku chưa sẵn sàng; sai với hành động có Trợ năng / LOCAL, và sai với mọi hành động khi Shizuku sẵn sàng |
+
+## 15. Mở trang Cài đặt (v1.8.3 — FR-A21)
+
+```kotlin
+@SerialName("open_settings") data class OpenSettings(val intentAction: String) : Action
+
+enum class SettingsGroup { CONNECTIONS, DEVICE, APPS, SECURITY, SYSTEM, PANELS }    // core.action
+data class SettingsPage(val intentAction: String, val group: SettingsGroup)
+object SettingsPages { val all: List<SettingsPage> }
+```
+
+Danh sách tuyển chọn (thứ tự hiển thị; nhãn en / vi nằm ở `:app`). Hằng ẩn của SDK (đánh dấu *) vẫn có trong
+Cài đặt AOSP và đa số ROM; trang nào máy không có thì bị ẩn.
+
+| Nhóm | `intentAction` (nhãn) |
+|---|---|
+| CONNECTIONS — Connections / Kết nối | `android.settings.WIRELESS_SETTINGS` (Network & internet), `WIFI_SETTINGS` (Wi-Fi), `BLUETOOTH_SETTINGS` (Bluetooth), `DATA_USAGE_SETTINGS` (Data usage), `NETWORK_OPERATOR_SETTINGS` (Mobile network), `AIRPLANE_MODE_SETTINGS` (Airplane mode), `NFC_SETTINGS` (NFC), `VPN_SETTINGS` (VPN), `CAST_SETTINGS` (Cast) |
+| DEVICE — Device / Thiết bị | `DISPLAY_SETTINGS` (Display), `NIGHT_DISPLAY_SETTINGS` (Night Light), `DARK_THEME_SETTINGS` (Dark theme), `SOUND_SETTINGS` (Sound), `ZEN_MODE_SETTINGS`* (Do Not Disturb), `android.intent.action.POWER_USAGE_SUMMARY` (Battery), `BATTERY_SAVER_SETTINGS` (Battery saver), `INTERNAL_STORAGE_SETTINGS` (Storage), `DREAM_SETTINGS` (Screen saver) |
+| APPS — Apps / Ứng dụng | `APPLICATION_SETTINGS` (Apps), `MANAGE_DEFAULT_APPS_SETTINGS` (Default apps), `HOME_SETTINGS` (Home app), `NOTIFICATION_SETTINGS`* (Notifications), `android.settings.action.MANAGE_OVERLAY_PERMISSION` (Display over other apps), `USAGE_ACCESS_SETTINGS` (Usage access), `MANAGE_UNKNOWN_APP_SOURCES` (Install unknown apps), `IGNORE_BATTERY_OPTIMIZATION_SETTINGS` (Battery optimization) |
+| SECURITY — Security & privacy / Bảo mật & quyền riêng tư | `SECURITY_SETTINGS` (Security), `PRIVACY_SETTINGS` (Privacy), `LOCATION_SOURCE_SETTINGS` (Location), `SYNC_SETTINGS` (Accounts) |
+| SYSTEM — System / Hệ thống | `android.settings.SETTINGS` (Settings), `ACCESSIBILITY_SETTINGS` (Accessibility), `LOCALE_SETTINGS` (Languages), `INPUT_METHOD_SETTINGS` (Keyboards), `DATE_SETTINGS` (Date & time), `APPLICATION_DEVELOPMENT_SETTINGS` (Developer options), `DEVICE_INFO_SETTINGS` (About phone) |
+| PANELS — Panels / Bảng nổi | `android.settings.panel.action.INTERNET_CONNECTIVITY` (Internet panel), `…panel.action.WIFI` (Wi-Fi panel), `…panel.action.NFC` (NFC panel), `…panel.action.VOLUME` (Volume panel) |
+
+(tên không có tiền tố = `android.settings.<tên>`). Mỗi hành động có `<queries><intent><action …/></intent></queries>`
+trong manifest để `resolveActivity` thấy được trang; `SettingsPageSource.available()` (`:app`) = các `intentAction`
+resolve được.
+
+Thực thi: `AccessibilityExecutor` → `startActivity(Intent(intentAction) + NEW_TASK)`; `ShizukuExecutor` →
+`ShellCommands.openSettings(a)` = `am start -a '<a>' -f 0x10000000`.
+
+| ID | Tiêu chí |
+|---|---|
+| SP-1 | `SettingsPages.all`: không trùng `intentAction`, thứ tự nhóm theo `SettingsGroup.entries`, mỗi nhóm không rỗng |
+| SP-2 | Mọi `intentAction` khớp `IntentActionRegex` (SC-13) |
+| SP-3 | (`:app`) mọi trang có nhãn en và vi (`settingsPageLabel`) |
+| SC-13 | `IntentActionRegex = ^[A-Za-z0-9_.:$-]+$`. `openSettings("android.settings.WIFI_SETTINGS")` = `am start -a 'android.settings.WIFI_SETTINGS' -f 0x10000000`; action sai định dạng (`"a b"`, `"a';reboot"`, rỗng) → `null`; `of(OpenSettings(…)) == null` |
+
+## 16. Gửi intent của app (v1.8.3 — FR-A22)
+
+```kotlin
+@Serializable enum class IntentTarget { @SerialName("activity") ACTIVITY, @SerialName("broadcast") BROADCAST }
+@SerialName("send_intent") data class SendIntent(
+    val packageName: String, val className: String, val intentAction: String, val target: IntentTarget) : Action
+```
+
+Nguồn (`AppIntents.intents()`, `:app`): với mỗi app có activity launcher (đã thấy nhờ `<queries>`), trừ Totch, đọc
+`AndroidManifest.xml` đã biên dịch (`createPackageContext(pkg, 0).assets.openXmlResourceParser`) → các
+`<activity>` / `<activity-alias>` / `<receiver>` với `<intent-filter>` (danh sách `<action>`, có `<data>` hay không).
+Tên lớp chuẩn hóa bằng `resolveClassName`. Chỉ giữ thành phần có trong `getPackageInfo(GET_ACTIVITIES | GET_RECEIVERS)`
+(= đang bật) với `exported` và `permission == null`. Đọc lỗi (manifest hỏng, app bị gỡ) → bỏ app đó.
+
+Lọc thuần (`:core`, `IntentFilters`):
+```kotlin
+data class ManifestFilter(val actions: List<String>, val hasData: Boolean)
+fun usableActions(target: IntentTarget, filters: List<ManifestFilter>): List<String>
+fun resolveClassName(packageName: String, name: String): String
+fun shortIntentAction(action: String): String
+```
+
+Thực thi:
+- ACTIVITY: `AccessibilityExecutor` → `startActivity(Intent(action).setClassName(pkg, cls) + NEW_TASK)`;
+  `ShizukuExecutor` → `ShellCommands.sendIntent(…)` = `am start -a '<action>' -n '<pkg>/<cls>' -f 0x10000000`.
+- BROADCAST: `LocalExecutor` → `context.sendBroadcast(Intent(action).setClassName(pkg, cls))` (broadcast tường minh tới
+  receiver khai báo trong manifest được phép từ Android 8). Không cần Trợ năng / Shizuku.
+
+| ID | Tiêu chí |
+|---|---|
+| IN-1 | `usableActions`: bỏ filter có `<data>`; gộp action của các filter còn lại, bỏ trùng, giữ thứ tự xuất hiện; action không khớp `IntentActionRegex` bị bỏ |
+| IN-2 | ACTIVITY: bỏ `android.intent.action.MAIN` |
+| IN-3 | BROADCAST: bỏ action bắt đầu bằng `android.` hoặc `com.android.` (broadcast của hệ thống, phần lớn được bảo vệ) |
+| IN-4 | `resolveClassName("com.a", ".ui.Main") = "com.a.ui.Main"`, `("com.a", "Main") = "com.a.Main"`, `("com.a", "org.b.X") = "org.b.X"` |
+| IN-5 | `shortIntentAction("com.a.action.TOGGLE") = "TOGGLE"`; không có dấu chấm → nguyên chuỗi |
+| IN-6 | `groupIntents(entries, query)`: như SH-1/SH-2 — nhóm theo package, nhóm sắp theo tên app rồi package, mục trong nhóm theo `shortIntentAction` rồi action rồi tên lớp (không phân biệt hoa thường); query (trim, không phân biệt hoa thường) khớp action, tên lớp **hoặc** tên app; khớp tên app → giữ cả nhóm; nhóm rỗng bị ẩn |
+| SC-14 | `sendIntent("com.a", "com.a.Main$Sub", "com.a.OPEN")` = `am start -a 'com.a.OPEN' -n 'com.a/com.a.Main$Sub' -f 0x10000000`; package / lớp sai định dạng (SC-2) hoặc action sai (SC-13) → `null`; `of(SendIntent(…)) == null`; `ShizukuExecutor.supports(SendIntent(…, BROADCAST))` sai |
+
+## 17. Mở liên hệ (v1.8.3 — FR-A23)
+
+```kotlin
+@SerialName("open_contact") data class OpenContact(val lookupUri: String, val name: String) : Action  // name lưu để hiển thị
+```
+
+Nguồn (`ContactSource.contacts()`, `:app`): cần quyền runtime `READ_CONTACTS` (chỉ dùng để liệt kê khi chọn). Query
+`ContactsContract.Contacts` (`_ID`, `LOOKUP_KEY`, `DISPLAY_NAME_PRIMARY`), bỏ tên rỗng;
+`lookupUri = Contacts.getLookupUri(id, lookupKey)` (`content://com.android.contacts/contacts/lookup/<key>/<id>` — vẫn
+mở đúng liên hệ khi id đổi sau đồng bộ).
+
+Thực thi (không cần quyền Danh bạ, app Danh bạ tự đọc): `AccessibilityExecutor` →
+`startActivity(Intent(ACTION_VIEW, Uri.parse(lookupUri)) + NEW_TASK)` → app Danh bạ mặc định; `ShizukuExecutor` →
+`ShellCommands.openContact(uri)` = `am start -a android.intent.action.VIEW -d '<uri>' -f 0x10000000`.
+
+`filterContacts(entries, query): List<ContactEntry>`:
+
+| ID | Tiêu chí |
+|---|---|
+| CT-1 | Sắp theo tên đã chuẩn hóa như tìm kiếm (chữ thường, bỏ dấu: "Ân" trước "Anh") rồi `lookupUri`; query khớp tên sau khi chuẩn hóa như `filterCatalog` (bỏ dấu tiếng Việt: `"an"` khớp "Ân") |
+| SC-15 | `openContact("content://com.android.contacts/contacts/lookup/0r1-ABC/1")` = `am start -a android.intent.action.VIEW -d 'content://com.android.contacts/contacts/lookup/0r1-ABC/1' -f 0x10000000`; URI không bắt đầu bằng `content://com.android.contacts/contacts/lookup/` hoặc chứa ký tự điều khiển → `null`; `'` escape thành `'\''`; `of(OpenContact(…)) == null` |

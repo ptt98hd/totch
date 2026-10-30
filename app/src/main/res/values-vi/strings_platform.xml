@@ -41,9 +41,8 @@
     <string name="platform_action_brightness_down">Giảm độ sáng</string>
     <string name="platform_action_auto_brightness">Bật/tắt độ sáng tự động</string>
     <string name="platform_action_auto_rotate">Bật/tắt tự động xoay</string>
-    <string name="platform_action_ringer_normal">Chế độ âm thanh: đổ chuông</string>
-    <string name="platform_action_ringer_vibrate">Chế độ âm thanh: rung</string>
-    <string name="platform_action_ringer_silent">Chế độ âm thanh: im lặng</string>
+    <string name="platform_action_ringer_normal">Chế độ đổ chuông</string>
+    <string name="platform_action_ringer_silent">Chế độ im lặng</string>
     <string name="platform_action_ringer_cycle">Đổi chế độ âm thanh</string>
     <string name="platform_action_dnd">Bật/tắt Không làm phiền</string>
     <string name="platform_action_wifi">Bật/tắt Wi-Fi</string>
@@ -52,4 +51,7 @@
     <string name="platform_action_airplane">Bật/tắt chế độ máy bay</string>
     <string name="platform_action_location">Bật/tắt vị trí</string>
     <string name="media_listener_label">Totch điều khiển media</string>
+    <string name="platform_action_settings">Mở trang Cài đặt</string>
+    <string name="platform_action_intent">Gửi intent</string>
+    <string name="platform_action_contact">Mở liên hệ</string>
 </resources>

@@ -1,5 +1,9 @@
 package io.github.ptt98hd.totch.ui.common
 
+import io.github.ptt98hd.totch.core.action.IntentFilters
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.outlined.Settings
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -42,7 +46,6 @@ import androidx.compose.material.icons.outlined.SwipeRightAlt
 import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VerticalAlignBottom
-import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material.icons.outlined.WebAsset
 import androidx.compose.material.icons.outlined.Wifi
@@ -110,7 +113,6 @@ val Action.labelRes: Int
         Action.ToggleAutoBrightness -> R.string.action_auto_brightness
         Action.ToggleAutoRotate -> R.string.action_auto_rotate
         Action.RingerNormal -> R.string.action_ringer_normal
-        Action.RingerVibrate -> R.string.action_ringer_vibrate
         Action.RingerSilent -> R.string.action_ringer_silent
         Action.CycleRingerMode -> R.string.action_ringer_cycle
         Action.ToggleDnd -> R.string.action_dnd
@@ -119,6 +121,9 @@ val Action.labelRes: Int
         Action.ToggleMobileData -> R.string.action_mobile_data
         Action.ToggleAirplaneMode -> R.string.action_airplane
         Action.ToggleLocation -> R.string.action_location
+        is Action.OpenSettings -> R.string.action_open_settings
+        is Action.SendIntent -> R.string.action_send_intent
+        is Action.OpenContact -> R.string.action_open_contact
     }
 
 val Action.icon: ImageVector
@@ -149,7 +154,6 @@ val Action.icon: ImageVector
         Action.ToggleAutoBrightness -> Icons.Outlined.BrightnessAuto
         Action.ToggleAutoRotate -> Icons.Outlined.ScreenRotation
         Action.RingerNormal -> Icons.Outlined.NotificationsActive
-        Action.RingerVibrate -> Icons.Outlined.Vibration
         Action.RingerSilent -> Icons.Outlined.NotificationsOff
         Action.CycleRingerMode -> Icons.Outlined.Autorenew
         Action.ToggleDnd -> Icons.Outlined.DoNotDisturbOn
@@ -158,6 +162,9 @@ val Action.icon: ImageVector
         Action.ToggleMobileData -> Icons.Outlined.SignalCellularAlt
         Action.ToggleAirplaneMode -> Icons.Outlined.AirplanemodeActive
         Action.ToggleLocation -> Icons.Outlined.LocationOn
+        is Action.OpenSettings -> Icons.Outlined.Settings
+        is Action.SendIntent -> Icons.AutoMirrored.Outlined.Send
+        is Action.OpenContact -> Icons.Outlined.Person
     }
 
 @StringRes
@@ -170,12 +177,17 @@ fun ActionGroupId.labelRes(): Int = when (this) {
     ActionGroupId.CONNECTIVITY -> R.string.group_connections
 }
 
-/** Human-readable action name; LaunchApp/LaunchShortcut/LaunchActivity/ClickTile show the app label (UI-12) or the package name. */
+/** Human-readable action name; LaunchApp/LaunchShortcut/LaunchActivity/ClickTile/SendIntent show the app label (UI-12) or the package name. */
 @Composable
 fun actionDisplayName(action: Action, appLabel: String?): String = when (action) {
     is Action.LaunchApp -> stringResource(R.string.action_launch_app, appLabel ?: action.packageName)
     is Action.LaunchShortcut -> stringResource(R.string.action_launch_shortcut, appLabel ?: action.packageName, action.label)
     is Action.LaunchActivity -> stringResource(R.string.action_launch_shortcut, appLabel ?: action.packageName, action.label)
     is Action.ClickTile -> stringResource(R.string.action_launch_shortcut, appLabel ?: action.packageName, action.label)
+    is Action.SendIntent ->
+        stringResource(R.string.action_launch_shortcut, appLabel ?: action.packageName, IntentFilters.shortIntentAction(action.intentAction))
+    is Action.OpenSettings ->
+        stringResource(R.string.action_settings_page, settingsPageLabels[action.intentAction]?.let { stringResource(it) } ?: action.intentAction)
+    is Action.OpenContact -> stringResource(R.string.action_contact, action.name)
     else -> stringResource(action.labelRes)
 }

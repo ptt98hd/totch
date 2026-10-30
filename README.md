@@ -13,10 +13,13 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers. The network is use
 - **Actions** (one per gesture):
   - System: Back, Home, Recents, Lock screen, Screenshot, Notification shade, Quick Settings, Assistant
   - Flashlight toggle; media Play/Pause, Next, Previous; Volume up/down; show the volume panel
-  - Sound mode: ring, vibrate, silent, cycle through them; toggle Do Not Disturb
+  - Sound mode: ring mode, silent mode, switch between them; toggle Do Not Disturb
   - Display: brightness up/down, toggle auto brightness, toggle auto-rotate
   - Connections: toggle Wi-Fi, Bluetooth, mobile data, airplane mode, location
   - Launch any installed app, one of its static app shortcuts, or one of its exported activities
+  - Open a system Settings page (Wi-Fi, Bluetooth, display, battery, developer options, Internet / volume panels…)
+  - Send an intent another app declares in its manifest (start its activity or send its broadcast)
+  - Open a contact in the default contacts app
   - Tap an app's Quick Settings tile (a tile that is not in Quick Settings is added for the tap and removed again)
   - Toggle Android's one-handed mode (no shortcut needed; falls back to the launcher's swipe gesture and remembers what works)
 - Adjustable sensitivity, manual notch size, position and padding shown live on screen, haptic feedback, start on boot.
@@ -36,6 +39,7 @@ The permissions can be switched on or off from the Home screen; Totch grants the
 - **Notifications** (Android 13+) — for the foreground service notification. Android closes an app when one of its permissions is revoked, so switching it off restarts Totch.
 - **Media control** (notification access) — only to find the active media session and send play/pause/skip commands (more reliable than media key events). It never reads notifications.
 - **Do Not Disturb** (access) — needed by the sound mode actions; Android blocks ringer and Do Not Disturb changes without it.
+- **Contacts** — asked only when you open Contacts in the action picker, to list your contacts so you can pick one. Opening the contact later does not need it.
 - **Unrestricted battery** — keeps the gesture service from being killed (through Shizuku it also lifts the background restriction).
 - **Keep when unused** — exempts Totch from Android's "pause app activity if unused", which would stop an app that runs in the background but is rarely opened.
 - **Install updates** (install unknown apps) — lets the self-update install the new APK. Switching it off also restarts Totch.

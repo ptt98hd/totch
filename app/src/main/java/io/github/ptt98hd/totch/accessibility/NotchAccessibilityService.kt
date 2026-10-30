@@ -96,6 +96,11 @@ class NotchAccessibilityService : AccessibilityService() {
         startActivity(Intent().setClassName(packageName, activityName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
+    /** Starts [intent] as a new task: Settings pages, contacts and app intents (FR-A21…FR-A23). */
+    fun start(intent: Intent) {
+        startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
     /** Opens the default assistant (FR-A11); ACTION_ASSIST first, voice command as fallback. */
     fun openAssistant() {
         val intent = listOf(Intent.ACTION_ASSIST, Intent.ACTION_VOICE_COMMAND)

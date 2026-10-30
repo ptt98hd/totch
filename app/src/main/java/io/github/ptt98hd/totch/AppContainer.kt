@@ -1,5 +1,6 @@
 package io.github.ptt98hd.totch
 
+import io.github.ptt98hd.totch.core.model.IntentTarget
 import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
@@ -20,6 +21,9 @@ interface AppContainer {
     val appShortcuts: AppShortcuts
     val appActivities: AppActivities
     val quickSettingsTiles: QuickSettingsTiles
+    val settingsPageSource: SettingsPageSource
+    val appIntents: AppIntents
+    val contactSource: ContactSource
     val appUpdater: AppUpdater
     /** Shared update state and dialog (update spec §5). */
     val updates: UpdateController
@@ -125,6 +129,33 @@ data class TileEntry(
 interface QuickSettingsTiles {
     /** Exported tile services guarded by `BIND_QUICK_SETTINGS_TILE`, except Totch's own; unordered. */
     suspend fun tiles(): List<TileEntry>
+}
+
+interface SettingsPageSource {
+    /** Intent actions of `SettingsPages.all` that resolve to an activity on this device (actions spec §15). */
+    suspend fun available(): Set<String>
+}
+
+/** An intent declared in the manifest of a launchable app (actions spec §16); [className] is fully qualified. */
+data class IntentEntry(
+    val packageName: String,
+    val appLabel: String,
+    val className: String,
+    val intentAction: String,
+    val target: IntentTarget,
+)
+
+interface AppIntents {
+    /** Usable intents (IN-1…IN-3) of exported, enabled components without a permission; unordered. */
+    suspend fun intents(): List<IntentEntry>
+}
+
+/** A contact (actions spec §17); [lookupUri] is `Contacts.getLookupUri`. */
+data class ContactEntry(val lookupUri: String, val name: String)
+
+interface ContactSource {
+    /** Contacts with a name; needs `READ_CONTACTS`, empty without it. Unordered. */
+    suspend fun contacts(): List<ContactEntry>
 }
 
 /** Self-update from GitHub Releases (update spec §4). */

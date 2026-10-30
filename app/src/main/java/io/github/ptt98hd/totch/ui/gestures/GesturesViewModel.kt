@@ -83,6 +83,7 @@ class GesturesViewModel(
                                 is Action.LaunchShortcut -> action.packageName
                                 is Action.LaunchActivity -> action.packageName
                                 is Action.ClickTile -> action.packageName
+                                is Action.SendIntent -> action.packageName
                                 else -> null
                             }
                             val gestureNeed = when {

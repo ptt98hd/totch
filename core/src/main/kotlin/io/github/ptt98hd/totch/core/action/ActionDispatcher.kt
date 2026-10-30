@@ -1,6 +1,7 @@
 package io.github.ptt98hd.totch.core.action
 
 import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.model.IntentTarget
 import kotlin.coroutines.cancellation.CancellationException
 
 enum class Capability { SHIZUKU, ACCESSIBILITY, LOCAL }
@@ -22,10 +23,11 @@ object ActionRequirements {
         Action.None -> emptySet()
         Action.Back, Action.Home, Action.Recents, Action.LockScreen, Action.Screenshot,
         Action.Notifications, Action.QuickSettings, is Action.LaunchApp, Action.Assistant,
-        is Action.LaunchShortcut, is Action.LaunchActivity -> system
+        is Action.LaunchShortcut, is Action.LaunchActivity, is Action.OpenSettings, is Action.OpenContact -> system
+        is Action.SendIntent -> if (action.target == IntentTarget.BROADCAST) local else system
         Action.ToggleTorch, Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious,
         Action.VolumeUp, Action.VolumeDown, Action.VolumePanel,
-        Action.RingerNormal, Action.RingerVibrate, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd -> local
+        Action.RingerNormal, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd -> local
         is Action.ClickTile, Action.OneHandedMode,
         Action.BrightnessUp, Action.BrightnessDown, Action.ToggleAutoBrightness, Action.ToggleAutoRotate,
         Action.ToggleWifi, Action.ToggleBluetooth, Action.ToggleMobileData, Action.ToggleAirplaneMode,

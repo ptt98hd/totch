@@ -44,9 +44,8 @@
     <string name="platform_action_brightness_down">Brightness down</string>
     <string name="platform_action_auto_brightness">Toggle auto brightness</string>
     <string name="platform_action_auto_rotate">Toggle auto-rotate</string>
-    <string name="platform_action_ringer_normal">Sound mode: ring</string>
-    <string name="platform_action_ringer_vibrate">Sound mode: vibrate</string>
-    <string name="platform_action_ringer_silent">Sound mode: silent</string>
+    <string name="platform_action_ringer_normal">Ring mode</string>
+    <string name="platform_action_ringer_silent">Silent mode</string>
     <string name="platform_action_ringer_cycle">Cycle sound mode</string>
     <string name="platform_action_dnd">Toggle Do Not Disturb</string>
     <string name="platform_action_wifi">Toggle Wi-Fi</string>
@@ -55,4 +54,7 @@
     <string name="platform_action_airplane">Toggle airplane mode</string>
     <string name="platform_action_location">Toggle location</string>
     <string name="media_listener_label">Totch media control</string>
+    <string name="platform_action_settings">Open Settings page</string>
+    <string name="platform_action_intent">Send intent</string>
+    <string name="platform_action_contact">Open contact</string>
 </resources>

@@ -340,6 +340,18 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-K6 | Khởi động lại máy (không có Shizuku, Trợ năng bật) | Service chạy lại sau khi mở khóa; cử chỉ hoạt động qua Trợ năng | [ ] |
 | MT-K7 | Cập nhật đè APK (adb install -r) khi đang bật | Service tự chạy lại sau khi cài, không cần mở app | [ ] |
 
+## 19. v1.8.3 — Ring / Silent, Cài đặt, Intents, Danh bạ
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-A40 | Picker › Cơ bản › Âm thanh | Có "Chế độ đổ chuông", "Chế độ im lặng", "Đổi chế độ âm thanh", không còn "Rung" | [ ] |
+| MT-A41 | Gán Đổi chế độ âm thanh, chạy nhiều lần; đặt máy sang Rung bằng tay rồi chạy | Đổ chuông ↔ Im lặng; từ Rung → Đổ chuông | [ ] |
+| MT-A42 | Cài 1.8.2 với một cử chỉ gán "Rung", cập nhật lên 1.8.3 | Cử chỉ thành "Chế độ im lặng", các cử chỉ khác giữ nguyên | [ ] |
+| MT-A43 | Picker › Cài đặt: gán Wi-Fi, Tùy chọn nhà phát triển, Bảng âm lượng; chạy (Trợ năng / chỉ Shizuku) | Mở đúng trang / bảng nổi; trang máy không có không hiện | [ ] |
+| MT-A44 | Picker › Intents: mở app có receiver (vd. Tasker, KDE Connect) và activity có action riêng; gán, chạy | Activity mở; broadcast được app nhận (kể cả khi không có Trợ năng / Shizuku) | [ ] |
+| MT-A45 | Picker › Danh bạ lần đầu | Khung xin quyền; Cho phép → danh sách; Từ chối 2 lần → nút mở trang app | [ ] |
+| MT-A46 | Gán một liên hệ, chạy cử chỉ (Trợ năng / chỉ Shizuku) | Mở liên hệ đó trong app Danh bạ mặc định; tên hiện ở màn Cử chỉ "Liên hệ: <tên>" | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)

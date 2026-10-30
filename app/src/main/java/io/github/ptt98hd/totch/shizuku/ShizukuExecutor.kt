@@ -8,6 +8,7 @@ import io.github.ptt98hd.totch.core.action.OneHandedCommands
 import io.github.ptt98hd.totch.core.action.OneHandedMethod
 import io.github.ptt98hd.totch.core.action.ShellCommands
 import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.model.IntentTarget
 import io.github.ptt98hd.totch.engine.DisplaySnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
@@ -39,7 +40,9 @@ class ShizukuExecutor(
 
     override fun supports(action: Action): Boolean =
         action is Action.LaunchApp || action is Action.LaunchShortcut || action is Action.LaunchActivity ||
-            action is Action.ClickTile || action == Action.OneHandedMode || ShellCommands.of(action) != null
+            action is Action.ClickTile || action == Action.OneHandedMode || action is Action.OpenSettings ||
+            action is Action.OpenContact || (action is Action.SendIntent && action.target == IntentTarget.ACTIVITY) ||
+            ShellCommands.of(action) != null
 
     override suspend fun execute(action: Action): Result<Unit> = withContext(Dispatchers.IO) {
         if (action == Action.OneHandedMode) return@withContext oneHanded.run()
@@ -49,6 +52,9 @@ class ShizukuExecutor(
                 is Action.LaunchShortcut -> ShellCommands.startIntent(action.intentUri)
                 is Action.LaunchActivity -> ShellCommands.startActivity(action.packageName, action.activityName)
                 is Action.ClickTile -> ShellCommands.clickTile(action.packageName, action.serviceName)
+                is Action.OpenSettings -> ShellCommands.openSettings(action.intentAction)
+                is Action.OpenContact -> ShellCommands.openContact(action.lookupUri)
+                is Action.SendIntent -> ShellCommands.sendIntent(action.packageName, action.className, action.intentAction)
                 else -> ShellCommands.of(action)
             } ?: error("unsupported")
             val exit = exec(command)

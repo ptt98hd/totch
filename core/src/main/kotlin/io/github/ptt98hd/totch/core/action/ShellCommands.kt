@@ -9,7 +9,8 @@ object ShellCommands {
 
     /**
      * Command or script for [action], or `null` if it is not a plain shell action (LOCAL actions, None, LaunchApp,
-     * LaunchShortcut, LaunchActivity, ClickTile, OneHandedMode — see [OneHandedCommands]).
+     * LaunchShortcut, LaunchActivity, ClickTile, OpenSettings, SendIntent, OpenContact, OneHandedMode — see
+     * [OneHandedCommands]).
      */
     fun of(action: Action): String? = when (action) {
         Action.Back -> "input keyevent 4"
@@ -88,4 +89,28 @@ object ShellCommands {
         if (intentUri.any { it.isISOControl() }) return null
         return "am start '" + intentUri.replace("'", "'\\''") + "'"
     }
+
+    /** SC-13: `am start` for a Settings page by its intent action; `null` if the action is unsafe. */
+    fun openSettings(intentAction: String): String? {
+        if (!IntentActionRegex.matches(intentAction)) return null
+        return "am start -a '$intentAction' -f 0x10000000"
+    }
+
+    /** SC-14: `am start` for an explicit activity with an intent action; `null` if any name is unsafe. */
+    fun sendIntent(packageName: String, className: String, intentAction: String): String? {
+        if (!this.packageName.matches(packageName) || !activityName.matches(className)) return null
+        if (!IntentActionRegex.matches(intentAction)) return null
+        return "am start -a '$intentAction' -n '$packageName/$className' -f 0x10000000"
+    }
+
+    /** SC-15: views a contact lookup URI, single-quoted; `null` if it is not a contact lookup URI. */
+    fun openContact(lookupUri: String): String? {
+        if (!lookupUri.startsWith(CONTACT_LOOKUP) || lookupUri.any { it.isISOControl() }) return null
+        return "am start -a android.intent.action.VIEW -d '" + lookupUri.replace("'", "'\\''") + "' -f 0x10000000"
+    }
+
+    private const val CONTACT_LOOKUP = "content://com.android.contacts/contacts/lookup/"
 }
+
+/** SC-13: intent actions Totch sends; no quotes, spaces or shell characters. */
+val IntentActionRegex = Regex("""[A-Za-z0-9_.:$-]+""")

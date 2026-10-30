@@ -20,7 +20,7 @@ object ActionCatalog {
             ActionGroupId.SOUND,
             listOf(
                 Action.VolumeUp, Action.VolumeDown, Action.VolumePanel,
-                Action.RingerNormal, Action.RingerVibrate, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd,
+                Action.RingerNormal, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd,
             ),
         ),
         ActionGroup(
@@ -38,7 +38,7 @@ object ActionCatalog {
 
     /** Sound mode actions, which need Do Not Disturb access (FR-A18, UI-29). */
     val needsDndAccess: Set<Action> =
-        setOf(Action.RingerNormal, Action.RingerVibrate, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd)
+        setOf(Action.RingerNormal, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd)
 }
 
 private val marks = Regex("\\p{Mn}+")
@@ -53,15 +53,26 @@ fun filterCatalog(
     query: String,
     actionLabel: (Action) -> String,
     groupLabel: (ActionGroupId) -> String,
-): List<ActionGroup> {
+): List<ActionGroup> = filterGroups(groups, query, { it.id }, { it.actions }, { g, a -> g.copy(actions = a) }, actionLabel, groupLabel)
+
+/** UI-24 for any grouped list (also the Settings pages, UI-74). */
+fun <G, T, K> filterGroups(
+    groups: List<G>,
+    query: String,
+    id: (G) -> K,
+    items: (G) -> List<T>,
+    copy: (G, List<T>) -> G,
+    itemLabel: (T) -> String,
+    groupLabel: (K) -> String,
+): List<G> {
     val q = searchKey(query)
     if (q.isEmpty()) return groups
     return groups.mapNotNull { group ->
-        val actions = if (q in searchKey(groupLabel(group.id))) {
-            group.actions
+        val kept = if (q in searchKey(groupLabel(id(group)))) {
+            items(group)
         } else {
-            group.actions.filter { q in searchKey(actionLabel(it)) }
+            items(group).filter { q in searchKey(itemLabel(it)) }
         }
-        actions.takeIf { it.isNotEmpty() }?.let { group.copy(actions = it) }
+        kept.takeIf { it.isNotEmpty() }?.let { copy(group, it) }
     }
 }

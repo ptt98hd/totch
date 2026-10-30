@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
@@ -13,7 +14,6 @@ import android.media.session.PlaybackState
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.os.VibratorManager
 import android.util.Log
 import android.view.KeyEvent
 import androidx.core.app.NotificationManagerCompat
@@ -22,6 +22,7 @@ import io.github.ptt98hd.totch.core.action.ActionExecutor
 import io.github.ptt98hd.totch.core.action.Capability
 import io.github.ptt98hd.totch.core.action.RingerMode
 import io.github.ptt98hd.totch.core.action.SoundModes
+import io.github.ptt98hd.totch.core.model.IntentTarget
 import io.github.ptt98hd.totch.core.model.Action
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -78,7 +79,8 @@ class LocalExecutor(private val context: Context, private val accessibility: Acc
         Action.ToggleTorch -> torchCameraId != null
         Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious,
         Action.VolumeUp, Action.VolumeDown, Action.VolumePanel,
-        Action.RingerNormal, Action.RingerVibrate, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd -> true
+        Action.RingerNormal, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd -> true
+        is Action.SendIntent -> action.target == IntentTarget.BROADCAST
         else -> false
     }
 
@@ -95,10 +97,11 @@ class LocalExecutor(private val context: Context, private val accessibility: Acc
             Action.VolumeDown -> volume(AudioManager.ADJUST_LOWER)
             Action.VolumePanel -> volume(AudioManager.ADJUST_SAME) // only shows the panel (FR-A13)
             Action.RingerNormal -> audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
-            Action.RingerVibrate -> audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
             Action.RingerSilent -> audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
             Action.CycleRingerMode -> cycleRingerMode()
             Action.ToggleDnd -> toggleDnd()
+            // Explicit broadcast to a manifest receiver (FR-A22); no accessibility or Shizuku needed.
+            is Action.SendIntent -> context.sendBroadcast(Intent(action.intentAction).setClassName(action.packageName, action.className))
             else -> error("unsupported")
         }
     }
@@ -157,8 +160,7 @@ class LocalExecutor(private val context: Context, private val accessibility: Acc
             AudioManager.RINGER_MODE_VIBRATE -> RingerMode.VIBRATE
             else -> RingerMode.NORMAL
         }
-        val canVibrate = context.getSystemService(VibratorManager::class.java)?.defaultVibrator?.hasVibrator() == true
-        audioManager.ringerMode = when (SoundModes.next(current, canVibrate)) {
+        audioManager.ringerMode = when (SoundModes.next(current)) {
             RingerMode.NORMAL -> AudioManager.RINGER_MODE_NORMAL
             RingerMode.VIBRATE -> AudioManager.RINGER_MODE_VIBRATE
             RingerMode.SILENT -> AudioManager.RINGER_MODE_SILENT

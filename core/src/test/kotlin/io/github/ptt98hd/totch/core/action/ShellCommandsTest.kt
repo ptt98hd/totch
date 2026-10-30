@@ -1,6 +1,7 @@
 package io.github.ptt98hd.totch.core.action
 
 import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.model.IntentTarget
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -176,7 +177,44 @@ class ShellCommandsTest {
     }
 
     @Test fun `SM-3 sound modes are not shell actions`() {
-        listOf(Action.RingerNormal, Action.RingerVibrate, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd)
+        listOf(Action.RingerNormal, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd)
             .forEach { assertNull(ShellCommands.of(it), "$it") }
+    }
+
+    @Test fun `SC-13 openSettings starts the page by its quoted action`() {
+        assertEquals(
+            "am start -a 'android.settings.WIFI_SETTINGS' -f 0x10000000",
+            ShellCommands.openSettings("android.settings.WIFI_SETTINGS"),
+        )
+        assertNull(ShellCommands.openSettings("a b"))
+        assertNull(ShellCommands.openSettings("a';reboot"))
+        assertNull(ShellCommands.openSettings(""))
+        assertNull(ShellCommands.of(Action.OpenSettings("android.settings.WIFI_SETTINGS")))
+    }
+
+    @Test fun `SC-14 sendIntent starts an explicit activity with the action`() {
+        assertEquals(
+            "am start -a 'com.a.OPEN' -n 'com.a/com.a.Main\$Sub' -f 0x10000000",
+            ShellCommands.sendIntent("com.a", "com.a.Main\$Sub", "com.a.OPEN"),
+        )
+        assertNull(ShellCommands.sendIntent("com.a; reboot", "com.a.Main", "com.a.OPEN"))
+        assertNull(ShellCommands.sendIntent("com.a", "Main'; reboot", "com.a.OPEN"))
+        assertNull(ShellCommands.sendIntent("com.a", "com.a.Main", "x' y"))
+        assertNull(ShellCommands.of(Action.SendIntent("com.a", "com.a.Main", "com.a.OPEN", IntentTarget.ACTIVITY)))
+    }
+
+    @Test fun `SC-15 openContact views the quoted lookup URI`() {
+        val uri = "content://com.android.contacts/contacts/lookup/0r1-ABC/1"
+        assertEquals(
+            "am start -a android.intent.action.VIEW -d '$uri' -f 0x10000000",
+            ShellCommands.openContact(uri),
+        )
+        assertEquals(
+            "am start -a android.intent.action.VIEW -d 'content://com.android.contacts/contacts/lookup/a'\\''b/1' -f 0x10000000",
+            ShellCommands.openContact("content://com.android.contacts/contacts/lookup/a'b/1"),
+        )
+        assertNull(ShellCommands.openContact("content://sms/1"))
+        assertNull(ShellCommands.openContact("$uri\nreboot"))
+        assertNull(ShellCommands.of(Action.OpenContact(uri, "Ann")))
     }
 }

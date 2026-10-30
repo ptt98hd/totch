@@ -55,6 +55,9 @@ Mục tiêu độ phủ: `:core` ≥ 90% dòng (NFR-6).
 | ui (UI-29)                         | `app/.../ui/picker/ActionPickerViewModelTest`                                           |
 | update (UP-14, UP-15)              | `core/.../update/UpdateCommandsTest`                                                    |
 | update (UP-16, UP-17)              | `app/.../update/UpdateControllerTest`, `app/.../ui/settings/AppSettingsViewModelTest`   |
+| actions §12 (SM-1…SM-3), §15–§17 (AD-13, SP-1, SP-2, SC-13…SC-15, IN-1…IN-5) | `core/.../action/SoundModesTest`, `ActionDispatcherTest`, `SettingsPagesTest`, `ShellCommandsTest`, `IntentFiltersTest` |
+| settings (ST-35, ST-36)            | `core/.../settings/SettingsCodecTest`                                                   |
+| actions (SP-3, IN-6, CT-1), ui (UI-73…UI-77) | `app/.../ui/picker/ActionPickerViewModelTest`, `IntentGroupingTest`, `ContactFilterTest`, `app/.../ui/common/ActionCatalogTest`, `StringsTest` |
 
 ## 4. Checklist thủ công trước release
 

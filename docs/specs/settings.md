@@ -108,6 +108,8 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ST-31 | (v1.8.1, FR-G15) `Settings().enabledGestures = ∅` (mọi cử chỉ tắt, chưa đặt). `isGestureOn(g)` = `g.isAvailable && g ∈ enabledGestures` bất kể binding; g bật + `None` → `effectiveAction = None` nhưng `toGestureConfig` coi g như đang nhận (DOUBLE_TAP → `doubleTapEnabled`, `*_HOLD` → `holdSwipes`), `needsTouchBlocking` đúng khi SWIPE_DOWN bật dù `None`; `withGestureOn(g,false)` rồi `true` → về như cũ; `withBinding(g, None)` → g bật. Thay ST-13, ST-19, ST-20, ST-26 phần "đã gán" |
 | ST-32 | (v1.8.1) JSON 1.8.0 không có `enabledGestures`: `{"bindings":{"TAP":home,"DOUBLE_TAP":lock,"LONG_PRESS":torch},"disabledGestures":["LONG_PRESS"]}` → `enabledGestures = {TAP, DOUBLE_TAP}`; không có `disabledGestures` → mọi cử chỉ đã gán bật. Có `enabledGestures` → dùng nguyên giá trị. `decode(encode(s)) == s` |
 | ST-33 | (v1.8.1, FR-U49) `Settings().navLabels == true`; JSON cũ không có key → `true`; round-trip `navLabels=false` |
+| ST-35 | (v1.8.3, FR-A18) JSON có `{"type":"ringer_vibrate"}` (bỏ ở 1.8.3) ở bất kỳ binding nào → đọc thành `RingerSilent`, các binding / cài đặt khác giữ nguyên |
+| ST-36 | (v1.8.3) Round-trip với `type` ổn định: `OpenSettings` → `open_settings`, `SendIntent` → `send_intent` (`target` = `"activity"` / `"broadcast"`), `OpenContact` → `open_contact` |
 | ST-34 | (v1.8.2, FR-D15) `Settings().accessibilityWanted == false`; JSON cũ không có key → `false`; round-trip `accessibilityWanted=true` |
 | ST-30 | (v1.8, FR-S2 sửa, FR-S10) `Settings().bindings` = `None` cho **cả 9** cử chỉ, `isGestureOn(g)` = false với mọi g; `Settings().longPressMs == 300`; JSON đã lưu (có `bindings`, `longPressMs`) giữ nguyên giá trị cũ |
 

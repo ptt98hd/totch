@@ -1,6 +1,7 @@
 package io.github.ptt98hd.totch.core.action
 
 import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.model.IntentTarget
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -115,7 +116,18 @@ class ActionDispatcherTest {
             Action.ToggleWifi, Action.ToggleBluetooth, Action.ToggleMobileData, Action.ToggleAirplaneMode,
             Action.ToggleLocation,
         ).forEach { assertEquals(setOf(Capability.SHIZUKU), ActionRequirements.of(it), "$it") }
-        listOf(Action.RingerNormal, Action.RingerVibrate, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd)
+        listOf(Action.RingerNormal, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd)
             .forEach { assertEquals(setOf(Capability.LOCAL), ActionRequirements.of(it), "$it") }
+    }
+
+    @Test fun `AD-13 settings, contacts and activity intents need a system backend, broadcasts run locally`() {
+        val system = setOf(Capability.ACCESSIBILITY, Capability.SHIZUKU)
+        assertEquals(system, ActionRequirements.of(Action.OpenSettings("android.settings.WIFI_SETTINGS")))
+        assertEquals(system, ActionRequirements.of(Action.OpenContact("content://com.android.contacts/contacts/lookup/k/1", "Ann")))
+        assertEquals(system, ActionRequirements.of(Action.SendIntent("com.a", "com.a.Main", "com.a.OPEN", IntentTarget.ACTIVITY)))
+        assertEquals(
+            setOf(Capability.LOCAL),
+            ActionRequirements.of(Action.SendIntent("com.a", "com.a.Receiver", "com.a.PING", IntentTarget.BROADCAST)),
+        )
     }
 }

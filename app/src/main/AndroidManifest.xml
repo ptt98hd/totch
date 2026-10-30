@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Sound mode actions: ringer mode and Do Not Disturb (FR-A18) -->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <!-- FR-A23: only to list contacts in the action picker. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <!-- FR-D7: recommended, keeps the gesture service from being killed. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- FR-U27, FR-U29: self-update from GitHub Releases, on request or on checks the user turned on. -->
@@ -34,6 +36,130 @@
         <!-- FR-A15: list Quick Settings tiles. -->
         <intent>
             <action android:name="android.service.quicksettings.action.QS_TILE" />
+        </intent>
+        <!-- FR-A21: Settings pages the picker offers (SettingsPages). -->
+        <intent>
+            <action android:name="android.settings.WIRELESS_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.WIFI_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.BLUETOOTH_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.DATA_USAGE_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.NETWORK_OPERATOR_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.AIRPLANE_MODE_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.NFC_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.VPN_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.CAST_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.DISPLAY_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.NIGHT_DISPLAY_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.DARK_THEME_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.SOUND_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.ZEN_MODE_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.POWER_USAGE_SUMMARY" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.BATTERY_SAVER_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.INTERNAL_STORAGE_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.DREAM_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.APPLICATION_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.MANAGE_DEFAULT_APPS_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.HOME_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.NOTIFICATION_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.action.MANAGE_OVERLAY_PERMISSION" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.USAGE_ACCESS_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.MANAGE_UNKNOWN_APP_SOURCES" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.SECURITY_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.PRIVACY_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.LOCATION_SOURCE_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.SYNC_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.ACCESSIBILITY_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.LOCALE_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.INPUT_METHOD_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.DATE_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.APPLICATION_DEVELOPMENT_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.DEVICE_INFO_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.panel.action.INTERNET_CONNECTIVITY" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.panel.action.WIFI" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.panel.action.NFC" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.panel.action.VOLUME" />
         </intent>
         <!-- FR-U59: makers' auto-start managers (OemSettings). -->
         <package android:name="com.miui.securitycenter" />

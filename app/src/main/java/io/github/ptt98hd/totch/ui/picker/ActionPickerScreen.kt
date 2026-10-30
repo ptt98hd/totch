@@ -1,5 +1,23 @@
 package io.github.ptt98hd.totch.ui.picker
 
+import io.github.ptt98hd.totch.ui.common.settingsPageLabels
+import io.github.ptt98hd.totch.ui.common.settingsGroupLabels
+import io.github.ptt98hd.totch.ui.common.openAppDetails
+import io.github.ptt98hd.totch.ui.common.filterGroups
+import io.github.ptt98hd.totch.core.model.IntentTarget
+import io.github.ptt98hd.totch.core.action.IntentFilters
+import io.github.ptt98hd.totch.IntentEntry
+import io.github.ptt98hd.totch.ContactEntry
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.Button
+import androidx.compose.material.icons.outlined.Contacts
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
+import android.content.pm.PackageManager
+import android.app.Activity
+import android.Manifest
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
@@ -113,6 +131,20 @@ fun ActionPickerSheet(container: AppContainer, gesture: Gesture, onDismiss: () -
     val vm: ActionPickerViewModel =
         viewModel(key = gesture.name, viewModelStoreOwner = owner, factory = ActionPickerViewModel.factory(container, gesture))
     val state by vm.state.collectAsStateWithLifecycle()
+    // UI-76: READ_CONTACTS is checked on every resume and after the request; denied for good → app info.
+    val context = LocalContext.current
+    fun contactsGranted() = context.checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+    var contactsBlocked by remember { mutableStateOf(false) }
+    val contactsRequest = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        vm.setContactsPermission(granted)
+        val activity = context as? Activity
+        contactsBlocked = !granted && activity != null &&
+            !activity.shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)
+    }
+    LifecycleResumeEffect(Unit) {
+        vm.setContactsPermission(contactsGranted())
+        onPauseOrDispose {}
+    }
     LaunchedEffect(state.finished) {
         if (state.finished) onDismiss()
     }
@@ -130,7 +162,14 @@ fun ActionPickerSheet(container: AppContainer, gesture: Gesture, onDismiss: () -
             onSelectActivity = vm::selectActivity,
             onToggleActivityApp = vm::toggleActivityApp,
             onSelectTile = vm::selectTile,
+            onSelectIntent = vm::selectIntent,
+            onToggleIntentApp = vm::toggleIntentApp,
+            onSelectContact = vm::selectContact,
+            onRequestContacts = {
+                if (contactsBlocked) context.openAppDetails() else contactsRequest.launch(Manifest.permission.READ_CONTACTS)
+            },
         ),
+        contactsBlocked = contactsBlocked,
     )
 }
 
@@ -146,6 +185,11 @@ data class PickerCallbacks(
     val onSelectActivity: (ActivityEntry) -> Unit = {},
     val onToggleActivityApp: (String) -> Unit = {},
     val onSelectTile: (TileEntry) -> Unit = {},
+    val onSelectIntent: (IntentEntry) -> Unit = {},
+    val onToggleIntentApp: (String) -> Unit = {},
+    val onSelectContact: (ContactEntry) -> Unit = {},
+    /** UI-76: asks for READ_CONTACTS, or opens the app info page once it was denied for good. */
+    val onRequestContacts: () -> Unit = {},
 )
 
 private val PickerTab.icon: ImageVector
@@ -155,6 +199,9 @@ private val PickerTab.icon: ImageVector
         PickerTab.SHORTCUTS -> ShortcutIcon
         PickerTab.ACTIVITIES -> ActivityIcon
         PickerTab.TILES -> TileIcon
+        PickerTab.SETTINGS -> SettingsIcon
+        PickerTab.INTENTS -> IntentIcon
+        PickerTab.CONTACTS -> Icons.Outlined.Contacts
     }
 
 private val PickerTab.labelRes: Int
@@ -164,6 +211,9 @@ private val PickerTab.labelRes: Int
         PickerTab.SHORTCUTS -> R.string.tab_shortcuts
         PickerTab.ACTIVITIES -> R.string.tab_activities
         PickerTab.TILES -> R.string.tab_tiles
+        PickerTab.SETTINGS -> R.string.tab_settings
+        PickerTab.INTENTS -> R.string.tab_intents
+        PickerTab.CONTACTS -> R.string.tab_contacts
     }
 
 /** A row of the Shortcuts or Activities tab: an app (expandable) or one of its shortcuts / activities. */
@@ -181,11 +231,23 @@ private sealed interface ExpandableRow {
     data class Activity(val entry: ActivityEntry) : ExpandableRow {
         override val key = "act-${entry.packageName}-${entry.name}"
     }
+
+    data class Intent(val entry: IntentEntry) : ExpandableRow {
+        override val key = "int-${entry.packageName}-${entry.className}-${entry.intentAction}"
+    }
 }
 
-/** FR-U9, FR-U20, FR-U58, FR-A14, FR-A15: action chooser; one search field also picks the action type (Basic / Applications / Shortcuts / Activities / Quick settings). */
+/**
+ * FR-U9, FR-U20, FR-U58, FR-A14, FR-A15, FR-A21…FR-A23: action chooser; one search field also picks the action type
+ * (UI-73).
+ */
 @Composable
-fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, modifier: Modifier = Modifier) {
+fun ActionPickerContent(
+    state: ActionPickerUiState,
+    callbacks: PickerCallbacks,
+    modifier: Modifier = Modifier,
+    contactsBlocked: Boolean = false,
+) {
     Column(modifier.fillMaxSize().imePadding()) {
         Row(
             Modifier.fillMaxWidth().padding(start = Gutter, end = 4.dp, top = 8.dp, bottom = 8.dp),
@@ -272,6 +334,47 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                             stringResource(R.string.tile_empty, state.tileQuery.trim())
                         },
                     ) { tilesTab(state, callbacks.onSelectTile) }
+                    PickerTab.SETTINGS -> {
+                        val resources = LocalResources.current
+                        val groups = remember(state.settingsGroups, state.settingsQuery, resources) {
+                            filterGroups(
+                                state.settingsGroups,
+                                state.settingsQuery,
+                                id = { it.group },
+                                items = { it.intentActions },
+                                copy = { g, pages -> g.copy(intentActions = pages) },
+                                itemLabel = { page -> settingsPageLabels[page]?.let(resources::getString) ?: page },
+                                groupLabel = { group -> resources.getString(settingsGroupLabels.getValue(group)) },
+                            )
+                        }
+                        SearchableList(
+                            loading = state.settingsLoading,
+                            empty = groups.isEmpty(),
+                            emptyText = stringResource(R.string.settings_page_empty, state.settingsQuery.trim()),
+                        ) { settingsTab(groups, state, callbacks.onSelect) }
+                    }
+                    PickerTab.INTENTS -> SearchableList(
+                        loading = state.intentsLoading,
+                        empty = state.intentGroups.isEmpty(),
+                        emptyText = if (state.intentQuery.isBlank()) {
+                            stringResource(R.string.intent_none)
+                        } else {
+                            stringResource(R.string.intent_empty, state.intentQuery.trim())
+                        },
+                    ) { intentsTab(state, callbacks) }
+                    PickerTab.CONTACTS -> if (!state.contactsPermission) {
+                        ContactsPermission(contactsBlocked, callbacks.onRequestContacts)
+                    } else {
+                        SearchableList(
+                            loading = state.contactsLoading,
+                            empty = state.contacts.isEmpty(),
+                            emptyText = if (state.contactQuery.isBlank()) {
+                                stringResource(R.string.contact_none)
+                            } else {
+                                stringResource(R.string.contact_empty, state.contactQuery.trim())
+                            },
+                        ) { contactsTab(state, callbacks.onSelectContact) }
+                    }
                 }
             }
         }
@@ -361,7 +464,7 @@ private fun LazyListScope.shortcutsTab(state: ActionPickerUiState, callbacks: Pi
                     modifier = modifier.padding(start = 24.dp),
                 )
             }
-            is ExpandableRow.Activity -> Unit
+            is ExpandableRow.Activity, is ExpandableRow.Intent -> Unit
         }
     }
 }
@@ -389,7 +492,116 @@ private fun LazyListScope.activitiesTab(state: ActionPickerUiState, callbacks: P
                     modifier = modifier.padding(start = 24.dp),
                 )
             }
-            is ExpandableRow.Shortcut -> Unit
+            is ExpandableRow.Shortcut, is ExpandableRow.Intent -> Unit
+        }
+    }
+}
+
+/** UI-74: grouped like the Basic tab. */
+private fun LazyListScope.settingsTab(groups: List<SettingsPageGroup>, state: ActionPickerUiState, onSelect: (Action) -> Unit) {
+    val current = (state.current as? Action.OpenSettings)?.intentAction
+    groups.forEach { group ->
+        item(key = "header-${group.group}") {
+            SectionHeader(stringResource(settingsGroupLabels.getValue(group.group)), Modifier.padding(top = 8.dp, bottom = 8.dp))
+        }
+        itemsIndexed(group.intentActions, key = { _, page -> "page-$page" }) { index, page ->
+            val action = Action.OpenSettings(page)
+            val need = state.need(action)
+            Choice(
+                selected = page == current,
+                onClick = { onSelect(action) },
+                leading = { TonalIcon(SettingsIcon) },
+                title = settingsPageLabels[page]?.let { stringResource(it) } ?: page,
+                supporting = need?.let { stringResource(it.labelRes) },
+                enabled = need == null,
+                modifier = Modifier.groupItem(index, group.intentActions.size),
+            )
+        }
+    }
+}
+
+/** UI-75: like the Shortcuts tab; each intent shows its short action and whether it is an activity or a broadcast. */
+private fun LazyListScope.intentsTab(state: ActionPickerUiState, callbacks: PickerCallbacks) {
+    val current = state.current as? Action.SendIntent
+    val rows = state.intentGroups.flatMap { group ->
+        val expanded = state.isIntentAppExpanded(group.packageName)
+        listOf(ExpandableRow.App(group.packageName, group.appLabel, expanded)) +
+            if (expanded) group.intents.map(ExpandableRow::Intent) else emptyList()
+    }
+    expandableRows(rows) { row, modifier ->
+        when (row) {
+            is ExpandableRow.App -> AppHeader(row, modifier, onClick = { callbacks.onToggleIntentApp(row.packageName) })
+            is ExpandableRow.Intent -> {
+                val e = row.entry
+                val need = state.need(Action.SendIntent(e.packageName, e.className, e.intentAction, e.target))
+                val component = shortActivityName(e.packageName, e.className)
+                val kind = stringResource(
+                    if (e.target == IntentTarget.BROADCAST) R.string.intent_broadcast else R.string.intent_activity,
+                    component,
+                )
+                Choice(
+                    selected = current?.packageName == e.packageName && current.className == e.className &&
+                        current.intentAction == e.intentAction,
+                    onClick = { callbacks.onSelectIntent(e) },
+                    leading = { TonalIcon(IntentIcon) },
+                    title = IntentFilters.shortIntentAction(e.intentAction),
+                    supporting = need?.let { "$kind · ${stringResource(it.labelRes)}" } ?: kind,
+                    enabled = need == null,
+                    modifier = modifier.padding(start = 24.dp),
+                )
+            }
+            is ExpandableRow.Shortcut, is ExpandableRow.Activity -> Unit
+        }
+    }
+}
+
+/** UI-76: one card of contacts, each with its initial. */
+private fun LazyListScope.contactsTab(state: ActionPickerUiState, onSelectContact: (ContactEntry) -> Unit) {
+    val current = (state.current as? Action.OpenContact)?.lookupUri
+    itemsIndexed(state.contacts, key = { _, contact -> contact.lookupUri }) { index, contact ->
+        val need = state.need(Action.OpenContact(contact.lookupUri, contact.name))
+        Choice(
+            selected = contact.lookupUri == current,
+            onClick = { onSelectContact(contact) },
+            leading = { Initial(contact.name) },
+            title = contact.name,
+            supporting = need?.let { stringResource(it.labelRes) },
+            enabled = need == null,
+            modifier = Modifier.groupItem(index, state.contacts.size),
+        )
+    }
+}
+
+@Composable
+private fun Initial(name: String) {
+    val colors = MaterialTheme.colorScheme
+    Box(Modifier.size(40.dp).background(colors.primaryContainer, CircleShape), contentAlignment = Alignment.Center) {
+        Text(
+            name.trim().take(1).uppercase(),
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.onPrimaryContainer,
+        )
+    }
+}
+
+/** UI-76: shown in place of the list until READ_CONTACTS is granted. */
+@Composable
+private fun ContactsPermission(blocked: Boolean, onRequest: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().padding(Gutter),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(Icons.Outlined.Contacts, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
+        Text(
+            stringResource(R.string.contacts_permission_text),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(vertical = 16.dp),
+        )
+        Button(onClick = onRequest) {
+            Text(stringResource(if (blocked) R.string.contacts_permission_settings else R.string.contacts_permission_allow))
         }
     }
 }
@@ -426,6 +638,8 @@ private val ActivityAction = Action.LaunchActivity("", "", "")
 private val ShortcutIcon = ShortcutAction.icon
 private val ActivityIcon = ActivityAction.icon
 private val TileIcon = Action.ClickTile("", "", "").icon
+private val SettingsIcon = Action.OpenSettings("").icon
+private val IntentIcon = Action.SendIntent("", "", "", IntentTarget.ACTIVITY).icon
 
 @Composable
 private fun AppHeader(row: ExpandableRow.App, modifier: Modifier, onClick: () -> Unit) {
