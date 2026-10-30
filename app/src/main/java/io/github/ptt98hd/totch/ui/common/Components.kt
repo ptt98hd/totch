@@ -19,7 +19,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwitchDefaults
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -458,7 +457,10 @@ fun TotchSwitch(
     )
 }
 
-/** FR-U53: the slider of the whole app, with a round thumb and a thin track without a gap around it. */
+/**
+ * FR-U53, FR-U57: the slider of the whole app — the Material 3 track (thick, a gap around the thumb, a stop
+ * indicator) with a round thumb that narrows while pressed, as the M3 handle does.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TotchSlider(
@@ -473,7 +475,7 @@ fun TotchSlider(
     val interaction = remember { MutableInteractionSource() }
     val dragged by interaction.collectIsDraggedAsState()
     val pressed by interaction.collectIsPressedAsState()
-    val thumbSize by animateDpAsState(if (dragged || pressed) 24.dp else 20.dp, label = "thumb")
+    val thumbSize by animateDpAsState(if (dragged || pressed) 20.dp else 24.dp, label = "thumb")
     Slider(
         value = value,
         onValueChange = onValueChange,
@@ -488,21 +490,11 @@ fun TotchSlider(
                 Box(
                     Modifier
                         .size(thumbSize)
-                        .shadow(1.dp, CircleShape)
-                        .background(if (enabled) MaterialTheme.colorScheme.primary else colors.disabledThumbColor, CircleShape),
+                        .background(if (enabled) colors.thumbColor else colors.disabledThumbColor, CircleShape),
                 )
             }
         },
-        track = { state ->
-            SliderDefaults.Track(
-                sliderState = state,
-                modifier = Modifier.height(6.dp),
-                enabled = enabled,
-                colors = colors,
-                drawStopIndicator = null,
-                thumbTrackGapSize = 0.dp,
-            )
-        },
+        track = { state -> SliderDefaults.Track(sliderState = state, enabled = enabled, colors = colors) },
     )
 }
 

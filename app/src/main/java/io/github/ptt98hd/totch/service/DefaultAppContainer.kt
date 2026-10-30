@@ -6,6 +6,8 @@ import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.EngineStatus
 import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.SystemStatus
+import io.github.ptt98hd.totch.Permission
+import io.github.ptt98hd.totch.core.action.PermissionCommands
 import io.github.ptt98hd.totch.AppActivities
 import io.github.ptt98hd.totch.AppShortcuts
 import io.github.ptt98hd.totch.TouchArea
@@ -64,6 +66,9 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     override val settingsRepository = DataStoreSettingsRepository(app.settingsDataStore)
     private val settings: StateFlow<Settings> =
         settingsRepository.settings.stateIn(scope, SharingStarted.Eagerly, Settings())
+
+    /** Gestures are switched on, as last read from the repository. */
+    val settingsEnabled: Boolean get() = settings.value.enabled
 
     val display = DisplayMonitor(app, scope)
 
@@ -151,7 +156,53 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
             settingsRepository.settings
                 .map { it.enabled }
                 .distinctUntilChanged()
-                .collect { NotchForegroundService.setRunning(app, it) } // DM-1, DM-7
+                .collect {
+                    NotchForegroundService.setRunning(app, it) // DM-1, DM-7
+                    KeepAliveScheduler.apply(app, it) // DM-50
+                }
+        }
+        // DM-55: on process start and whenever Shizuku becomes ready.
+        scope.launch {
+            shizuku.state.map { it.ready }.distinctUntilChanged().collect { ready ->
+                if (ready) grantWriteSecureSettings()
+                restoreAccessibility()
+            }
+        }
+    }
+
+    /** FR-D14: what the watchdog, boot and update receivers do; the service start is a no-op when it runs. */
+    suspend fun keepAlive() {
+        if (settingsRepository.settings.first().enabled) NotchForegroundService.setRunning(app, true)
+        restoreAccessibility()
+    }
+
+    /** FR-D15, DM-54: turns accessibility back on when Android dropped it but the user did not switch it off. */
+    private suspend fun restoreAccessibility() {
+        val method = AccessibilityKeeper.decide(
+            wanted = settingsRepository.settings.first().accessibilityWanted,
+            enabled = AccessibilityKeeper.isEnabled(app),
+            canWriteSecure = AccessibilityKeeper.canWriteSecureSettings(app),
+            shizukuReady = shizuku.state.value.ready,
+        )
+        when (method) {
+            RestoreMethod.WRITE -> AccessibilityKeeper.write(app, true)
+            RestoreMethod.SHIZUKU -> systemStatus.setPermission(Permission.ACCESSIBILITY, true)
+            RestoreMethod.NONE -> return
+        }
+        systemStatus.refresh()
+    }
+
+    /** PC-10: once, while Shizuku is available, so accessibility can be restored without it after a reboot. */
+    private suspend fun grantWriteSecureSettings() {
+        if (!AccessibilityKeeper.canWriteSecureSettings(app)) {
+            shell.exec(listOf(PermissionCommands.grantWriteSecureSettings(app.packageName)))
+        }
+    }
+
+    /** DM-53: the accessibility service records whether the user wants it on. */
+    fun setAccessibilityWanted(wanted: Boolean) {
+        scope.launch {
+            settingsRepository.update { if (it.accessibilityWanted == wanted) it else it.copy(accessibilityWanted = wanted) }
         }
     }
 

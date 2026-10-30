@@ -132,6 +132,7 @@ hoặc không được hỗ trợ trên nhiều máy.
 | HF-2 | Android 13+: `vibrate(effect, VibrationAttributes.createForUsage(USAGE_HARDWARE_FEEDBACK))` (được phép khi app ở nền, không phụ thuộc công tắc phản hồi chạm); Android 12: `AudioAttributes` `USAGE_ASSISTANCE_SONIFICATION` |
 | HF-3 | Mỗi cử chỉ có hành động rung một lần; không có vibrator → bỏ qua, không crash |
 | HF-4 | (v1.6.2) Rung ngay khi nhận diện, **không chờ** dispatch xong (đang chạy, chờ trong hàng đợi, hay lỗi đều đã rung) — hành động qua Shizuku có thể chậm, rung sau khi xong cảm giác trễ |
+| HF-5 | (v1.8.2, FR-G16) Cử chỉ **đang bật** với hành động `None` (Nothing) cũng rung một lần khi nhận diện (theo `haptics`), không dispatch gì. Cử chỉ tắt không rung. Sửa HF-3 phần "có hành động" |
 
 ## 7. Shortcut tĩnh của ứng dụng (FR-A12)
 

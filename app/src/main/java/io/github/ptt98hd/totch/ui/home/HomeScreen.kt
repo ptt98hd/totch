@@ -37,6 +37,15 @@ import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.outlined.PauseCircle
+import androidx.compose.material.icons.outlined.RestartAlt
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.foundation.clickable
+import io.github.ptt98hd.totch.service.OemSettings
+import io.github.ptt98hd.totch.ui.common.TonalIcon
+import io.github.ptt98hd.totch.ui.common.TotchListItem
+import io.github.ptt98hd.totch.ui.common.openAutostartSettings
+import io.github.ptt98hd.totch.ui.common.openKeepWhenUnusedSettings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -95,6 +104,8 @@ fun HomeRoute(container: AppContainer) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var shizukuInstalled by remember { mutableStateOf(context.isShizukuInstalled()) }
+    // FR-U59: only on phones whose maker adds an auto-start manager.
+    val hasAutostart = remember { OemSettings.autostartIntent(context) != null }
     var notificationAsked by rememberSaveable { mutableStateOf(false) }
     var confirmRevoke by rememberSaveable { mutableStateOf<Permission?>(null) }
 
@@ -116,6 +127,7 @@ fun HomeRoute(container: AppContainer) {
             Permission.MEDIA_ACCESS -> context.openMediaAccessSettings()
             Permission.DND_ACCESS -> context.openDndAccessSettings()
             Permission.INSTALL_UPDATES -> context.openInstallUnknownAppsSettings()
+            Permission.KEEP_WHEN_UNUSED -> context.openKeepWhenUnusedSettings()
             Permission.BATTERY ->
                 if (state.permissions.any { it.permission == Permission.BATTERY && it.granted }) {
                     context.openBatteryOptimizationSettings()
@@ -137,6 +149,7 @@ fun HomeRoute(container: AppContainer) {
     HomeScreen(
         state = state,
         shizukuInstalled = shizukuInstalled,
+        onAutostartClick = if (hasAutostart) context::openAutostartSettings else null,
         onEnabledChange = vm::setEnabled,
         onShizukuClick = {
             if (state.shizuku == ShizukuStatus.PERMISSION_REQUIRED) vm.requestShizukuPermission() else context.openShizuku()
@@ -184,6 +197,8 @@ fun HomeScreen(
     onShizukuClick: () -> Unit,
     onPermissionChange: (Permission, Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    /** FR-U59: opens the maker's auto-start page; null hides the row. */
+    onAutostartClick: (() -> Unit)? = null,
 ) {
     Scaffold(
         modifier = modifier,
@@ -212,6 +227,7 @@ fun HomeScreen(
                     SectionHeader(stringResource(R.string.advanced_title))
                     GroupCard {
                         ShizukuRow(state.shizuku, shizukuInstalled, onShizukuClick)
+                        if (onAutostartClick != null) AutostartRow(onAutostartClick)
                     }
                 }
             }
@@ -323,6 +339,18 @@ private fun ShizukuRow(status: ShizukuStatus, installed: Boolean, onClick: () ->
     )
 }
 
+/** FR-U59: the maker's auto-start / background manager. */
+@Composable
+private fun AutostartRow(onClick: () -> Unit) {
+    TotchListItem(
+        headline = stringResource(R.string.autostart_title),
+        modifier = Modifier.clickable(onClick = onClick),
+        supporting = stringResource(R.string.autostart_description),
+        leading = { TonalIcon(Icons.Outlined.RestartAlt) },
+        trailing = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) },
+    )
+}
+
 private val Permission.icon: ImageVector
     get() = when (this) {
         Permission.ACCESSIBILITY -> Icons.Outlined.AccessibilityNew
@@ -330,6 +358,7 @@ private val Permission.icon: ImageVector
         Permission.MEDIA_ACCESS -> Icons.Outlined.MusicNote
         Permission.DND_ACCESS -> Icons.Outlined.DoNotDisturbOn
         Permission.BATTERY -> Icons.Outlined.BatteryFull
+        Permission.KEEP_WHEN_UNUSED -> Icons.Outlined.PauseCircle
         Permission.INSTALL_UPDATES -> Icons.Outlined.InstallMobile
     }
 
@@ -340,6 +369,7 @@ private val Permission.titleRes: Int
         Permission.MEDIA_ACCESS -> R.string.permission_media
         Permission.DND_ACCESS -> R.string.permission_dnd
         Permission.BATTERY -> R.string.permission_battery
+        Permission.KEEP_WHEN_UNUSED -> R.string.permission_keep_unused
         Permission.INSTALL_UPDATES -> R.string.permission_install_updates
     }
 
@@ -371,6 +401,7 @@ private fun HomeScreenPreview() {
                     PermissionItem(Permission.MEDIA_ACCESS, false),
                     PermissionItem(Permission.DND_ACCESS, false),
                     PermissionItem(Permission.BATTERY, true),
+                    PermissionItem(Permission.KEEP_WHEN_UNUSED, true),
                     PermissionItem(Permission.INSTALL_UPDATES, false),
                 ),
             ),

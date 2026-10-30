@@ -42,15 +42,16 @@ class AndroidSystemStatus(
     private val batteryUnrestricted = MutableStateFlow(false)
     private val installUpdatesAllowed = MutableStateFlow(false)
     private val dndAccessGranted = MutableStateFlow(false)
+    private val keepWhenUnused = MutableStateFlow(false)
     private val powerManager = context.getSystemService(PowerManager::class.java)
     private val notificationManager = context.getSystemService(NotificationManager::class.java)
 
     override val requirements: StateFlow<Requirements> = combine(
         combine(shizuku.state, accessibilityEnabled, accessibility.service, ::Triple),
         combine(notificationsGranted, mediaAccessGranted, ::Pair),
-        batteryUnrestricted, installUpdatesAllowed, dndAccessGranted,
-    ) { (s, enabled, service), (notifications, media), battery, install, dnd ->
-        Requirements(s.running, s.granted, enabled || service != null, notifications, media, battery, install, dnd)
+        combine(batteryUnrestricted, keepWhenUnused, ::Pair), installUpdatesAllowed, dndAccessGranted,
+    ) { (s, enabled, service), (notifications, media), (battery, unused), install, dnd ->
+        Requirements(s.running, s.granted, enabled || service != null, notifications, media, battery, install, dnd, unused)
     }.stateIn(scope, SharingStarted.Eagerly, Requirements())
 
     init {
@@ -78,12 +79,17 @@ class AndroidSystemStatus(
         batteryUnrestricted.value = powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
         installUpdatesAllowed.value = context.packageManager.canRequestPackageInstalls()
         dndAccessGranted.value = notificationManager?.isNotificationPolicyAccessGranted == true
+        keepWhenUnused.value = runCatching { context.packageManager.isAutoRevokeWhitelisted }.getOrDefault(false)
     }
 
     override fun requestShizukuPermission() = shizuku.requestPermission()
 
     override suspend fun setPermission(permission: Permission, granted: Boolean): Boolean {
         val pkg = context.packageName
+        // FR-D15: with WRITE_SECURE_SETTINGS (granted once through Shizuku) accessibility needs no Shizuku.
+        if (permission == Permission.ACCESSIBILITY && AccessibilityKeeper.canWriteSecureSettings(context)) {
+            return AccessibilityKeeper.write(context, granted).also { refresh() }
+        }
         val commands = when (permission) {
             Permission.ACCESSIBILITY -> PermissionCommands.accessibility(
                 Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES),
@@ -96,7 +102,8 @@ class AndroidSystemStatus(
                 ),
             )
             Permission.DND_ACCESS -> listOf(PermissionCommands.dndAccess(pkg, granted))
-            Permission.BATTERY -> listOf(PermissionCommands.batteryUnrestricted(pkg, granted))
+            Permission.BATTERY -> PermissionCommands.batteryUnrestricted(pkg, granted)
+            Permission.KEEP_WHEN_UNUSED -> listOf(PermissionCommands.keepWhenUnused(pkg, granted))
             // Denying the app-op kills Totch too, so it is detached and reopens the app (PC-7, UI-53).
             Permission.INSTALL_UPDATES -> listOf(
                 if (granted) {

@@ -321,6 +321,25 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-U54 | Mọi switch (Home, Gestures, Settings); mọi thanh trượt (Notch) | Switch có ✓ khi bật, ✕ khi tắt; thanh trượt có nút kéo tròn | [ ] |
 | MT-I7 | Icon launcher / F-Droid | 4 ngôi sao giống nhau ở 4 góc, đối xứng | [ ] |
 
+## 18. v1.8.2 — Không làm gì, ô tìm kiếm gộp, thanh trượt, khó bị tắt
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-G30 | Bật Chạm đúp (Không làm gì), Rung phản hồi bật; chạm đúp ở notch | Rung một lần, không gì khác xảy ra. Tắt Rung phản hồi → không rung. Tắt switch Chạm đúp → chạm đúp không rung | [ ] |
+| MT-G31 | Gestures / picker, tiếng Việt và tiếng Anh | Cử chỉ chưa đặt ghi "Không làm gì" / "Nothing"; dòng đầu tab Cơ bản cũng vậy | [ ] |
+| MT-H20 | Home › Quyền | "Không làm phiền" / "Do Not Disturb"; có dòng "Giữ khi ít dùng" sau Pin không giới hạn | [ ] |
+| MT-H21 | Giữ khi ít dùng: bật/tắt có Shizuku / không có Shizuku | Đổi ngay qua Shizuku / mở trang app trong Cài đặt (mục Tạm dừng hoạt động khi không dùng); quay lại → trạng thái đúng | [ ] |
+| MT-P30 | Picker: ô tìm kiếm duy nhất; bấm icon trái | Menu 5 loại (icon + tên + radio), loại đang chọn được tô; chọn "Cài đặt nhanh" → icon đổi, placeholder "Tìm cài đặt nhanh" | [ ] |
+| MT-P31 | Gõ chữ vào ô tìm kiếm; xóa | Bên phải hiện ✕ khi có chữ, mũi tên khi rỗng; bấm mũi tên → mở menu. Đổi loại qua lại → query của mỗi loại giữ nguyên | [ ] |
+| MT-U60 | Notch: mọi thanh trượt, sáng / tối | Track dày kiểu Material 3, có khe quanh nút kéo, chấm ở cuối; nút kéo tròn, nhỏ lại khi kéo | [ ] |
+| MT-K1 | Bật cử chỉ, `adb shell am kill io.github.ptt98hd.totch` (hoặc để ROM dọn) | Trong ≤ 15 phút (thường ngay) service và thông báo chạy lại, cử chỉ hoạt động | [ ] |
+| MT-K2 | Vuốt Totch khỏi Gần đây (máy Xiaomi / OPPO / Samsung nếu có) | Cử chỉ vẫn chạy hoặc chạy lại sau vài giây | [ ] |
+| MT-K3 | Có Shizuku: mở Totch; `adb shell dumpsys package io.github.ptt98hd.totch \| grep WRITE_SECURE` | `WRITE_SECURE_SETTINGS: granted=true` | [ ] |
+| MT-K4 | Sau MT-K3, Trợ năng bật; Buộc dừng Totch trong Cài đặt rồi mở lại Totch (không có Shizuku) | Trợ năng tự bật lại. Tắt Trợ năng trong Cài đặt hệ thống rồi mở Totch → **không** tự bật lại | [ ] |
+| MT-K5 | Máy Xiaomi / Huawei / OPPO / vivo / Samsung: Home › Nâng cao | Có dòng "Tự khởi chạy", bấm → trang tự khởi chạy / pin của hãng. Pixel / máy gốc → không có dòng này | [ ] |
+| MT-K6 | Khởi động lại máy (không có Shizuku, Trợ năng bật) | Service chạy lại sau khi mở khóa; cử chỉ hoạt động qua Trợ năng | [ ] |
+| MT-K7 | Cập nhật đè APK (adb install -r) khi đang bật | Service tự chạy lại sau khi cài, không cần mở app | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)

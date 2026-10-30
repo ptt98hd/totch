@@ -1,0 +1,4 @@
+* "Chưa đặt" thành "Không làm gì", vẫn rung khi nhận diện.
+* Bảng chọn hành động: một ô tìm kiếm, icon trái chọn loại. "Cài đặt nhanh".
+* Thanh trượt Material 3 nút tròn; Home ghi "Không làm phiền".
+* Khó bị tắt hơn: job watchdog, chạy lại sau cập nhật / khi vuốt khỏi Gần đây, tự bật lại Trợ năng sau khi buộc dừng, quyền "Giữ khi ít dùng", trang tự khởi chạy của hãng.

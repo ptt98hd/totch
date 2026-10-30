@@ -150,7 +150,7 @@ fun GesturesScreen(
 
 /**
  * UI-16, UI-64: a gesture row with its switch, which only decides whether the gesture listens (FR-G15); switched-off and unavailable gestures are dimmed (UI-14). FR-U43: unbound
- * gestures read "Not set"; FR-U44: a gesture or action that cannot run shows why, and its switch is disabled.
+ * gestures read "Nothing" (UI-72); FR-U44: a gesture or action that cannot run shows why, and its switch is disabled.
  */
 @Composable
 private fun GestureListItem(row: GestureRow, onClick: () -> Unit, onSwitchChange: (Boolean) -> Unit) {

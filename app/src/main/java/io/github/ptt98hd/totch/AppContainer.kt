@@ -46,7 +46,7 @@ sealed interface EngineStatus {
 }
 
 /** Permissions shown on Home; each can be switched through Shizuku (detection-modes §6). */
-enum class Permission { ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS, DND_ACCESS, BATTERY, INSTALL_UPDATES }
+enum class Permission { ACCESSIBILITY, NOTIFICATIONS, MEDIA_ACCESS, DND_ACCESS, BATTERY, KEEP_WHEN_UNUSED, INSTALL_UPDATES }
 
 data class Requirements(
     val shizukuRunning: Boolean = false,
@@ -61,6 +61,8 @@ data class Requirements(
     val installUpdatesAllowed: Boolean = false,
     /** Do Not Disturb access for the sound mode actions (FR-D12). */
     val dndAccessGranted: Boolean = false,
+    /** Exempt from app hibernation, "pause app activity if unused" (FR-D16). */
+    val keepWhenUnused: Boolean = false,
 )
 
 interface SystemStatus {

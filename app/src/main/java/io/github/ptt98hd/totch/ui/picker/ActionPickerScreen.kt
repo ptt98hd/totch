@@ -35,15 +35,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -123,17 +123,13 @@ fun ActionPickerSheet(container: AppContainer, gesture: Gesture, onDismiss: () -
             onClose = onDismiss,
             onTab = vm::selectTab,
             onSelect = vm::select,
-            onBasicQuery = vm::setBasicQuery,
+            onQuery = vm::setQuery,
             onSelectApp = vm::selectApp,
             onSelectShortcut = vm::selectShortcut,
-            onAppQuery = vm::setAppQuery,
-            onShortcutQuery = vm::setShortcutQuery,
             onToggleApp = vm::toggleExpanded,
             onSelectActivity = vm::selectActivity,
-            onActivityQuery = vm::setActivityQuery,
             onToggleActivityApp = vm::toggleActivityApp,
             onSelectTile = vm::selectTile,
-            onTileQuery = vm::setTileQuery,
         ),
     )
 }
@@ -142,17 +138,14 @@ data class PickerCallbacks(
     val onClose: () -> Unit = {},
     val onTab: (PickerTab) -> Unit = {},
     val onSelect: (Action) -> Unit = {},
-    val onBasicQuery: (String) -> Unit = {},
+    /** UI-71: the search of the current tab. */
+    val onQuery: (String) -> Unit = {},
     val onSelectApp: (AppInfo) -> Unit = {},
     val onSelectShortcut: (ShortcutEntry) -> Unit = {},
-    val onAppQuery: (String) -> Unit = {},
-    val onShortcutQuery: (String) -> Unit = {},
     val onToggleApp: (String) -> Unit = {},
     val onSelectActivity: (ActivityEntry) -> Unit = {},
-    val onActivityQuery: (String) -> Unit = {},
     val onToggleActivityApp: (String) -> Unit = {},
     val onSelectTile: (TileEntry) -> Unit = {},
-    val onTileQuery: (String) -> Unit = {},
 )
 
 private val PickerTab.icon: ImageVector
@@ -163,56 +156,6 @@ private val PickerTab.icon: ImageVector
         PickerTab.ACTIVITIES -> ActivityIcon
         PickerTab.TILES -> TileIcon
     }
-
-/** FR-U47: the sections in a drop-down select (replacing the chip row of FR-U25); each entry has its icon. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TabSelect(current: PickerTab, onTab: (PickerTab) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(bottom = 12.dp),
-    ) {
-        OutlinedTextField(
-            value = stringResource(current.labelRes),
-            onValueChange = {},
-            readOnly = true,
-            singleLine = true,
-            label = { Text(stringResource(R.string.picker_tab_label)) },
-            leadingIcon = { Icon(current.icon, contentDescription = null) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            shape = MaterialTheme.shapes.large,
-            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            PickerTab.entries.forEach { tab ->
-                val isSelected = tab == current
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            stringResource(tab.labelRes),
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Unspecified,
-                        )
-                    },
-                    onClick = {
-                        expanded = false
-                        onTab(tab)
-                    },
-                    leadingIcon = {
-                        Icon(
-                            tab.icon,
-                            contentDescription = null,
-                            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                    modifier = Modifier.semantics { selected = isSelected },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                )
-            }
-        }
-    }
-}
 
 private val PickerTab.labelRes: Int
     get() = when (this) {
@@ -240,7 +183,7 @@ private sealed interface ExpandableRow {
     }
 }
 
-/** FR-U9, FR-U20, FR-U47, FR-A14, FR-A15: action chooser with a section select (Basic / Apps / Shortcuts / Activities / Tiles). */
+/** FR-U9, FR-U20, FR-U58, FR-A14, FR-A15: action chooser; one search field also picks the action type (Basic / Applications / Shortcuts / Activities / Quick settings). */
 @Composable
 fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxSize().imePadding()) {
@@ -259,7 +202,13 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                 Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.picker_close))
             }
         }
-        TabSelect(state.tab, callbacks.onTab)
+        PickerSearchField(
+            tab = state.tab,
+            query = state.query,
+            onQuery = callbacks.onQuery,
+            onTab = callbacks.onTab,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(bottom = 12.dp),
+        )
         AnimatedContent(
             targetState = state.tab,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -277,23 +226,17 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                                 groupLabel = { resources.getString(it.labelRes()) },
                             )
                         }
-                        // FR-U43: "Not set" leads the list, hidden by a query that does not match it.
-                        val showNotSet = remember(state.basicQuery, resources) {
+                        // FR-U43: "Nothing" leads the list, hidden by a query that does not match it (UI-72).
+                        val showNothing = remember(state.basicQuery, resources) {
                             searchKey(state.basicQuery) in searchKey(resources.getString(Action.None.labelRes))
                         }
                         SearchableList(
-                            query = state.basicQuery,
-                            onQuery = callbacks.onBasicQuery,
-                            placeholder = stringResource(R.string.action_search),
                             loading = false,
-                            empty = groups.isEmpty() && !showNotSet,
+                            empty = groups.isEmpty() && !showNothing,
                             emptyText = stringResource(R.string.action_search_empty, state.basicQuery.trim()),
-                        ) { basicTab(groups, showNotSet, state, callbacks.onSelect) }
+                        ) { basicTab(groups, showNothing, state, callbacks.onSelect) }
                     }
                     PickerTab.APPS -> SearchableList(
-                        query = state.appQuery,
-                        onQuery = callbacks.onAppQuery,
-                        placeholder = stringResource(R.string.app_picker_search),
                         loading = state.appsLoading,
                         empty = state.apps.isEmpty(),
                         emptyText = if (state.appQuery.isBlank()) {
@@ -303,9 +246,6 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                         },
                     ) { appsTab(state, callbacks.onSelectApp) }
                     PickerTab.SHORTCUTS -> SearchableList(
-                        query = state.shortcutQuery,
-                        onQuery = callbacks.onShortcutQuery,
-                        placeholder = stringResource(R.string.shortcut_search),
                         loading = state.shortcutsLoading,
                         empty = state.shortcutGroups.isEmpty(),
                         emptyText = if (state.shortcutQuery.isBlank()) {
@@ -315,9 +255,6 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                         },
                     ) { shortcutsTab(state, callbacks) }
                     PickerTab.ACTIVITIES -> SearchableList(
-                        query = state.activityQuery,
-                        onQuery = callbacks.onActivityQuery,
-                        placeholder = stringResource(R.string.activity_search),
                         loading = state.activitiesLoading,
                         empty = state.activityGroups.isEmpty(),
                         emptyText = if (state.activityQuery.isBlank()) {
@@ -327,9 +264,6 @@ fun ActionPickerContent(state: ActionPickerUiState, callbacks: PickerCallbacks, 
                         },
                     ) { activitiesTab(state, callbacks) }
                     PickerTab.TILES -> SearchableList(
-                        query = state.tileQuery,
-                        onQuery = callbacks.onTileQuery,
-                        placeholder = stringResource(R.string.tile_search),
                         loading = state.tilesLoading,
                         empty = state.tiles.isEmpty(),
                         emptyText = if (state.tileQuery.isBlank()) {
@@ -350,15 +284,15 @@ private val listPadding = PaddingValues(start = Gutter, end = Gutter, bottom = 2
 
 /**
  * UI-26: each group is one rounded card of rows (icon, name, radio) separated by dividers; FR-U35 groups. FR-U43: the
- * "Not set" card comes first. FR-U44: actions that cannot run are disabled and say why.
+ * "Nothing" card comes first. FR-U44: actions that cannot run are disabled and say why.
  */
 private fun LazyListScope.basicTab(
     groups: List<ActionGroup>,
-    showNotSet: Boolean,
+    showNothing: Boolean,
     state: ActionPickerUiState,
     onSelect: (Action) -> Unit,
 ) {
-    if (showNotSet) {
+    if (showNothing) {
         item(key = "action-none") {
             Choice(
                 selected = state.current == Action.None,
@@ -532,20 +466,11 @@ private fun Choice(
 
 @Composable
 private fun SearchableList(
-    query: String,
-    onQuery: (String) -> Unit,
-    placeholder: String,
     loading: Boolean,
     empty: Boolean,
     emptyText: String,
     content: LazyListScope.() -> Unit,
 ) {
-    CompactSearchField(
-        query = query,
-        onQuery = onQuery,
-        placeholder = placeholder,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(bottom = 12.dp),
-    )
     when {
         loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         empty -> Box(Modifier.fillMaxSize().padding(Gutter), contentAlignment = Alignment.Center) {
@@ -555,50 +480,111 @@ private fun SearchableList(
     }
 }
 
-/** FR-U38: a 44 dp search field (the M3 SearchBar is 56 dp), fully rounded. */
+/**
+ * FR-U58: the search field of the current action type, fully rounded. Its leading icon is the type and opens a menu of
+ * the types (icon, name, radio; the current one highlighted); the trailing button clears the query, or opens the
+ * same menu while the query is empty.
+ */
 @Composable
-private fun CompactSearchField(query: String, onQuery: (String) -> Unit, placeholder: String, modifier: Modifier = Modifier) {
+private fun PickerSearchField(
+    tab: PickerTab,
+    query: String,
+    onQuery: (String) -> Unit,
+    onTab: (PickerTab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val focusManager = LocalFocusManager.current
     val colors = MaterialTheme.colorScheme
-    BasicTextField(
-        value = query,
-        onValueChange = onQuery,
-        singleLine = true,
-        textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
-        cursorBrush = SolidColor(colors.primary),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-        modifier = modifier.height(44.dp),
-        decorationBox = { field ->
-            Row(
-                Modifier.fillMaxSize().background(colors.surfaceContainerHigh, CircleShape).padding(start = 14.dp, end = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Outlined.Search, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-                Box(Modifier.weight(1f).padding(horizontal = 10.dp)) {
-                    if (query.isEmpty()) {
-                        Text(
-                            placeholder,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = colors.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    field()
-                }
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { onQuery("") }, modifier = Modifier.size(36.dp)) {
+    val density = LocalDensity.current
+    val locale = LocalConfiguration.current.locales[0]
+    var expanded by remember { mutableStateOf(false) }
+    var width by remember { mutableStateOf(0.dp) }
+    val typeLabel = stringResource(tab.labelRes)
+    val arrow by animateFloatAsState(if (expanded) 180f else 0f, label = "typeMenu")
+    Box(modifier.onSizeChanged { width = with(density) { it.width.toDp() } }) {
+        BasicTextField(
+            value = query,
+            onValueChange = onQuery,
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
+            cursorBrush = SolidColor(colors.primary),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            decorationBox = { field ->
+                Row(
+                    Modifier.fillMaxSize().background(colors.surfaceContainerHigh, CircleShape).padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = { expanded = true }, modifier = Modifier.size(40.dp)) {
                         Icon(
-                            Icons.Outlined.Close,
-                            contentDescription = stringResource(R.string.app_picker_clear),
-                            modifier = Modifier.size(20.dp),
+                            tab.icon,
+                            contentDescription = stringResource(R.string.picker_type_cd, typeLabel),
+                            tint = colors.primary,
+                            modifier = Modifier.size(22.dp),
                         )
                     }
+                    Box(Modifier.weight(1f).padding(horizontal = 8.dp)) {
+                        if (query.isEmpty()) {
+                            Text(
+                                stringResource(R.string.picker_search, typeLabel.lowercase(locale)),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = colors.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        field()
+                    }
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { onQuery("") }, modifier = Modifier.size(40.dp)) {
+                            Icon(
+                                Icons.Outlined.Close,
+                                contentDescription = stringResource(R.string.app_picker_clear),
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = { expanded = true }, modifier = Modifier.size(40.dp)) {
+                            Icon(
+                                Icons.Outlined.ExpandMore,
+                                contentDescription = stringResource(R.string.picker_type_cd, typeLabel),
+                                tint = colors.onSurfaceVariant,
+                                modifier = Modifier.rotate(arrow),
+                            )
+                        }
+                    }
                 }
+            },
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.width(width),
+        ) {
+            PickerTab.entries.forEach { entry ->
+                val isSelected = entry == tab
+                val content = if (isSelected) colors.onSecondaryContainer else colors.onSurface
+                DropdownMenuItem(
+                    text = { Text(stringResource(entry.labelRes), color = content) },
+                    onClick = {
+                        expanded = false
+                        onTab(entry)
+                    },
+                    leadingIcon = {
+                        Icon(entry.icon, contentDescription = null, tint = if (isSelected) content else colors.onSurfaceVariant)
+                    },
+                    trailingIcon = { RadioButton(selected = isSelected, onClick = null) },
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(if (isSelected) colors.secondaryContainer else Color.Transparent)
+                        .semantics { selected = isSelected },
+                )
             }
-        },
-    )
+        }
+    }
 }
 
 @Preview(showBackground = true)

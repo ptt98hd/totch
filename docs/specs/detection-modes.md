@@ -10,7 +10,7 @@
 > **v1.5:** quyền Thông báo tắt được qua Shizuku (FR-D10, PC-5); overlay chặn chạm khi có Trợ năng (FR-G14, §7);
 > nhận cử chỉ khi xoay ngang (FR-R8, DM-31).
 
-Yêu cầu: FR-D1…FR-D13, FR-S8, FR-G10, FR-G14, FR-R8, NFR-3, NFR-8 · Module: `:app`
+Yêu cầu: FR-D1…FR-D17, FR-U59, FR-S8, FR-G10, FR-G14, FR-R8, NFR-3, NFR-8 · Module: `:app`
 
 ## 1. Trạng thái engine
 
@@ -79,6 +79,7 @@ Trạng thái được expose qua `StateFlow<EngineStatus>` (singleton `GestureE
 | EN-10 | `SWIPE_RIGHT_HOLD` gán `VolumeUp`: vuốt phải rồi giữ 500 + 2000 ms (virtual time) → `VolumeUp` dispatch đúng **1** lần (v1.3: không lặp, FR-G11) |
 | EN-11 | `SWIPE_RIGHT` gán `MediaNext` nhưng nằm trong `disabledGestures` → vuốt phải không dispatch gì (FR-G12) |
 | EN-14 | (v1.8.1, FR-G15) DOUBLE_TAP **bật** + `None`, TAP gán `Home` → chạm một lần: `Home` dispatch sau `doubleTapMs` (vẫn chờ chạm đúp), chạm đúp → không dispatch, không rung. DOUBLE_TAP **tắt** → `Home` dispatch ngay |
+| EN-15 | (v1.8.2, FR-G16) Như EN-14 nhưng chạm đúp → không dispatch, **rung một lần** (`onRecognized`) khi `haptics`; `haptics=false` → không rung. Cử chỉ **tắt** (không trong `enabledGestures`, vd. TAP tắt) → không rung, không dispatch. Thay EN-14 phần "không rung" |
 | EN-12 | (v1.5, FR-G14) `engine.canBlockTouches = true` → `SWIPE_DOWN` gán `Notifications` được dispatch; đặt lại `false` → không dispatch (config cập nhật ngay) |
 
 Đồng hồ: engine dùng `SystemClock.uptimeMillis()` (CLOCK_MONOTONIC). `MotionEvent.eventTime` dùng cùng
@@ -110,7 +111,8 @@ tọa độ với `getevent`, xem notch-region §v1.5); ngược lại `null`. H
 | Thông báo (13+) | `pm grant <pkg> POST_NOTIFICATIONS` | v1.5: xác nhận → `pm revoke` tách rời rồi mở lại Totch (PC-5) | Thông báo foreground service |
 | Điều khiển media | `cmd notification allow_listener <component>` | `disallow_listener` | `MediaController` (FR-A6) |
 | Không làm phiền (v1.6.3) | `cmd notification allow_dnd <pkg>` | `disallow_dnd` | Đổi chế độ chuông / Không làm phiền (FR-A18, FR-D12) |
-| Pin không giới hạn | `cmd deviceidle whitelist +<pkg>` | `whitelist -<pkg>` | Giữ service sống (FR-D7) |
+| Pin không giới hạn | `cmd deviceidle whitelist +<pkg>`; v1.8.2 (FR-D17): thêm `cmd appops set <pkg> RUN_ANY_IN_BACKGROUND allow` | `whitelist -<pkg>` | Giữ service sống (FR-D7) |
+| Giữ khi ít dùng (v1.8.2, FR-D16) | `cmd appops set <pkg> AUTO_REVOKE_PERMISSIONS_IF_UNUSED ignore` | `… allow` | Miễn app hibernation: không bị tạm dừng / thu hồi quyền khi lâu không mở |
 | Cài bản cập nhật (v1.6.1) | `appops set <pkg> REQUEST_INSTALL_PACKAGES allow` | xác nhận → `appops set … deny` tách rời rồi mở lại Totch (PC-7) | Cài APK tự cập nhật không cần hỏi quyền "Cài ứng dụng không rõ nguồn gốc" (FR-U27, FR-D11) |
 
 | ID | Tiêu chí |
@@ -122,6 +124,10 @@ tọa độ với `getevent`, xem notch-region §v1.5); ngược lại `null`. H
 | PC-6 | (v1.6.1) `allowInstallPackages(pkg)` = `appops set 'pkg' REQUEST_INSTALL_PACKAGES allow` |
 | PC-7 | (v1.6.1) `denyInstallPackagesAndRestart(pkg, activity)`: như PC-5 với lệnh `appops set <pkg> REQUEST_INSTALL_PACKAGES deny`; tên sai định dạng → `null` |
 | PC-8 | (v1.6.3) `dndAccess(pkg, allowed)` = `cmd notification allow_dnd 'pkg'` / `disallow_dnd 'pkg'` |
+| PC-3b | (v1.8.2, FR-D17) `batteryUnrestricted(pkg, true)` = [`cmd deviceidle whitelist +'pkg'`, `cmd appops set 'pkg' RUN_ANY_IN_BACKGROUND allow`]; `false` = [`cmd deviceidle whitelist -'pkg'`] (giờ trả về danh sách) |
+| PC-9 | (v1.8.2, FR-D15) `accessibilityServices(current, c, enabled)`: giá trị mới của `enabled_accessibility_services` theo luật PC-1 (`""` khi rỗng); `accessibility(…)` dùng hàm này |
+| PC-10 | (v1.8.2, FR-D15) `grantWriteSecureSettings(pkg)` = `pm grant 'pkg' android.permission.WRITE_SECURE_SETTINGS` |
+| PC-11 | (v1.8.2, FR-D16) `keepWhenUnused(pkg, keep)` = `cmd appops set 'pkg' AUTO_REVOKE_PERMISSIONS_IF_UNUSED ignore` / `allow` |
 | PC-5 | `revokeNotificationsAndRestart(pkg, activity)` = `setsid sh -c '<script>' </dev/null >/dev/null 2>&1 &` với script = `sleep 1; pm revoke <pkg> android.permission.POST_NOTIFICATIONS; am start -n <pkg>/<activity>`; package/activity sai định dạng (SC-2) → `null` |
 
 **Vì sao thu hồi Thông báo lại giết app (FR-D10).** Android giết process của app mỗi khi một quyền runtime bị thu hồi —
@@ -138,6 +144,11 @@ Thông báo: hỏi xác nhận rồi chạy lệnh tách rời và mở lại To
 **Không làm phiền (v1.6.3 — FR-D12).** Manifest khai báo `ACCESS_NOTIFICATION_POLICY`; trạng thái =
 `NotificationManager.isNotificationPolicyAccessGranted`. Thu hồi không giết app nên không hỏi xác nhận. Không có Shizuku
 → mở `Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS`.
+
+**Giữ khi ít dùng (v1.8.2 — FR-D16).** Android 12+ "tạm dừng hoạt động của ứng dụng nếu không dùng" (hibernation): app
+không được **mở** vài tháng bị dừng hẳn (như buộc dừng: hủy job, không nhận broadcast, gỡ quyền) — Totch chủ yếu chạy nền
+nên dễ dính. Trạng thái = `PackageManager.isAutoRevokeWhitelisted()`; không có Shizuku → mở
+`Intent.ACTION_AUTO_REVOKE_PERMISSIONS` (`package:<pkg>`), lỗi → trang thông tin app. Thu hồi không giết app.
 
 ## 7. Chặn chạm bằng Trợ năng (v1.5 — FR-G14)
 
@@ -211,3 +222,69 @@ Foreground service (DM-1) vẫn chạy khi `enabled` ở cả hai nguồn (giữ
 | DM-45 | (thủ công) Không có Shizuku, bật Trợ năng: chạm / chạm đúp / vuốt tại notch chạy đúng hành động, chạm ở notch không tới app bên dưới |
 
 DM-2, DM-3 (chờ Shizuku / thiếu quyền Shizuku) không còn là trạng thái engine: Shizuku chỉ hiện ở Home › Nâng cao.
+
+## 9. Khó bị tắt (v1.8.2 — FR-D14, FR-D15, FR-U59)
+
+### Totch có thể bị dừng theo những cách nào
+
+| Kịch bản | Điều gì xảy ra | Lớp bảo vệ |
+|---|---|---|
+| Thiếu RAM (LMK) | Process có foreground service / Trợ năng đang bind có ưu tiên gần như app đang mở; hiếm bị giết. Bị giết → hệ thống bind lại Trợ năng (khởi động lại process) và khởi động lại service `START_STICKY` | FGS (FR-D5), Trợ năng, `START_STICKY` |
+| Doze / App Standby / "Hạn chế pin" | Hạn chế chạy nền, chặn khởi động FGS từ nền | Pin không giới hạn (FR-D7) + `RUN_ANY_IN_BACKGROUND allow` (FR-D17). App được miễn tối ưu pin cũng được miễn hạn chế "khởi động FGS từ nền" của Android 12+ |
+| Trình dọn dẹp / tiết kiệm pin của hãng (MIUI, EMUI, ColorOS, Funtouch, One UI…) | Giết process định kỳ, chặn tự khởi chạy | Trang **Tự khởi chạy** của hãng (FR-U59), watchdog (DM-50) |
+| Vuốt app khỏi Gần đây | Android gốc: FGS vẫn chạy; vài ROM giết luôn process | `onTaskRemoved` hẹn job khởi động lại sau ~1 s (DM-52) |
+| Buộc dừng (Force stop, hoặc ROM buộc dừng khi dọn) | Hủy job/alarm, không nhận broadcast nào cho tới khi người dùng **mở** app; Android còn **gỡ Trợ năng của app khỏi danh sách bật** | Không gì chạy lại được trước khi mở app (giới hạn của Android). Khi mở lại: service tự chạy (DM-1) và Trợ năng tự bật lại (DM-55) |
+| Khởi động lại máy | Mọi thứ dừng; Shizuku (không root) **không** tự chạy lại | `BOOT_COMPLETED` (DM-20), quick boot (DM-51), watchdog persisted, `WRITE_SECURE_SETTINGS` để bật lại Trợ năng không cần Shizuku (DM-54) |
+| Cập nhật app (kể cả tự cập nhật) | Process bị giết | `MY_PACKAGE_REPLACED` (DM-51) |
+| Lâu không mở app | Hibernation (Android 12+) | Giữ khi ít dùng (FR-D16) |
+
+Không làm (không khả thi hoặc có hại): `android:persistent` (chỉ app hệ thống), hai process canh nhau / "âm thanh câm",
+wake lock thường trực (tốn pin, không giúp gì khi đã có FGS), alarm chính xác (`SCHEDULE_EXACT_ALARM` — job đủ dùng
+cho watchdog), tự bật lại Trợ năng khi người dùng **chủ động** tắt.
+
+### Watchdog (FR-D14)
+
+`KeepAliveJobService` (`JobScheduler`, `BIND_JOB_SERVICE`): job định kỳ **15 phút** (mức tối thiểu của Android),
+`setPersisted(true)` (sống qua reboot, cần `RECEIVE_BOOT_COMPLETED`); bật khi `enabled`, hủy khi tắt (cùng chỗ với
+`NotchForegroundService.setRunning`). Mỗi lần chạy: `enabled` → `setRunning(true)` (no-op khi đang chạy) và
+`AccessibilityKeeper.restore()`; xong ngay (`jobFinished`, không reschedule). Việc process được đánh thức cũng đủ để
+`DefaultAppContainer` khởi động lại service (DM-1).
+
+### Tự bật lại Trợ năng (FR-D15)
+
+- Manifest khai báo `WRITE_SECURE_SETTINGS` (`tools:ignore="ProtectedPermissions"`) — cấp được bằng `pm grant` từ shell
+  (Shizuku hoặc `adb`), giữ qua reboot và cập nhật.
+- `Settings.accessibilityWanted` (mặc định `false`): `NotchAccessibilityService.onServiceConnected` → `true`;
+  `onUnbind` → `false`. `onUnbind` chỉ chạy khi hệ thống gỡ service mà process còn sống — tức người dùng (hoặc Home)
+  tắt Trợ năng; khi process bị giết / buộc dừng thì không có `onUnbind` nên ý muốn được giữ.
+- `AccessibilityKeeper.restore()`: `accessibilityWanted` ∧ Trợ năng chưa nằm trong `enabled_accessibility_services` →
+  có `WRITE_SECURE_SETTINGS` → ghi thẳng `Settings.Secure` (giá trị PC-9, `accessibility_enabled = 1`); không có →
+  qua Shizuku (`setPermission(ACCESSIBILITY, true)`); không được thì thôi. Gọi khi: process khởi động, Shizuku vừa sẵn
+  sàng, mỗi lần watchdog chạy.
+- Shizuku vừa sẵn sàng (chuyển sang running + granted) và chưa có `WRITE_SECURE_SETTINGS` → chạy PC-10 (im lặng).
+- `setPermission(ACCESSIBILITY, on)` khi có `WRITE_SECURE_SETTINGS` → ghi thẳng, không cần Shizuku.
+
+### Khởi động lại sau cập nhật / quick boot, vuốt khỏi Gần đây
+
+- `BootReceiver` nhận thêm `MY_PACKAGE_REPLACED` (được miễn hạn chế khởi động FGS từ nền),
+  `android.intent.action.QUICKBOOT_POWERON` và `com.htc.intent.action.QUICKBOOT_POWERON` (khởi động nhanh của một số
+  hãng, coi như boot).
+- `NotchForegroundService.onTaskRemoved` → `enabled` → hẹn job một lần (độ trễ 1 s, id riêng) gọi lại như watchdog.
+
+### Tự khởi chạy của hãng (FR-U59)
+
+`OemSettings.autostart`: danh sách component theo thứ tự ưu tiên (Xiaomi `com.miui.securitycenter`, Huawei / Honor
+`systemmanager`, OPPO / realme / OnePlus ColorOS `safecenter`, OnePlus `oneplus.security`, vivo `iqoo.secure` /
+`vivo.permissionmanager`, Samsung `lool` (pin), Asus `mobilemanager`, Letv). Manifest khai báo `<queries><package>` cho
+các package này. Home tìm component đầu tiên resolve được (`exported`); có → hiện dòng; bấm → `startActivity`, lỗi
+(`SecurityException`, không tìm thấy) → trang thông tin app.
+
+| ID | Tiêu chí |
+|---|---|
+| DM-50 | (FR-D14) `KeepAliveScheduler.apply(enabled)`: `true` → job định kỳ 15 phút, persisted (không lên lịch lại khi đã có cùng chu kỳ); `false` → hủy job định kỳ và job một lần |
+| DM-51 | `startupAction(settings, event)` (hàm thuần thay `bootAction`): `BOOT` (gồm quick boot) như DM-22; `PACKAGE_REPLACED` → `START_SERVICE` khi `enabled`, ngược lại `NONE` (không bao giờ `DISABLE`) |
+| DM-52 | `onTaskRemoved` khi `enabled` → job một lần, độ trễ 1 s; job chạy như watchdog |
+| DM-53 | (FR-D15) Settings mới `accessibilityWanted = false` (ST-34); service kết nối → `true`, `onUnbind` → `false` |
+| DM-54 | `AccessibilityKeeper.decide(wanted, enabled, canWriteSecure, shizukuReady)` (hàm thuần): `!wanted ∨ enabled` → `NONE`; có `WRITE_SECURE_SETTINGS` → `WRITE`; Shizuku sẵn sàng → `SHIZUKU`; còn lại → `NONE` |
+| DM-55 | Gọi `restore()` khi process khởi động, Shizuku vừa sẵn sàng, watchdog chạy; Shizuku vừa sẵn sàng mà chưa có `WRITE_SECURE_SETTINGS` → chạy PC-10 một lần |
+| DM-56 | (FR-U59) `OemSettings.autostart` không rỗng, mỗi phần tử là component `pkg/cls` hợp lệ, không trùng; mọi package có trong `<queries>` (kiểm thủ công MT-K5) |

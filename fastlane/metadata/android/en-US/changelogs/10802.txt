@@ -1,0 +1,4 @@
+* Gestures set to "Nothing" (formerly "Not set") still vibrate when recognized.
+* Action picker: one search field; its left icon picks the action type. "Applications", "Quick settings".
+* Material 3 sliders with a round handle; "Do Not Disturb" on Home.
+* Harder to kill: watchdog job, restart after updates and when swiped from Recents, accessibility turned back on after a force stop (via Shizuku-granted WRITE_SECURE_SETTINGS), "Keep when unused" permission, maker auto-start page.

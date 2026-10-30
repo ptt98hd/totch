@@ -80,11 +80,13 @@ development" / "Ủng hộ phát triển Totch", chevron (›).
 │ [♿] Accessibility          [on]  │  Granted / Not granted
 │ [🔔] Notifications         [off] │  (Android 13+)
 │ [♪] Media control          [off] │
-│ [⊖] Do Not Disturb access  [off] │  v1.6.3
+│ [⊖] Do Not Disturb         [off] │  v1.6.3; v1.8.2: bỏ "access"
 │ [🔋] Unrestricted battery  [on]  │
+│ [⏸] Keep when unused       [on]  │  v1.8.2
 │ [⤓] Install updates        [off] │  v1.6.1
 │ Advanced                         │  v1.7: đổi tên từ Requirement, chuyển xuống dưới
 │ [▣] Shizuku                [on]  │  Running, permission granted / Not running · optional
+│ [⟳] Auto-start                ›  │  v1.8.2, chỉ khi máy có trang của hãng
 │ Support                          │  v1.7
 │ [☕] Buy me a coffee          ›  │
 ├──────────────────────────────────┤
@@ -99,9 +101,14 @@ development" / "Ủng hộ phát triển Totch", chevron (›).
   tả khi chưa chạy / chưa cài: "Not running · optional" / "Chưa chạy · tùy chọn", "Not installed · optional" / "Chưa
   cài đặt · tùy chọn". Chạm: chưa cấp quyền → hộp thoại
   quyền Shizuku; còn lại → mở app Shizuku (hoặc trang web khi chưa cài).
+  v1.8.2 (FR-U59): dưới Shizuku là dòng **Auto-start** / **Tự khởi chạy** (icon `RestartAlt`, mô tả "Let Totch run in
+  the background" / "Cho Totch chạy nền", chevron) — chỉ hiện khi `OemSettings` tìm được trang của hãng
+  ([detection-modes §9](detection-modes.md)); bấm → mở trang đó.
 - **Permissions**: mỗi dòng như thẻ Totch nhưng icon là **biểu tượng quyền** (box tonal), tên quyền, mô tả
   "Granted" / "Not granted", switch. Bật/tắt → `SystemStatus.setPermission` (qua Shizuku); trả về false → mở trang
   hệ thống (Notifications khi chưa hỏi lần nào → hộp thoại runtime).
+  v1.8.2: tên quyền Không làm phiền là **Do Not Disturb** / **Không làm phiền** (FR-U56); thêm **Keep when unused** /
+  **Giữ khi ít dùng** (icon `PauseCircle`, FR-D16) sau Pin không giới hạn.
 
 | ID | Tiêu chí |
 |---|---|
@@ -109,7 +116,7 @@ development" / "Ủng hộ phát triển Totch", chevron (›).
 | UI-2 | Status text ánh xạ 1-1 từ `EngineStatus` |
 | UI-42 | `masterIcon(status)`: `Running` → ON; `Starting`, `Stopping` → PENDING; còn lại → OFF |
 | UI-50 | `HomeUiState.shizuku`: chưa chạy → NOT_RUNNING; chạy, chưa cấp quyền → PERMISSION_REQUIRED; còn lại READY |
-| UI-51 | `permissions` = Accessibility, Notifications (chỉ Android 13+), Media control, Do Not Disturb (v1.6.3), Battery, Install updates (v1.6.1), theo thứ tự, `granted` từ `Requirements` |
+| UI-51 | `permissions` = Accessibility, Notifications (chỉ Android 13+), Media control, Do Not Disturb (v1.6.3), Battery, Keep when unused (v1.8.2, `Requirements.keepWhenUnused`), Install updates (v1.6.1), theo thứ tự, `granted` từ `Requirements` |
 | UI-52 | `setPermission(p, on)` gọi `SystemStatus.setPermission(p, on)`; kết quả false → gọi fallback (mở trang hệ thống) |
 | UI-54 | (v1.7) Thứ tự Home: thẻ Totch, Permissions, Advanced (Shizuku), Support (Buy me a coffee) |
 | UI-55 | (v1.7) Thẻ Totch khi `NeedsAccess`: "Turn on Accessibility or Shizuku" / "Bật Trợ năng hoặc Shizuku" (UI-2). v1.8: "Needs Accessibility or Shizuku" / "Cần Trợ năng hoặc Shizuku" |
@@ -130,7 +137,7 @@ Các cử chỉ chia nhóm, mỗi nhóm một `SectionHeader` + `Card`:
 - Mỗi dòng: icon cử chỉ, tên, hành động đang gán, **switch** ở cuối dòng (v1.3, FR-G12). v1.4 (FR-G13): dòng có
   switch tắt (kể cả cử chỉ không khả dụng) bị **làm mờ** (icon, tên, mô tả alpha 50%). Không còn hiển thị
   "Không làm gì": cử chỉ chưa gán / đã tắt chỉ có switch tắt. v1.8 (FR-U43): cử chỉ chưa gán hiện mô tả "Not set" /
-  "Chưa đặt".
+  "Chưa đặt". v1.8.2 (FR-G16): đổi thành "Nothing" / "Không làm gì".
   - Switch bật (`on = isGestureOn(g)`): chạm dòng → mở **Action picker** (bottom sheet); dòng hiện tên hành động.
   - Switch tắt: chạm dòng **không** mở picker; nếu có hành động đã nhớ, dòng hiện tên đó mờ đi.
   - ~~Bật switch: có hành động đã nhớ → bỏ g khỏi `disabledGestures`; chưa có (`None`) → mở picker, chỉ bật khi
@@ -186,7 +193,22 @@ mục mới như Intents, Settings… mà nhãn không bị hẹp lại).~~ Nộ
 | Basic (v1.8.1, FR-U46: trước là System; en **Basic**, vi **Cơ bản**, icon `Category`) | v1.6.3 (FR-U34, FR-U35): ô tìm kiếm như tab Applications, rồi 6 nhóm (bảng dưới). ~~Không có "Không làm gì".~~ v1.8 (FR-U43): dòng **Not set** / **Chưa đặt** (icon `Block`, một card riêng không tiêu đề) ở đầu danh sách, ẩn khi query không khớp tên của nó. Hành động âm thanh (trừ âm lượng) có dòng phụ "Requires Do Not Disturb access" khi chưa có quyền (FR-A18) |
 | Applications | Ô tìm kiếm + danh sách app (icon, tên, radio) |
 
-Ô tìm kiếm (v1.7, FR-U38): `CompactSearchField` cao 44 dp (thay `SearchBar` 56 dp), bo tròn hoàn toàn, nền
+**Ô tìm kiếm + loại hành động** (v1.8.2, FR-U58 — thay ô chọn tab của FR-U47 và ô tìm kiếm riêng của từng tab):
+một ô duy nhất dưới hàng tiêu đề, cao 48 dp, bo tròn hoàn toàn, nền `surfaceContainerHigh`, đầy đủ chiều rộng trừ gutter.
+```
+( [▦▾]  Search applications                 [✕] | [⌄] )
+```
+- **Trái**: icon của loại đang chọn (`IconButton`, mô tả "Action type: <loại>") — bấm → `DropdownMenu` rộng bằng ô, mỗi
+  mục: icon + tên loại + `RadioButton` bên phải; mục đang chọn nền `secondaryContainer`, chữ / icon `onSecondaryContainer`.
+  Chọn → `selectTab`, menu đóng.
+- **Giữa**: ô nhập, placeholder `picker_search` = "Search %1$s" / "Tìm %1$s" với tên loại viết thường theo locale
+  ("Search applications", "Tìm cài đặt nhanh"); `ImeAction.Search` ẩn bàn phím.
+- **Phải**: query không rỗng → nút **xóa** (✕); rỗng → **mũi tên thả xuống** (xoay khi mở menu), bấm cũng mở menu.
+- Query là của loại đang chọn (`ActionPickerUiState.query`); mỗi loại giữ query riêng khi đổi qua lại.
+- Nhãn loại (en / vi): Basic / Cơ bản, **Applications** / Ứng dụng, Shortcuts / Shortcut, Activities / Activity,
+  **Quick settings** / **Cài đặt nhanh** (trước: Apps, Tiles / Ô nhanh).
+
+~~Ô tìm kiếm (v1.7, FR-U38):~~ (v1.7, FR-U38 — thay ở v1.8.2:) `CompactSearchField` cao 44 dp (thay `SearchBar` 56 dp), bo tròn hoàn toàn, nền
 `surfaceContainerHigh`, icon kính lúp 20 dp, nút xóa khi có chữ, bàn phím `ImeAction.Search` (bấm → ẩn bàn phím).
 
 Hành động chỉ chạy qua Shizuku (v1.7, FR-A20 — actions §14) có dòng phụ "Requires Shizuku" / "Cần Shizuku" khi Shizuku
@@ -246,6 +268,8 @@ dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọ
 | UI-63 | (v1.8, FR-U43) `select(None)` → binding `None`, `finished=true`, cử chỉ tắt (`isGestureOn = false`). v1.8.1: thay bằng UI-65 |
 | UI-65 | (v1.8.1, FR-G15) `select(None)` → binding `None`, `finished=true`, cử chỉ **vẫn bật** (`isGestureOn = true`) |
 | UI-66 | (v1.8.1, FR-U46) `PickerTab.entries` = BASIC, APPS, SHORTCUTS, ACTIVITIES, TILES; `initialTab` của hành động cố định / `None` = BASIC; `basicQuery`, `setBasicQuery` (thay `systemQuery`, UI-29) |
+| UI-71 | (v1.8.2, FR-U58) `ActionPickerUiState.query` = query của `tab` (BASIC → `basicQuery`, APPS → `appQuery`, …); `setQuery(v)` ghi vào query của tab hiện tại, query của tab khác giữ nguyên |
+| UI-72 | (v1.8.2, FR-G16) Nhãn `None`: "Nothing" / "Không làm gì"; dòng Nothing của tab Basic vẫn ẩn khi query không khớp tên mới |
 | UI-26 | Mỗi nhóm là một card bo góc (`Modifier.groupItem(index, count)`: bo góc trên ở dòng đầu, góc dưới ở dòng cuối, đường kẻ trên mỗi dòng trừ dòng đầu) |
 
 ### Notch (FR-U12, FR-U17, FR-U18, FR-S9, FR-R5…FR-R7) — tab thứ 3
@@ -257,7 +281,11 @@ chuyển sang Settings, bỏ section Phản hồi):
 
 v1.6 (FR-U28): các slider trong một section ngăn bằng `RowDivider` (thụt lề hai bên như Settings).
 
-v1.8.1 (FR-U53): thanh trượt là `TotchSlider` — `Slider` của Material 3 với nút kéo **hình tròn** 20 dp màu `primary`
+v1.8.2 (FR-U57): `TotchSlider` dùng **track mặc định của Material 3** (`SliderDefaults.Track`: cao 16 dp, khe 6 dp quanh
+nút kéo, chấm dừng ở cuối) và nút kéo **hình tròn** 24 dp màu `primary` (20 dp khi đang kéo / nhấn, như nút kéo M3 thu
+hẹp khi kéo), không bóng. Thay mô tả v1.8.1 dưới đây.
+
+~~v1.8.1 (FR-U53):~~ thanh trượt là `TotchSlider` — `Slider` của Material 3 với nút kéo **hình tròn** 20 dp màu `primary`
 (thay thanh dọc), track không có khe quanh nút kéo; mọi thanh trượt trong app dùng component này.
 
 Mỗi slider (FR-U18): hàng 1 là nhãn ngắn + giá trị; hàng 2 là nút **−**, thanh slider, nút **+**, nút reset. Kéo

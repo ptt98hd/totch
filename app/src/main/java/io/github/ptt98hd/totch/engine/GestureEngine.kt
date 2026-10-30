@@ -9,6 +9,7 @@ import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.model.TouchEvent
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.settings.effectiveAction
+import io.github.ptt98hd.totch.core.settings.isGestureOn
 import io.github.ptt98hd.totch.core.settings.toGestureConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -19,7 +20,7 @@ import kotlin.math.abs
 
 /** User-visible feedback after a dispatch (FR-A9, FR-A10). */
 interface EngineFeedback {
-    /** A gesture with an action was recognized and haptics are enabled; called before dispatch (HF-4). */
+    /** A switched-on gesture was recognized and haptics are enabled, even one set to Nothing; called before dispatch (HF-4, HF-5). */
     fun onRecognized()
     fun onFailed(action: Action, reason: String)
 }
@@ -113,11 +114,11 @@ class GestureEngine(
 
     private fun emit(gestures: List<Gesture>) {
         for (g in gestures) {
-            val action = settings.effectiveAction(g, canBlockTouches)
-            if (action == Action.None) continue
-            // EN-13: vibrate now; the action may be slow or still queued behind another one.
+            if (!settings.isGestureOn(g, canBlockTouches)) continue
+            // EN-13: vibrate now; the action may be slow or still queued behind another one. EN-15: Nothing vibrates too.
             if (settings.haptics) feedback.onRecognized()
-            actions.trySend(action)
+            val action = settings.effectiveAction(g, canBlockTouches)
+            if (action != Action.None) actions.trySend(action)
         }
     }
 

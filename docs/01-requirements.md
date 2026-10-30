@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), **v1.8.1** (§19) · Cập nhật: 2026-10-30
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), **v1.8.2** (§20) · Cập nhật: 2026-10-30
 
 ## 1. Tầm nhìn
 
@@ -283,3 +283,17 @@ tham chiếu ID tương ứng.
 | FR-U53 | Mọi thanh trượt trong app dùng **nút kéo hình tròn** (thay thanh dọc của Material 3 Expressive), cùng một component | [ui §3](specs/ui.md) |
 | FR-U55 | Icon: các ngôi sao nền **giống hệt nhau** (cùng kích thước, cùng hình 4 cánh), mỗi góc một ngôi sao, **đối xứng** qua hai trục giữa của icon. Sửa phần sao của FR-U33 | [ui — Icon](specs/ui.md) |
 | FR-U54 | Mọi switch trong app có **icon trong nút gạt**: ✓ khi bật, ✕ khi tắt, cùng một component | [ui §1](specs/ui.md) |
+
+## 20. Phiên bản 1.8.2
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-G16 | **Not set** / **Chưa đặt** đổi tên thành **Nothing** / **Không làm gì**. Cử chỉ đang bật với hành động Nothing khi được nhận diện vẫn **rung phản hồi** (nếu bật Rung phản hồi và máy có rung), chỉ là không thực hiện gì. Sửa FR-G15 phần "không rung" | [detection-modes §5](specs/detection-modes.md), [actions §6](specs/actions.md), [ui §3](specs/ui.md) |
+| FR-U56 | Home › Permissions: dòng "Do Not Disturb access" / "Quyền Không làm phiền" đổi tên thành **Do Not Disturb** / **Không làm phiền** | [ui §3](specs/ui.md) |
+| FR-U57 | Thanh trượt: giữ **giao diện Material 3** (track dày, khe hở quanh nút kéo, chấm dừng ở cuối track) nhưng nút kéo là **hình tròn**. Sửa FR-U53 phần "track mảnh không khe" | [ui §3](specs/ui.md) |
+| FR-U58 | Picker: **gộp ô tìm kiếm và ô chọn loại hành động** thành một ô: icon bên trái là icon của loại đang chọn, bấm → menu thả xuống chọn loại khác (mỗi mục: icon + tên + radio, mục đang chọn được tô); placeholder "Search <loại>" / "Tìm <loại>"; bên phải là nút xóa khi có chữ, ngược lại là mũi tên thả xuống (bấm cũng mở menu). Nhãn **Apps** → **Applications**, **Tiles** → **Quick settings** / **Cài đặt nhanh**. Thay FR-U47 và ô tìm kiếm riêng của FR-U38 | [ui §3](specs/ui.md) |
+| FR-D14 | **Khó bị tắt nhất có thể**: ngoài foreground service + Trợ năng + bỏ tối ưu pin, thêm job **watchdog** định kỳ (khởi động lại service nếu bị giết, sống qua reboot), tự chạy lại sau khi **cập nhật app** và sau "quick boot" của một số hãng, hẹn khởi động lại khi app bị **vuốt khỏi Gần đây** | [detection-modes §9](specs/detection-modes.md) |
+| FR-D15 | **Tự bật lại Trợ năng**: khi có Shizuku, Totch tự cấp cho mình `WRITE_SECURE_SETTINGS` (giữ vĩnh viễn, không cần Shizuku sau reboot). Nếu Trợ năng bị hệ thống / ROM tắt (vd. sau khi app bị buộc dừng) mà người dùng **không** tự tắt, Totch bật lại khi chạy lại; nút Trợ năng ở Home cũng bật/tắt trực tiếp bằng quyền này khi không có Shizuku | [detection-modes §9](specs/detection-modes.md), [settings](specs/settings.md) |
+| FR-D16 | Home › Permissions thêm **Keep when unused** / **Giữ khi ít dùng** (miễn "Tạm dừng hoạt động khi không dùng" — app hibernation): trạng thái từ hệ thống, bật/tắt qua Shizuku (`appops`), không có Shizuku → mở trang của app trong Cài đặt | [detection-modes §6](specs/detection-modes.md), [ui §3](specs/ui.md) |
+| FR-D17 | Bật **Pin không giới hạn** qua Shizuku đồng thời gỡ hạn chế chạy nền (`RUN_ANY_IN_BACKGROUND allow`) | [detection-modes §6](specs/detection-modes.md) |
+| FR-U59 | Home › Nâng cao: dòng **Auto-start** / **Tự khởi chạy** — chỉ hiện trên máy có trang quản lý tự khởi chạy / chạy nền của hãng (Xiaomi, Huawei, Honor, OPPO/realme, OnePlus, vivo, Samsung, Asus…); bấm → mở trang đó | [detection-modes §9](specs/detection-modes.md), [ui §3](specs/ui.md) |

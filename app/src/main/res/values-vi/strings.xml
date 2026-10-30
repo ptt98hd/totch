@@ -30,7 +30,7 @@
     <string name="permission_accessibility">Trợ năng</string>
     <string name="permission_notifications">Thông báo</string>
     <string name="permission_media">Điều khiển media</string>
-    <string name="permission_dnd">Quyền Không làm phiền</string>
+    <string name="permission_dnd">Không làm phiền</string>
     <string name="permission_battery">Pin không giới hạn</string>
     <string name="permission_install_updates">Cài bản cập nhật</string>
     <string name="permission_granted">Đã cấp</string>
@@ -56,7 +56,7 @@
     <string name="group_swipe_hold">Vuốt và giữ</string>
     <string name="gesture_switch_cd">Bật hoặc tắt %1$s</string>
     <string name="gesture_unavailable">Cần quyền Trợ năng (bật ở Trang chủ)</string>
-    <string name="action_none">Chưa đặt</string>
+    <string name="action_none">Không làm gì</string>
     <string name="action_back">Quay lại</string>
     <string name="action_home">Màn hình chính</string>
     <string name="action_recents">Ứng dụng gần đây</string>
@@ -106,24 +106,19 @@
     <string name="group_connections">Kết nối</string>
 
     <!-- Action picker -->
-    <string name="app_picker_search">Tìm ứng dụng</string>
     <string name="app_picker_clear">Xóa tìm kiếm</string>
     <string name="app_picker_empty">Không có ứng dụng nào khớp “%1$s”</string>
     <string name="app_picker_none">Không tìm thấy ứng dụng</string>
     <string name="tab_basic">Cơ bản</string>
-    <string name="action_search">Tìm hành động</string>
     <string name="action_search_empty">Không có hành động nào khớp “%1$s”</string>
     <string name="tab_apps">Ứng dụng</string>
     <string name="tab_shortcuts">Shortcut</string>
     <string name="tab_activities">Activity</string>
-    <string name="tab_tiles">Ô nhanh</string>
-    <string name="tile_search">Tìm ô cài đặt nhanh</string>
+    <string name="tab_tiles">Cài đặt nhanh</string>
     <string name="tile_empty">Không có ô nào khớp “%1$s”</string>
     <string name="tile_none">Không tìm thấy ô Cài đặt nhanh nào</string>
-    <string name="activity_search">Tìm activity</string>
     <string name="activity_empty">Không có activity nào khớp “%1$s”</string>
     <string name="activity_none">Không tìm thấy activity nào</string>
-    <string name="shortcut_search">Tìm shortcut</string>
     <string name="shortcut_empty">Không có shortcut nào khớp “%1$s”</string>
     <string name="shortcut_none">Không tìm thấy shortcut</string>
     <string name="picker_close">Đóng</string>
@@ -216,8 +211,13 @@
     <string name="donate_action">Mời cà phê</string>
     <string name="donate_later">Để sau</string>
     <!-- v1.8.1 -->
-    <string name="picker_tab_label">Hành động</string>
     <string name="setting_nav_labels">Hiện nhãn thanh điều hướng</string>
     <string name="setting_nav_labels_summary">Chữ dưới icon thanh điều hướng</string>
     <string name="update_whats_new">Điểm mới</string>
+    <!-- v1.8.2 -->
+    <string name="picker_search">Tìm %1$s</string>
+    <string name="picker_type_cd">Loại hành động: %1$s</string>
+    <string name="permission_keep_unused">Giữ khi ít dùng</string>
+    <string name="autostart_title">Tự khởi chạy</string>
+    <string name="autostart_description">Cho Totch chạy nền</string>
 </resources>
