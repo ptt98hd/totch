@@ -1,0 +1,1 @@
+* Sửa lỗi vòng gợn sóng còn đứng yên tại chỗ chạm vào notch.

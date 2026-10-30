@@ -95,6 +95,7 @@ import io.github.ptt98hd.totch.core.overlay.pressProgress
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.LocalView
@@ -184,6 +185,7 @@ fun NotchOverlayContent(hub: OverlayHub, frame: OverlayFrame) {
     var streakDir by remember { mutableStateOf(Offset.Zero) }
     var glowHeld by remember { mutableStateOf(false) }
     val ripples = remember { mutableStateListOf<Ripple>() }
+    val rippleScope = rememberCoroutineScope()
     var progress by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(effects) {
@@ -216,9 +218,13 @@ fun NotchOverlayContent(hub: OverlayHub, frame: OverlayFrame) {
         }
         val ripple = Ripple(Offset(p.x, p.y))
         ripples += ripple
-        launch {
-            ripple.progress.animateTo(1f, tween(400))
-            ripples -= ripple
+        // FR-O9: outlive this effect, which restarts on release — a tap is shorter than the ripple.
+        rippleScope.launch {
+            try {
+                ripple.progress.animateTo(1f, tween(400))
+            } finally {
+                ripples -= ripple
+            }
         }
         while (true) withFrameMillis { progress = pressProgress(p.timeMs, SystemClock.uptimeMillis(), frame.longPressMs) }
     }

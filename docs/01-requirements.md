@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), v1.8.3 (§21), v1.9 (§22), **v1.9.1** (§23) · Cập nhật: 2026-10-30
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), v1.8.3 (§21), v1.9 (§22), **v1.9.1–1.9.2** (§23) · Cập nhật: 2026-10-30
 
 ## 1. Tầm nhìn
 
@@ -320,7 +320,7 @@ tham chiếu ID tương ứng.
 | FR-O7 | Ba tính năng trên có công tắc riêng ở màn **Notch** › **Hiệu ứng**, mặc định tắt; cần **Trợ năng** (overlay vẽ trên status bar). Báo thông báo, island media / thông báo cần quyền truy cập thông báo — dòng Home › Permissions "Media control" đổi thành **Media & notifications**. Totch chỉ đọc **metadata** thông báo (gói, thời điểm, cờ, mức quan trọng, màu), không đọc tiêu đề / nội dung, không lưu. Không vẽ khi xoay ngang hoặc app toàn màn hình | [notch-overlay §1, §5, §6](specs/notch-overlay.md) |
 | FR-O8 | Trợ năng nhận sự kiện `TYPE_WINDOW_STATE_CHANGED` **chỉ của System UI** để biết thanh thông báo đã mở (FR-O1); vẫn không đọc nội dung cửa sổ | [notch-overlay §2](specs/notch-overlay.md) |
 
-## 23. Phiên bản 1.9.1
+## 23. Phiên bản 1.9.1 (1.9.2: sửa FR-O9 — vòng gợn sóng còn đứng yên tại điểm chạm)
 
 | ID | Yêu cầu | Spec |
 |---|---|---|
