@@ -33,9 +33,8 @@ sealed interface Action {
     @Serializable @SerialName("auto_brightness") data object ToggleAutoBrightness : Action
     @Serializable @SerialName("auto_rotate") data object ToggleAutoRotate : Action
 
-    // v1.6.3 sound modes (FR-A18), local; need Do Not Disturb access.
+    // v1.6.3 sound modes (FR-A18), local; need Do Not Disturb access. 1.8.3 dropped "ringer_vibrate" (ST-35).
     @Serializable @SerialName("ringer_normal") data object RingerNormal : Action
-    @Serializable @SerialName("ringer_vibrate") data object RingerVibrate : Action
     @Serializable @SerialName("ringer_silent") data object RingerSilent : Action
     @Serializable @SerialName("ringer_cycle") data object CycleRingerMode : Action
     @Serializable @SerialName("dnd") data object ToggleDnd : Action
@@ -68,4 +67,28 @@ sealed interface Action {
         val serviceName: String,
         val label: String,
     ) : Action
+
+    /** A system Settings page started by its intent action (FR-A21, actions spec §15). */
+    @Serializable @SerialName("open_settings") data class OpenSettings(val intentAction: String) : Action
+
+    /** An intent another app declares in its manifest, sent to [className] (FR-A22, actions spec §16). */
+    @Serializable @SerialName("send_intent") data class SendIntent(
+        val packageName: String,
+        val className: String,
+        val intentAction: String,
+        val target: IntentTarget,
+    ) : Action
+
+    /** A contact opened in the default contacts app (FR-A23); [name] is kept for display. */
+    @Serializable @SerialName("open_contact") data class OpenContact(
+        val lookupUri: String,
+        val name: String,
+    ) : Action
+}
+
+/** Whether a [Action.SendIntent] starts an activity or sends a broadcast. */
+@Serializable
+enum class IntentTarget {
+    @SerialName("activity") ACTIVITY,
+    @SerialName("broadcast") BROADCAST,
 }

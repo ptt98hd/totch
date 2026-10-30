@@ -3,7 +3,10 @@ package io.github.ptt98hd.totch.core.settings
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 
@@ -18,11 +21,23 @@ object SettingsCodec {
 
     fun decode(json: String): Settings =
         runCatching {
-            val tree = this.json.parseToJsonElement(json)
+            val tree = this.json.parseToJsonElement(json).withoutVibrate()
             this.json.decodeFromJsonElement(Settings.serializer(), tree).migrated(tree)
         }
             .getOrDefault(Settings())
             .sanitized()
+
+    /** ST-35: 1.8.3 dropped the vibrate sound mode; bindings to it become silent. */
+    private fun JsonElement.withoutVibrate(): JsonElement = when (this) {
+        is JsonObject ->
+            if ((this["type"] as? JsonPrimitive)?.content == "ringer_vibrate") {
+                JsonObject(mapOf("type" to JsonPrimitive("ringer_silent")))
+            } else {
+                JsonObject(mapValues { it.value.withoutVibrate() })
+            }
+        is JsonArray -> JsonArray(map { it.withoutVibrate() })
+        else -> this
+    }
 
     /**
      * ST-32: up to 1.8.0 a gesture was on when bound to an action and not in `disabledGestures`; 1.8.1 stores the

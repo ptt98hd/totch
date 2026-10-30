@@ -1,5 +1,7 @@
 package io.github.ptt98hd.totch.action
 
+import io.github.ptt98hd.totch.core.action.IntentFilters
+import io.github.ptt98hd.totch.ui.common.settingsPageLabels
 import android.content.Context
 import android.media.AudioAttributes
 import android.os.Build
@@ -56,6 +58,9 @@ class AndroidFeedback(private val context: Context, private val apps: InstalledA
             is Action.LaunchShortcut -> action.label
             is Action.LaunchActivity -> action.label
             is Action.ClickTile -> action.label
+            is Action.SendIntent -> IntentFilters.shortIntentAction(action.intentAction)
+            is Action.OpenSettings -> settingsPageLabels[action.intentAction]?.let(context::getString) ?: action.intentAction
+            is Action.OpenContact -> action.name
             else -> context.getString(labelOf(action))
         }
         main.post { Toast.makeText(context, context.getString(R.string.platform_action_failed, name), Toast.LENGTH_SHORT).show() }
@@ -89,7 +94,6 @@ class AndroidFeedback(private val context: Context, private val apps: InstalledA
         Action.ToggleAutoBrightness -> R.string.platform_action_auto_brightness
         Action.ToggleAutoRotate -> R.string.platform_action_auto_rotate
         Action.RingerNormal -> R.string.platform_action_ringer_normal
-        Action.RingerVibrate -> R.string.platform_action_ringer_vibrate
         Action.RingerSilent -> R.string.platform_action_ringer_silent
         Action.CycleRingerMode -> R.string.platform_action_ringer_cycle
         Action.ToggleDnd -> R.string.platform_action_dnd
@@ -98,6 +102,9 @@ class AndroidFeedback(private val context: Context, private val apps: InstalledA
         Action.ToggleMobileData -> R.string.platform_action_mobile_data
         Action.ToggleAirplaneMode -> R.string.platform_action_airplane
         Action.ToggleLocation -> R.string.platform_action_location
+        is Action.OpenSettings -> R.string.platform_action_settings
+        is Action.SendIntent -> R.string.platform_action_intent
+        is Action.OpenContact -> R.string.platform_action_contact
     }
 
     private companion object {

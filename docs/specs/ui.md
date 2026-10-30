@@ -206,7 +206,8 @@ một ô duy nhất dưới hàng tiêu đề, cao 48 dp, bo tròn hoàn toàn, 
 - **Phải**: query không rỗng → nút **xóa** (✕); rỗng → **mũi tên thả xuống** (xoay khi mở menu), bấm cũng mở menu.
 - Query là của loại đang chọn (`ActionPickerUiState.query`); mỗi loại giữ query riêng khi đổi qua lại.
 - Nhãn loại (en / vi): Basic / Cơ bản, **Applications** / Ứng dụng, Shortcuts / Shortcut, Activities / Activity,
-  **Quick settings** / **Cài đặt nhanh** (trước: Apps, Tiles / Ô nhanh).
+  **Quick settings** / **Cài đặt nhanh** (trước: Apps, Tiles / Ô nhanh). v1.8.3: thêm **Settings** / **Cài đặt**,
+  **Intents** / **Intents**, **Contacts** / **Danh bạ**; thứ tự menu theo `PickerTab.entries` (UI-73).
 
 ~~Ô tìm kiếm (v1.7, FR-U38):~~ (v1.7, FR-U38 — thay ở v1.8.2:) `CompactSearchField` cao 44 dp (thay `SearchBar` 56 dp), bo tròn hoàn toàn, nền
 `surfaceContainerHigh`, icon kính lúp 20 dp, nút xóa khi có chữ, bàn phím `ImeAction.Search` (bấm → ẩn bàn phím).
@@ -230,6 +231,9 @@ Dòng không khả dụng ở mọi tab: **vô hiệu** (mờ 38%, radio disable
 | Shortcuts | Ô tìm kiếm + danh sách **app** như tab Applications; chạm app → mở rộng/thu gọn, shortcut của app hiện ngay bên dưới (thụt vào, icon `SubdirectoryArrowRight`, nhãn, radio). Mặc định thu gọn tất cả; khi đang tìm kiếm, mọi app khớp đều mở rộng |
 | Activities | (v1.5, FR-A14) Giống hệt Shortcuts nhưng dòng con là activity: icon activity, nhãn + dòng phụ tên lớp rút gọn, radio. Trạng thái mở rộng riêng (`expandedActivities`) |
 | Tiles | (v1.6, FR-A15) Ô tìm kiếm + gợi ý một dòng "Chỉ ô đã thêm vào Cài đặt nhanh mới phản hồi" + danh sách phẳng các ô (icon app, nhãn ô + dòng phụ tên app, radio), một card (UI-26) |
+| Settings (v1.8.3, FR-A21; en **Settings**, vi **Cài đặt**, icon `Settings`) | Các trang của `SettingsPages` mà máy có, chia nhóm như tab Basic (tiêu đề nhóm + một card mỗi nhóm; dòng: icon `Settings`, nhãn trang, radio). Tìm kiếm như `filterCatalog` (khớp tên nhóm giữ cả nhóm, bỏ dấu) |
+| Intents (v1.8.3, FR-A22; en / vi **Intents**, icon `Send`) | Giống Shortcuts: danh sách app mở rộng được, dòng con = intent: icon `Send`, tiêu đề `shortIntentAction`, dòng phụ "Activity · <lớp rút gọn>" hoặc "Broadcast · <lớp rút gọn>" (lớp rút gọn như AC-3), radio. Trạng thái mở rộng riêng (`expandedIntents`) |
+| Contacts (v1.8.3, FR-A23; en **Contacts**, vi **Danh bạ**, icon `Contacts`) | Chưa có quyền Danh bạ → khung giữa: icon, "Allow Totch to read your contacts to pick one" / "Cho phép Totch đọc danh bạ để chọn liên hệ" và nút **Allow** / **Cho phép** (xin `READ_CONTACTS`; bị từ chối hẳn → mở trang thông tin app). Có quyền → danh sách phẳng một card (avatar chữ cái đầu, tên, radio), tìm theo tên |
 
 Nhóm của tab System (v1.6.3, `ActionCatalog.groups`, theo thứ tự):
 
@@ -238,7 +242,7 @@ Nhóm của tab System (v1.6.3, `ActionCatalog.groups`, theo thứ tự):
 | Navigation / Điều hướng | Back, Home, Recents, Notifications, Quick settings, One-handed mode |
 | System / Hệ thống | Lock screen, Screenshot, Assistant, Torch |
 | Media / Media | Play/pause, Previous, Next |
-| Sound / Âm thanh | Volume up, Volume down, Volume panel, Ring, Vibrate, Silent, Cycle sound mode, Do Not Disturb |
+| Sound / Âm thanh | Volume up, Volume down, Volume panel, Ring mode, Silent mode, Cycle sound mode, Do Not Disturb (v1.8.3: bỏ Vibrate; "Sound mode: ring / silent" → "Ring mode" / "Silent mode", vi "Chế độ đổ chuông" / "Chế độ im lặng") |
 | Display / Màn hình | Brightness up, Brightness down, Auto brightness, Auto-rotate |
 | Connections / Kết nối | Wi-Fi, Bluetooth, Mobile data, Airplane mode, Location |
 
@@ -270,6 +274,11 @@ dòng (icon, tên, radio) ngăn cách bằng đường kẻ ngang (UI-26). Chọ
 | UI-66 | (v1.8.1, FR-U46) `PickerTab.entries` = BASIC, APPS, SHORTCUTS, ACTIVITIES, TILES; `initialTab` của hành động cố định / `None` = BASIC; `basicQuery`, `setBasicQuery` (thay `systemQuery`, UI-29) |
 | UI-71 | (v1.8.2, FR-U58) `ActionPickerUiState.query` = query của `tab` (BASIC → `basicQuery`, APPS → `appQuery`, …); `setQuery(v)` ghi vào query của tab hiện tại, query của tab khác giữ nguyên |
 | UI-72 | (v1.8.2, FR-G16) Nhãn `None`: "Nothing" / "Không làm gì"; dòng Nothing của tab Basic vẫn ẩn khi query không khớp tên mới |
+| UI-73 | (v1.8.3) `PickerTab.entries` = BASIC, SETTINGS, APPS, SHORTCUTS, ACTIVITIES, INTENTS, TILES, CONTACTS; `initialTab`: `OpenSettings` → SETTINGS, `SendIntent` → INTENTS, `OpenContact` → CONTACTS; `query`/`setQuery` có query riêng cho 3 loại mới |
+| UI-74 | (v1.8.3, FR-A21) Tab Settings tải `available()` lần đầu mở tab (như UI-22); `settingsGroups` = các nhóm của `SettingsPages.all` chỉ gồm trang khả dụng, nhóm rỗng bị ẩn; chọn → `OpenSettings(intentAction)` |
+| UI-75 | (v1.8.3, FR-A22) Tab Intents dùng `groupIntents` (IN-6), tải lần đầu mở tab; `toggleIntentApp(pkg)` / `isIntentAppExpanded(pkg)` như UI-25; chọn → `SendIntent(pkg, class, action, target)` |
+| UI-76 | (v1.8.3, FR-A23) Tab Contacts: `contactsPermission` (đặt bởi màn hình qua `setContactsPermission`); chỉ tải danh bạ khi tab đang mở **và** có quyền (một lần; quyền được cấp sau khi đã mở tab → tải lúc đó); `contacts` = `filterContacts` (CT-1); chọn → `OpenContact(lookupUri, name)` |
+| UI-77 | (v1.8.3) `ActionCatalog` không có `RingerVibrate`; nhóm SOUND = VolumeUp, VolumeDown, VolumePanel, RingerNormal, RingerSilent, CycleRingerMode, ToggleDnd; `needsDndAccess` = 4 hành động âm thanh còn lại. Nhãn: `action_ringer_normal` = "Ring mode" / "Chế độ đổ chuông", `action_ringer_silent` = "Silent mode" / "Chế độ im lặng" |
 | UI-26 | Mỗi nhóm là một card bo góc (`Modifier.groupItem(index, count)`: bo góc trên ở dòng đầu, góc dưới ở dòng cuối, đường kẻ trên mỗi dòng trừ dòng đầu) |
 
 ### Notch (FR-U12, FR-U17, FR-U18, FR-S9, FR-R5…FR-R7) — tab thứ 3

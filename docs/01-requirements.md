@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), **v1.8.2** (§20) · Cập nhật: 2026-10-30
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), **v1.8.3** (§21) · Cập nhật: 2026-10-30
 
 ## 1. Tầm nhìn
 
@@ -297,3 +297,12 @@ tham chiếu ID tương ứng.
 | FR-D16 | Home › Permissions thêm **Keep when unused** / **Giữ khi ít dùng** (miễn "Tạm dừng hoạt động khi không dùng" — app hibernation): trạng thái từ hệ thống, bật/tắt qua Shizuku (`appops`), không có Shizuku → mở trang của app trong Cài đặt | [detection-modes §6](specs/detection-modes.md), [ui §3](specs/ui.md) |
 | FR-D17 | Bật **Pin không giới hạn** qua Shizuku đồng thời gỡ hạn chế chạy nền (`RUN_ANY_IN_BACKGROUND allow`) | [detection-modes §6](specs/detection-modes.md) |
 | FR-U59 | Home › Nâng cao: dòng **Auto-start** / **Tự khởi chạy** — chỉ hiện trên máy có trang quản lý tự khởi chạy / chạy nền của hãng (Xiaomi, Huawei, Honor, OPPO/realme, OnePlus, vivo, Samsung, Asus…); bấm → mở trang đó | [detection-modes §9](specs/detection-modes.md), [ui §3](specs/ui.md) |
+
+## 21. Phiên bản 1.8.3
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-A18 (sửa) | Bỏ hành động **Rung** (chế độ âm thanh rung). **Đổi chế độ âm thanh** chỉ chuyển qua lại **Đổ chuông ↔ Im lặng** (đang Rung — do người dùng tự đặt — → Đổ chuông). Đổi tên: "Sound mode: ring / silent" → **Ring mode** / **Silent mode** ("Chế độ đổ chuông" / "Chế độ im lặng"). Cử chỉ đang gán Rung (bản cũ) được chuyển sang Im lặng | [actions §12](specs/actions.md), [settings](specs/settings.md) |
+| FR-A21 | Hành động **Mở trang Cài đặt**: một trang Cài đặt hệ thống trong danh sách tuyển chọn (Wi-Fi, Bluetooth, Màn hình, Âm thanh, Pin, Ứng dụng, Tùy chọn nhà phát triển, các bảng nổi Internet / Âm lượng…), ẩn trang máy không có. Loại **Settings** / **Cài đặt** trong picker, nhóm như tab Cơ bản, tìm kiếm được. Chạy qua Trợ năng hoặc Shizuku | [actions §15](specs/actions.md), [ui §3](specs/ui.md) |
+| FR-A22 | Hành động **Gửi intent**: liệt kê intent mà app (có launcher) khai báo trong manifest — `intent-filter` không có `<data>` của activity (trừ `MAIN`) và broadcast receiver (trừ broadcast của hệ thống) được export, không yêu cầu quyền. Loại **Intents** trong picker, hiển thị như Shortcuts (nhóm theo app). Activity chạy qua Trợ năng hoặc Shizuku; broadcast do Totch gửi trực tiếp | [actions §16](specs/actions.md), [ui §3](specs/ui.md) |
+| FR-A23 | Hành động **Mở liên hệ**: chọn một liên hệ ngay trong app (loại **Contacts** / **Danh bạ** trong picker, cần quyền **Danh bạ** — xin khi mở loại này), khi cử chỉ chạy → mở liên hệ đó trong app Danh bạ mặc định của hệ thống. Chạy qua Trợ năng hoặc Shizuku | [actions §17](specs/actions.md), [ui §3](specs/ui.md) |

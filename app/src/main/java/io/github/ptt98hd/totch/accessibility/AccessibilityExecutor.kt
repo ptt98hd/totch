@@ -1,9 +1,12 @@
 package io.github.ptt98hd.totch.accessibility
 
+import android.content.Intent
+import android.net.Uri
 import android.accessibilityservice.AccessibilityService
 import io.github.ptt98hd.totch.core.action.ActionExecutor
 import io.github.ptt98hd.totch.core.action.Capability
 import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.model.IntentTarget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -15,6 +18,8 @@ class AccessibilityExecutor(private val bridge: AccessibilityBridge) : ActionExe
 
     override fun supports(action: Action): Boolean =
         action is Action.LaunchApp || action is Action.LaunchShortcut || action is Action.LaunchActivity ||
+            action is Action.OpenSettings || action is Action.OpenContact ||
+            (action is Action.SendIntent && action.target == IntentTarget.ACTIVITY) ||
             action == Action.Assistant || globalAction(action) != null
 
     override suspend fun execute(action: Action): Result<Unit> = withContext(Dispatchers.Main) {
@@ -24,6 +29,9 @@ class AccessibilityExecutor(private val bridge: AccessibilityBridge) : ActionExe
                 is Action.LaunchApp -> service.launchApp(action.packageName)
                 is Action.LaunchShortcut -> service.launchShortcut(action.intentUri)
                 is Action.LaunchActivity -> service.launchActivity(action.packageName, action.activityName)
+                is Action.OpenSettings -> service.start(Intent(action.intentAction))
+                is Action.OpenContact -> service.start(Intent(Intent.ACTION_VIEW, Uri.parse(action.lookupUri)))
+                is Action.SendIntent -> service.start(Intent(action.intentAction).setClassName(action.packageName, action.className))
                 Action.Assistant -> service.openAssistant()
                 else -> {
                     val global = globalAction(action) ?: error("unsupported")

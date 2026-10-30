@@ -1,0 +1,3 @@
+* Sound mode: the vibrate action is gone; "Cycle sound mode" switches between Ring and Silent. "Ring mode" / "Silent mode". Gestures set to vibrate become Silent mode.
+* New action types in the picker: Settings (open a system Settings page or panel), Intents (send an intent an app declares), Contacts (open a contact in the default contacts app).
+* The Contacts permission is asked only when you open Contacts in the picker.

@@ -2,6 +2,11 @@ package io.github.ptt98hd.totch.ui
 
 import io.github.ptt98hd.totch.ActivityEntry
 import io.github.ptt98hd.totch.AppActivities
+import io.github.ptt98hd.totch.AppIntents
+import io.github.ptt98hd.totch.ContactEntry
+import io.github.ptt98hd.totch.ContactSource
+import io.github.ptt98hd.totch.IntentEntry
+import io.github.ptt98hd.totch.SettingsPageSource
 import io.github.ptt98hd.totch.AppInfo
 import io.github.ptt98hd.totch.HighlightArea
 import io.github.ptt98hd.totch.Permission
@@ -111,6 +116,30 @@ class FakeAppActivities(private val entries: List<ActivityEntry> = emptyList()) 
 class FakeQuickSettingsTiles(private val entries: List<TileEntry> = emptyList()) : QuickSettingsTiles {
     var loads = 0
     override suspend fun tiles(): List<TileEntry> {
+        loads++
+        return entries
+    }
+}
+
+class FakeSettingsPages(private val available: Set<String> = emptySet()) : SettingsPageSource {
+    var loads = 0
+    override suspend fun available(): Set<String> {
+        loads++
+        return available
+    }
+}
+
+class FakeAppIntents(private val entries: List<IntentEntry> = emptyList()) : AppIntents {
+    var loads = 0
+    override suspend fun intents(): List<IntentEntry> {
+        loads++
+        return entries
+    }
+}
+
+class FakeContacts(private val entries: List<ContactEntry> = emptyList()) : ContactSource {
+    var loads = 0
+    override suspend fun contacts(): List<ContactEntry> {
         loads++
         return entries
     }

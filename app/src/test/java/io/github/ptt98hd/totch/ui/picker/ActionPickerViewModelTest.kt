@@ -3,6 +3,10 @@ package io.github.ptt98hd.totch.ui.picker
 import app.cash.turbine.test
 import io.github.ptt98hd.totch.ActivityEntry
 import io.github.ptt98hd.totch.AppInfo
+import io.github.ptt98hd.totch.ContactEntry
+import io.github.ptt98hd.totch.IntentEntry
+import io.github.ptt98hd.totch.core.action.SettingsGroup
+import io.github.ptt98hd.totch.core.model.IntentTarget
 import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.ShortcutEntry
 import io.github.ptt98hd.totch.TileEntry
@@ -13,6 +17,9 @@ import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.settings.isGestureOn
 import io.github.ptt98hd.totch.ui.common.Need
 import io.github.ptt98hd.totch.ui.FakeAppActivities
+import io.github.ptt98hd.totch.ui.FakeAppIntents
+import io.github.ptt98hd.totch.ui.FakeContacts
+import io.github.ptt98hd.totch.ui.FakeSettingsPages
 import io.github.ptt98hd.totch.ui.FakeAppShortcuts
 import io.github.ptt98hd.totch.ui.FakeInstalledApps
 import io.github.ptt98hd.totch.ui.FakeQuickSettingsTiles
@@ -46,22 +53,139 @@ class ActionPickerViewModelTest {
     private val tile = TileEntry("com.notes", "Notes", "com.notes.QuickNote", "Quick note")
     private val tiles = FakeQuickSettingsTiles(listOf(tile))
 
+    private val wifiPage = "android.settings.WIFI_SETTINGS"
+    private val settingsPages = FakeSettingsPages(setOf(wifiPage, "android.settings.panel.action.VOLUME"))
+    private val intent = IntentEntry("com.b", "Browser", "com.b.Sync", "com.b.action.SYNC", IntentTarget.BROADCAST)
+    private val intents = FakeAppIntents(listOf(intent))
+    private val contact = ContactEntry("content://com.android.contacts/contacts/lookup/k/1", "Ann")
+    private val contacts = FakeContacts(listOf(contact, ContactEntry("content://com.android.contacts/contacts/lookup/b/2", "Bob")))
+
     private val ready = Requirements(shizukuRunning = true, shizukuGranted = true, accessibilityEnabled = true, dndAccessGranted = true)
     private val requirements = MutableStateFlow(ready)
 
     private fun vm(repo: FakeSettingsRepository = FakeSettingsRepository(), gesture: Gesture = Gesture.SWIPE_RIGHT) =
-        ActionPickerViewModel(gesture, repo, installed, shortcuts, activities, tiles, requirements, main.dispatcher)
+        ActionPickerViewModel(
+            gesture, repo, installed, shortcuts, activities, tiles, settingsPages, intents, contacts, requirements, main.dispatcher,
+        )
 
     private fun bound(action: Action) = FakeSettingsRepository(Settings(bindings = DefaultBindings + (Gesture.TAP to action)))
 
     @Test
     fun `UI-66 Basic leads the tabs and holds fixed actions and Not set`() = runTest {
-        assertEquals(
-            listOf(PickerTab.BASIC, PickerTab.APPS, PickerTab.SHORTCUTS, PickerTab.ACTIVITIES, PickerTab.TILES),
-            PickerTab.entries,
-        )
+        assertEquals(PickerTab.BASIC, PickerTab.entries.first())
         assertEquals(PickerTab.BASIC, initialTab(Action.None))
         assertEquals(PickerTab.BASIC, initialTab(Action.ToggleWifi))
+    }
+
+    @Test
+    fun `UI-73 picker types and their initial tab`() = runTest {
+        assertEquals(
+            listOf(
+                PickerTab.BASIC, PickerTab.SETTINGS, PickerTab.APPS, PickerTab.SHORTCUTS, PickerTab.ACTIVITIES,
+                PickerTab.INTENTS, PickerTab.TILES, PickerTab.CONTACTS,
+            ),
+            PickerTab.entries,
+        )
+        assertEquals(PickerTab.SETTINGS, initialTab(Action.OpenSettings(wifiPage)))
+        assertEquals(PickerTab.INTENTS, initialTab(Action.SendIntent("com.b", "com.b.Sync", "com.b.action.SYNC", IntentTarget.BROADCAST)))
+        assertEquals(PickerTab.CONTACTS, initialTab(Action.OpenContact(contact.lookupUri, "Ann")))
+        val vm = vm(bound(Action.Back), Gesture.TAP)
+        vm.state.test {
+            listOf(PickerTab.SETTINGS, PickerTab.INTENTS, PickerTab.CONTACTS).forEach { tab ->
+                vm.selectTab(tab)
+                vm.setQuery(tab.name)
+            }
+            vm.selectTab(PickerTab.SETTINGS)
+            assertEquals("SETTINGS", expectMostRecentItem().query)
+            vm.selectTab(PickerTab.INTENTS)
+            assertEquals("INTENTS", expectMostRecentItem().query)
+            vm.selectTab(PickerTab.CONTACTS)
+            assertEquals("CONTACTS", expectMostRecentItem().query)
+        }
+    }
+
+    @Test
+    fun `UI-74 settings pages load once, only available ones, saved as OpenSettings`() = runTest {
+        val repo = FakeSettingsRepository()
+        val vm = vm(repo)
+        vm.state.test {
+            expectMostRecentItem()
+            assertEquals(0, settingsPages.loads)
+            vm.selectTab(PickerTab.SETTINGS)
+            val state = expectMostRecentItem()
+            assertFalse(state.settingsLoading)
+            assertEquals(
+                listOf(SettingsGroup.CONNECTIONS to listOf(wifiPage), SettingsGroup.PANELS to listOf("android.settings.panel.action.VOLUME")),
+                state.settingsGroups.map { it.group to it.intentActions },
+            )
+            vm.selectTab(PickerTab.BASIC)
+            vm.selectTab(PickerTab.SETTINGS)
+            expectMostRecentItem()
+            assertEquals(1, settingsPages.loads)
+            vm.select(Action.OpenSettings(wifiPage))
+            assertTrue(expectMostRecentItem().finished)
+        }
+        assertEquals(Action.OpenSettings(wifiPage), repo.current.bindings[Gesture.SWIPE_RIGHT])
+    }
+
+    @Test
+    fun `UI-75 intents load once, expand per app and are saved as SendIntent`() = runTest {
+        val repo = FakeSettingsRepository()
+        val vm = vm(repo)
+        vm.state.test {
+            expectMostRecentItem()
+            assertEquals(0, intents.loads)
+            vm.selectTab(PickerTab.INTENTS)
+            val state = expectMostRecentItem()
+            assertFalse(state.intentsLoading)
+            assertEquals(listOf("com.b"), state.intentGroups.map { it.packageName })
+            assertFalse(state.isIntentAppExpanded("com.b"))
+            vm.toggleIntentApp("com.b")
+            val expanded = expectMostRecentItem()
+            assertTrue(expanded.isIntentAppExpanded("com.b"))
+            assertFalse(expanded.isActivityAppExpanded("com.b"))
+            vm.setQuery("zzz")
+            assertTrue(expectMostRecentItem().intentGroups.isEmpty())
+            vm.setQuery("sync")
+            assertTrue(expectMostRecentItem().isIntentAppExpanded("com.b"))
+            assertEquals(1, intents.loads)
+            vm.selectIntent(intent)
+            assertTrue(expectMostRecentItem().finished)
+        }
+        assertEquals(
+            Action.SendIntent("com.b", "com.b.Sync", "com.b.action.SYNC", IntentTarget.BROADCAST),
+            repo.current.bindings[Gesture.SWIPE_RIGHT],
+        )
+    }
+
+    @Test
+    fun `UI-76 contacts load only with the permission, while the tab is open`() = runTest {
+        val repo = FakeSettingsRepository()
+        val vm = vm(repo)
+        vm.state.test {
+            vm.setContactsPermission(true)
+            expectMostRecentItem()
+            assertEquals(0, contacts.loads) // tab not open
+            vm.setContactsPermission(false)
+            vm.selectTab(PickerTab.CONTACTS)
+            val denied = expectMostRecentItem()
+            assertFalse(denied.contactsPermission)
+            assertEquals(0, contacts.loads)
+            vm.setContactsPermission(true)
+            val state = expectMostRecentItem()
+            assertFalse(state.contactsLoading)
+            assertEquals(listOf("Ann", "Bob"), state.contacts.map { it.name })
+            vm.setQuery("bo")
+            assertEquals(listOf("Bob"), expectMostRecentItem().contacts.map { it.name })
+            vm.selectTab(PickerTab.BASIC)
+            vm.selectTab(PickerTab.CONTACTS)
+            vm.setContactsPermission(true)
+            expectMostRecentItem()
+            assertEquals(1, contacts.loads)
+            vm.selectContact(contact)
+            assertTrue(expectMostRecentItem().finished)
+        }
+        assertEquals(Action.OpenContact(contact.lookupUri, "Ann"), repo.current.bindings[Gesture.SWIPE_RIGHT])
     }
 
     @Test

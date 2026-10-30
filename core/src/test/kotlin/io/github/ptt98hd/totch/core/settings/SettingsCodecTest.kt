@@ -2,6 +2,7 @@ package io.github.ptt98hd.totch.core.settings
 
 import io.github.ptt98hd.totch.core.action.OneHandedMethod
 import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.model.IntentTarget
 import io.github.ptt98hd.totch.core.model.Gesture
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -201,7 +202,6 @@ class SettingsCodecTest {
             Action.ToggleAutoBrightness to "auto_brightness",
             Action.ToggleAutoRotate to "auto_rotate",
             Action.RingerNormal to "ringer_normal",
-            Action.RingerVibrate to "ringer_vibrate",
             Action.RingerSilent to "ringer_silent",
             Action.CycleRingerMode to "ringer_cycle",
             Action.ToggleDnd to "dnd",
@@ -217,6 +217,35 @@ class SettingsCodecTest {
             val json = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject
             assertEquals("""{"type":"$name"}""", json.getValue("bindings").jsonObject.getValue("TAP").toString())
         }
+    }
+
+    @Test fun `ST-35 the removed vibrate action is read as silent`() {
+        val s = SettingsCodec.decode(
+            """{"bindings":{"TAP":{"type":"ringer_vibrate"},"DOUBLE_TAP":{"type":"home"}},""" +
+                """"enabledGestures":["TAP","DOUBLE_TAP"],"longPressMs":450}""",
+        )
+        assertEquals(Action.RingerSilent, s.bindings[Gesture.TAP])
+        assertEquals(Action.Home, s.bindings[Gesture.DOUBLE_TAP])
+        assertEquals(setOf(Gesture.TAP, Gesture.DOUBLE_TAP), s.enabledGestures)
+        assertEquals(450, s.longPressMs)
+    }
+
+    @Test fun `ST-36 v1_8_3 actions round trip with stable type names`() {
+        val names = mapOf(
+            Action.OpenSettings("android.settings.WIFI_SETTINGS") to "open_settings",
+            Action.SendIntent("com.a", "com.a.Main", "com.a.OPEN", IntentTarget.ACTIVITY) to "send_intent",
+            Action.SendIntent("com.a", "com.a.Receiver", "com.a.PING", IntentTarget.BROADCAST) to "send_intent",
+            Action.OpenContact("content://com.android.contacts/contacts/lookup/k/1", "Ann") to "open_contact",
+        )
+        names.forEach { (action, name) ->
+            val s = Settings(bindings = DefaultBindings + (Gesture.TAP to action))
+            assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)), name)
+            val tap = Json.parseToJsonElement(SettingsCodec.encode(s)).jsonObject.getValue("bindings").jsonObject.getValue("TAP")
+            assertEquals(name, tap.jsonObject.getValue("type").jsonPrimitive.content)
+        }
+        val broadcast = Settings(bindings = DefaultBindings + (Gesture.TAP to names.keys.elementAt(2)))
+        val tap = Json.parseToJsonElement(SettingsCodec.encode(broadcast)).jsonObject.getValue("bindings").jsonObject.getValue("TAP")
+        assertEquals("broadcast", tap.jsonObject.getValue("target").jsonPrimitive.content)
     }
 
     @Test fun `ST-32 JSON without enabledGestures switches on the bound gestures that were not switched off`() {

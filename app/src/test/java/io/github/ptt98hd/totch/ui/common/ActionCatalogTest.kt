@@ -1,16 +1,19 @@
 package io.github.ptt98hd.totch.ui.common
 
+import io.github.ptt98hd.totch.core.action.SettingsGroup
+import io.github.ptt98hd.totch.core.action.SettingsPages
 import io.github.ptt98hd.totch.core.model.Action
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ActionCatalogTest {
     @Test
     fun `UI-23 catalog groups cover every fixed action except None exactly once`() {
         val all = ActionCatalog.groups.flatMap { it.actions }
         assertEquals(all.size, all.distinct().size)
-        assertEquals(30, all.size)
+        assertEquals(29, all.size)
         assertFalse(Action.None in all)
         assertEquals(
             listOf(
@@ -27,6 +30,27 @@ class ActionCatalogTest {
             listOf(Action.ToggleWifi, Action.ToggleBluetooth, Action.ToggleMobileData, Action.ToggleAirplaneMode, Action.ToggleLocation),
             group(ActionGroupId.CONNECTIVITY),
         )
+    }
+
+    @Test
+    fun `UI-77 no vibrate, sound group and Do Not Disturb set`() {
+        assertEquals(
+            listOf(
+                Action.VolumeUp, Action.VolumeDown, Action.VolumePanel,
+                Action.RingerNormal, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd,
+            ),
+            ActionCatalog.groups.single { it.id == ActionGroupId.SOUND }.actions,
+        )
+        assertEquals(
+            setOf(Action.RingerNormal, Action.RingerSilent, Action.CycleRingerMode, Action.ToggleDnd),
+            ActionCatalog.needsDndAccess,
+        )
+    }
+
+    @Test
+    fun `SP-3 every settings page has a label`() {
+        SettingsPages.all.forEach { assertTrue(it.intentAction in settingsPageLabels, it.intentAction) }
+        SettingsGroup.entries.forEach { assertTrue(it in settingsGroupLabels, "$it") }
     }
 
     private val labels = mapOf(

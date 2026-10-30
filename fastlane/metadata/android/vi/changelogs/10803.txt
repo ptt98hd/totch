@@ -1,0 +1,3 @@
+* Chế độ âm thanh: bỏ hành động Rung; "Đổi chế độ âm thanh" chỉ chuyển Đổ chuông ↔ Im lặng. "Chế độ đổ chuông" / "Chế độ im lặng". Cử chỉ đang gán Rung thành Chế độ im lặng.
+* Loại hành động mới trong picker: Cài đặt (mở một trang / bảng nổi Cài đặt), Intents (gửi intent app khai báo), Danh bạ (mở liên hệ trong app Danh bạ mặc định).
+* Quyền Danh bạ chỉ được xin khi mở Danh bạ trong picker.
