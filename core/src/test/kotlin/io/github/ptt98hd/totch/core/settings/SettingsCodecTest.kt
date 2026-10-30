@@ -240,4 +240,11 @@ class SettingsCodecTest {
         val s = Settings(navLabels = false)
         assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
     }
+
+    @Test fun `ST-34 accessibility wanted defaults off and round trips`() {
+        assertFalse(Settings().accessibilityWanted)
+        assertFalse(SettingsCodec.decode("""{"bindings":{"TAP":{"type":"home"}}}""").accessibilityWanted)
+        val s = Settings(accessibilityWanted = true)
+        assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
+    }
 }

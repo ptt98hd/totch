@@ -42,14 +42,36 @@ class PermissionCommandsTest {
         assertEquals("cmd notification disallow_listener 'a.b/a.b.L'", PermissionCommands.notificationListener("a.b/a.b.L", false))
     }
 
-    @Test fun `PC-3 battery`() {
-        assertEquals("cmd deviceidle whitelist +'a.b'", PermissionCommands.batteryUnrestricted("a.b", true))
-        assertEquals("cmd deviceidle whitelist -'a.b'", PermissionCommands.batteryUnrestricted("a.b", false))
+    @Test fun `PC-3b battery also lifts the background restriction`() {
+        assertEquals(
+            listOf("cmd deviceidle whitelist +'a.b'", "cmd appops set 'a.b' RUN_ANY_IN_BACKGROUND allow"),
+            PermissionCommands.batteryUnrestricted("a.b", true),
+        )
+        assertEquals(listOf("cmd deviceidle whitelist -'a.b'"), PermissionCommands.batteryUnrestricted("a.b", false))
+    }
+
+    @Test fun `PC-9 accessibility services value`() {
+        assertEquals("$other:$totch", PermissionCommands.accessibilityServices("$totchShort:$other", totch, enabled = true))
+        assertEquals(totch, PermissionCommands.accessibilityServices(null, totch, enabled = true))
+        assertEquals(other, PermissionCommands.accessibilityServices("$other:$totch", totch, enabled = false))
+        assertEquals("", PermissionCommands.accessibilityServices("null", totch, enabled = false))
+    }
+
+    @Test fun `PC-10 write secure settings grant`() {
+        assertEquals(
+            "pm grant 'a.b' android.permission.WRITE_SECURE_SETTINGS",
+            PermissionCommands.grantWriteSecureSettings("a.b"),
+        )
+    }
+
+    @Test fun `PC-11 keep when unused`() {
+        assertEquals("cmd appops set 'a.b' AUTO_REVOKE_PERMISSIONS_IF_UNUSED ignore", PermissionCommands.keepWhenUnused("a.b", true))
+        assertEquals("cmd appops set 'a.b' AUTO_REVOKE_PERMISSIONS_IF_UNUSED allow", PermissionCommands.keepWhenUnused("a.b", false))
     }
 
     @Test fun `PC-4 notifications grant and quoting`() {
         assertEquals("pm grant 'a.b' android.permission.POST_NOTIFICATIONS", PermissionCommands.grantNotifications("a.b"))
-        assertEquals("cmd deviceidle whitelist +'a'\\''b'", PermissionCommands.batteryUnrestricted("a'b", true))
+        assertEquals("cmd deviceidle whitelist +'a'\\''b'", PermissionCommands.batteryUnrestricted("a'b", true).first())
     }
 
     @Test fun `PC-5 notifications revoke runs detached and reopens the app`() {

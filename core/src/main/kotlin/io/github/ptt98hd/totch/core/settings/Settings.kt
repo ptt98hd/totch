@@ -88,6 +88,11 @@ data class Settings(
     val enabledGestures: Set<Gesture> = emptySet(),
     /** Labels under the bottom bar icons (FR-U49). */
     val navLabels: Boolean = true,
+    /**
+     * The user wants the accessibility service on: written by the service itself, true once connected, false when it is
+     * unbound while Totch runs (switched off). Lets Totch turn it back on when Android drops it (FR-D15, DM-53).
+     */
+    val accessibilityWanted: Boolean = false,
 ) {
     /** Clamps values to FR-S4 limits and ensures every [Gesture] has a binding. */
     fun sanitized(): Settings = copy(
@@ -123,7 +128,7 @@ fun Settings.needsTouchBlocking(): Boolean = enabled && SwipeDownGestures.any { 
 fun Settings.withGestureOn(g: Gesture, on: Boolean): Settings =
     copy(enabledGestures = if (on) enabledGestures + g else enabledGestures - g)
 
-/** Binds [action] to [g] and switches it on; [Action.None] leaves it listening but doing nothing (FR-G15). */
+/** Binds [action] to [g] and switches it on; [Action.None] (Nothing) leaves it listening but doing nothing (FR-G15). */
 fun Settings.withBinding(g: Gesture, action: Action): Settings =
     copy(bindings = bindings + (g to action), enabledGestures = enabledGestures + g)
 

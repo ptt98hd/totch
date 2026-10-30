@@ -9,7 +9,7 @@ Free and open source (GPL-3.0-or-later). No ads, no trackers. The network is use
 
 ## Features
 
-- **9 gestures** on the notch area: tap, double tap, long press, swipe down / left / right, and swipe down / left / right **& hold**. Each gesture has its own on/off switch that decides whether it listens and keeps the assigned action; a gesture can be on but **not set** (it then catches the touch and does nothing). All gestures start off and not set; gestures and actions that cannot run with the current permissions are greyed out with the reason.
+- **9 gestures** on the notch area: tap, double tap, long press, swipe down / left / right, and swipe down / left / right **& hold**. Each gesture has its own on/off switch that decides whether it listens and keeps the assigned action; a gesture can be on and set to **Nothing** (it then catches the touch, vibrates and does nothing). All gestures start off and set to Nothing; gestures and actions that cannot run with the current permissions are greyed out with the reason.
 - **Actions** (one per gesture):
   - System: Back, Home, Recents, Lock screen, Screenshot, Notification shade, Quick Settings, Assistant
   - Flashlight toggle; media Play/Pause, Next, Previous; Volume up/down; show the volume panel
@@ -35,9 +35,12 @@ The permissions can be switched on or off from the Home screen; Totch grants the
 - **Accessibility** — to detect gestures without Shizuku, perform global actions (Back, Home, lock screen, ...), open apps from the background, and block touches on the notch for the swipe-down gestures. It does not read screen content.
 - **Notifications** (Android 13+) — for the foreground service notification. Android closes an app when one of its permissions is revoked, so switching it off restarts Totch.
 - **Media control** (notification access) — only to find the active media session and send play/pause/skip commands (more reliable than media key events). It never reads notifications.
-- **Do Not Disturb access** — needed by the sound mode actions; Android blocks ringer and Do Not Disturb changes without it.
-- **Unrestricted battery** — keeps the gesture service from being killed.
+- **Do Not Disturb** (access) — needed by the sound mode actions; Android blocks ringer and Do Not Disturb changes without it.
+- **Unrestricted battery** — keeps the gesture service from being killed (through Shizuku it also lifts the background restriction).
+- **Keep when unused** — exempts Totch from Android's "pause app activity if unused", which would stop an app that runs in the background but is rarely opened.
 - **Install updates** (install unknown apps) — lets the self-update install the new APK. Switching it off also restarts Totch.
+
+To stay running, Totch combines a foreground service, the accessibility service, a 15-minute watchdog job (survives reboots), restarts after boot, quick boot and app updates, and a restart when it is swiped away from Recents. On phones whose maker adds its own auto-start manager (Xiaomi, Huawei, Honor, OPPO, realme, OnePlus, vivo, Samsung, Asus…), Home › Advanced has an **Auto-start** row that opens it. With Shizuku, Totch also grants itself `WRITE_SECURE_SETTINGS` once, so it can turn its accessibility service back on when Android drops it (for example after a force stop) — never when you switched it off yourself.
 
 Self-update (the update button in the top bar, or Settings › Update › Check for updates) reads the latest [GitHub release](https://github.com/ptt98hd/totch/releases), downloads its signed APK, checks its SHA-256 and installs it through Shizuku (no confirmation, Totch reopens by itself), or hands it to the system installer when Shizuku is not running. Optionally it also checks when the app opens, or daily / weekly / monthly in the background with a notification; both are off by default. The APK is signed with the same key as the F-Droid build, so either can update the other.
 

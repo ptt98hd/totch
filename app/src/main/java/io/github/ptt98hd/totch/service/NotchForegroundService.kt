@@ -48,6 +48,13 @@ class NotchForegroundService : LifecycleService() {
         return START_STICKY
     }
 
+    /** DM-52: some ROMs kill the process with its task; a job brings the service back if they do. */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        val platform = (application as TotchApp).platform
+        if (platform.settingsEnabled) KeepAliveScheduler.scheduleRestart(this)
+    }
+
     private fun updateNotification(status: EngineStatus) {
         val text = when (status) {
             EngineStatus.Running -> getString(R.string.platform_notification_running)

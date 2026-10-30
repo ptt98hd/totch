@@ -245,6 +245,34 @@ class ActionPickerViewModelTest {
     }
 
     @Test
+    fun `UI-71 the query follows the current tab and each tab keeps its own`() = runTest {
+        val vm = vm(bound(Action.Back), Gesture.TAP)
+        vm.state.test {
+            assertEquals("", expectMostRecentItem().query)
+            vm.setQuery("wifi")
+            assertEquals("wifi", expectMostRecentItem().basicQuery)
+            vm.selectTab(PickerTab.APPS)
+            vm.setQuery("cam")
+            val apps = expectMostRecentItem()
+            assertEquals("cam", apps.query)
+            assertEquals("cam", apps.appQuery)
+            assertEquals("wifi", apps.basicQuery)
+            vm.selectTab(PickerTab.TILES)
+            vm.setQuery("note")
+            assertEquals("note", expectMostRecentItem().tileQuery)
+            vm.selectTab(PickerTab.SHORTCUTS)
+            vm.setQuery("tab")
+            vm.selectTab(PickerTab.ACTIVITIES)
+            vm.setQuery("set")
+            val last = expectMostRecentItem()
+            assertEquals("tab", last.shortcutQuery)
+            assertEquals("set", last.activityQuery)
+            vm.selectTab(PickerTab.BASIC)
+            assertEquals("wifi", expectMostRecentItem().query)
+        }
+    }
+
+    @Test
     fun `UI-29 system search query and Do Not Disturb hint`() = runTest {
         requirements.value = Requirements(accessibilityEnabled = true)
         val vm = vm(bound(Action.Back), Gesture.TAP)

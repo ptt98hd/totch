@@ -40,6 +40,7 @@ class NotchAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         val platform = (application as TotchApp).platform.also { platform = it }
         platform.accessibility.attach(this)
+        platform.setAccessibilityWanted(true) // DM-53
         val scope = MainScope().also { scope = it }
         scope.launch {
             combine(
@@ -59,7 +60,12 @@ class NotchAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() = Unit
 
+    /**
+     * The system unbinds a live service only when it is switched off (by the user, or Home); a killed or force-stopped
+     * process never gets here, so Totch may turn it back on then (DM-53, FR-D15).
+     */
     override fun onUnbind(intent: Intent?): Boolean {
+        platform?.setAccessibilityWanted(false)
         tearDown()
         return super.onUnbind(intent)
     }

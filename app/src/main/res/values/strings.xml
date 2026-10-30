@@ -30,7 +30,7 @@
     <string name="permission_accessibility">Accessibility</string>
     <string name="permission_notifications">Notifications</string>
     <string name="permission_media">Media control</string>
-    <string name="permission_dnd">Do Not Disturb access</string>
+    <string name="permission_dnd">Do Not Disturb</string>
     <string name="permission_battery">Unrestricted battery</string>
     <string name="permission_install_updates">Install updates</string>
     <string name="permission_granted">Granted</string>
@@ -56,7 +56,7 @@
     <string name="group_swipe_hold">Swipe &amp; hold</string>
     <string name="gesture_switch_cd">%1$s on or off</string>
     <string name="gesture_unavailable">Requires Accessibility (turn it on in Home)</string>
-    <string name="action_none">Not set</string>
+    <string name="action_none">Nothing</string>
     <string name="action_back">Back</string>
     <string name="action_home">Home</string>
     <string name="action_recents">Recent apps</string>
@@ -106,24 +106,19 @@
     <string name="group_connections">Connections</string>
 
     <!-- Action picker -->
-    <string name="app_picker_search">Search apps</string>
     <string name="app_picker_clear">Clear search</string>
     <string name="app_picker_empty">No apps match “%1$s”</string>
     <string name="app_picker_none">No apps found</string>
     <string name="tab_basic">Basic</string>
-    <string name="action_search">Search actions</string>
     <string name="action_search_empty">No actions match “%1$s”</string>
-    <string name="tab_apps">Apps</string>
+    <string name="tab_apps">Applications</string>
     <string name="tab_shortcuts">Shortcuts</string>
     <string name="tab_activities">Activities</string>
-    <string name="tab_tiles">Tiles</string>
-    <string name="tile_search">Search tiles</string>
+    <string name="tab_tiles">Quick settings</string>
     <string name="tile_empty">No tiles match “%1$s”</string>
     <string name="tile_none">No Quick Settings tiles found</string>
-    <string name="activity_search">Search activities</string>
     <string name="activity_empty">No activities match “%1$s”</string>
     <string name="activity_none">No activities found</string>
-    <string name="shortcut_search">Search shortcuts</string>
     <string name="shortcut_empty">No shortcuts match “%1$s”</string>
     <string name="shortcut_none">No shortcuts found</string>
     <string name="picker_close">Close</string>
@@ -224,9 +219,14 @@
     <string name="donate_later">Maybe later</string>
     <string name="donate_url" translatable="false">https://buymeacoffee.com/ptt98hd</string>
     <!-- v1.8.1 -->
-    <string name="picker_tab_label">Actions</string>
     <string name="setting_nav_labels">Show navigation labels</string>
     <string name="setting_nav_labels_summary">Text under the bottom bar icons</string>
     <string name="update_version_change" translatable="false">%1$s → %2$s</string>
     <string name="update_whats_new">What’s new</string>
+    <!-- v1.8.2 -->
+    <string name="picker_search">Search %1$s</string>
+    <string name="picker_type_cd">Action type: %1$s</string>
+    <string name="permission_keep_unused">Keep when unused</string>
+    <string name="autostart_title">Auto-start</string>
+    <string name="autostart_description">Let Totch run in the background</string>
 </resources>

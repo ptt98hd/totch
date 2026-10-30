@@ -91,7 +91,7 @@ class GestureEngineTest {
     }
 
     @Test
-    fun `EN-14 a switched on gesture that is not set is recognized but does nothing`() = runTest {
+    fun `EN-14 EN-15 a switched on gesture set to Nothing is recognized, vibrates and does nothing`() = runTest {
         val notSet = base.bind(Gesture.TAP to Action.Home).withGestureOn(Gesture.DOUBLE_TAP, true)
         val e = engine(notSet.copy(bindings = notSet.bindings + (Gesture.DOUBLE_TAP to Action.None)))
         e.onTouch(down(0))
@@ -108,13 +108,35 @@ class GestureEngineTest {
         advanceTimeBy(1000)
         runCurrent()
         assertEquals(1, dispatched.size)
-        assertEquals(1, haptics)
+        assertEquals(2, haptics, "TAP and the Nothing double tap each vibrate once")
 
         e.updateSettings(notSet.withGestureOn(Gesture.DOUBLE_TAP, false))
         e.onTouch(down(3000))
         e.onTouch(up(3050))
         runCurrent()
         assertEquals(2, dispatched.size)
+    }
+
+    @Test
+    fun `EN-15 Nothing does not vibrate with haptics off, a switched off gesture never vibrates`() = runTest {
+        val nothing = base.bind(Gesture.TAP to Action.Home).withGestureOn(Gesture.DOUBLE_TAP, true)
+            .let { it.copy(bindings = it.bindings + (Gesture.DOUBLE_TAP to Action.None)) }
+        val e = engine(nothing.copy(haptics = false))
+        e.onTouch(down(0))
+        e.onTouch(up(50))
+        e.onTouch(down(100))
+        e.onTouch(up(150))
+        advanceTimeBy(1000)
+        runCurrent()
+        assertEquals(0, haptics)
+
+        e.updateSettings(nothing.withGestureOn(Gesture.TAP, false).withGestureOn(Gesture.DOUBLE_TAP, false))
+        e.onTouch(down(2000))
+        e.onTouch(up(2050))
+        advanceTimeBy(1000)
+        runCurrent()
+        assertTrue(dispatched.isEmpty())
+        assertEquals(0, haptics)
     }
 
     @Test

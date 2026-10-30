@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** UI-66: BASIC (FR-U46, formerly System) holds Not set and the fixed actions. */
+/** UI-66: BASIC (FR-U46, formerly System) holds Nothing and the fixed actions. */
 enum class PickerTab { BASIC, APPS, SHORTCUTS, ACTIVITIES, TILES }
 
 data class ShortcutGroup(val packageName: String, val appLabel: String, val shortcuts: List<ShortcutEntry>)
@@ -142,6 +142,16 @@ data class ActionPickerUiState(
 ) {
     /** UI-29, UI-29b, UI-62: why [action] cannot run (its row is disabled with this reason), null when it can. */
     fun need(action: Action): Need? = capabilities.need(action)
+
+    /** UI-71: the search of the current tab; each tab keeps its own. */
+    val query: String
+        get() = when (tab) {
+            PickerTab.BASIC -> basicQuery
+            PickerTab.APPS -> appQuery
+            PickerTab.SHORTCUTS -> shortcutQuery
+            PickerTab.ACTIVITIES -> activityQuery
+            PickerTab.TILES -> tileQuery
+        }
 
     /** UI-25: while searching, every matching app is shown expanded. */
     fun isExpanded(packageName: String): Boolean = shortcutQuery.isNotBlank() || packageName in expanded
@@ -250,6 +260,15 @@ class ActionPickerViewModel(
             }
             PickerTab.BASIC -> Unit
         }
+    }
+
+    /** UI-71: sets the search of the current tab (FR-U58: one search field for every tab). */
+    fun setQuery(value: String) = when (state.value.tab) {
+        PickerTab.BASIC -> setBasicQuery(value)
+        PickerTab.APPS -> setAppQuery(value)
+        PickerTab.SHORTCUTS -> setShortcutQuery(value)
+        PickerTab.ACTIVITIES -> setActivityQuery(value)
+        PickerTab.TILES -> setTileQuery(value)
     }
 
     fun setBasicQuery(value: String) = local.update { it.copy(basicQuery = value) }

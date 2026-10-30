@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -13,6 +14,10 @@
     <!-- FR-U27, FR-U29: self-update from GitHub Releases, on request or on checks the user turned on. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- FR-D15: granted once through Shizuku (pm grant) so Totch can turn its accessibility service back on by itself. -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
     <queries>
         <intent>
@@ -30,6 +35,18 @@
         <intent>
             <action android:name="android.service.quicksettings.action.QS_TILE" />
         </intent>
+        <!-- FR-U59: makers' auto-start managers (OemSettings). -->
+        <package android:name="com.miui.securitycenter" />
+        <package android:name="com.huawei.systemmanager" />
+        <package android:name="com.hihonor.systemmanager" />
+        <package android:name="com.coloros.safecenter" />
+        <package android:name="com.oppo.safe" />
+        <package android:name="com.oneplus.security" />
+        <package android:name="com.vivo.permissionmanager" />
+        <package android:name="com.iqoo.secure" />
+        <package android:name="com.samsung.android.lool" />
+        <package android:name="com.asus.mobilemanager" />
+        <package android:name="com.letv.android.letvsafe" />
     </queries>
 
     <application
@@ -66,7 +83,8 @@
         <service
             android:name=".service.NotchForegroundService"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Keeps notch gesture detection running (touch input via Shizuku or the accessibility overlay)" />
@@ -87,6 +105,10 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <!-- DM-51: after an update of Totch, and the quick boot of some makers. -->
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
 
@@ -97,6 +119,12 @@
         <!-- FR-U29: periodic update check, scheduled only when the user picks a frequency. -->
         <service
             android:name=".update.UpdateCheckJobService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- FR-D14: watchdog that restarts the gesture service (DM-50, DM-52). -->
+        <service
+            android:name=".service.KeepAliveJobService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
