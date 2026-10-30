@@ -373,6 +373,7 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | ID | Bước | Kỳ vọng | KQ |
 |---|---|---|---|
 | MT-O12 | Bật island + hiệu ứng chạm; cắm sạc, đổi âm lượng, chạm / vuốt notch nhiều lần; chờ kết thúc | Vùng notch trong suốt hoàn toàn: không sót icon, viên đen, viền, gợn sóng (FR-O9) | [ ] |
+| MT-O16 | (1.9.2) Bật Hiệu ứng chạm, chạm nhanh notch nhiều lần ở các vị trí khác nhau | Mỗi vòng gợn sóng lan ra rồi biến mất, không vòng nào đứng yên | [ ] |
 | MT-O13 | Cắm sạc / nhận thông báo khi island bật | Vòng sáng hiện quanh notch → viên giãn hai bên → nội dung → thu về notch → vòng sáng tắt; vòng sáng hiện suốt (FR-O11) | [ ] |
 | MT-O14 | Island bật với Thông báo mới; nhận tin nhắn; cập nhật từ 1.9.0 với Báo thông báo đang bật | Island bung icon app rồi thu lại, viền nhịp thở tới khi kéo thanh thông báo (FR-O12); không còn dòng Báo thông báo; cấu hình cũ → island bật với Thông báo mới | [ ] |
 | MT-O15 | Hiệu ứng chạm trên app nền trắng (Cài đặt, light mode) và nền đen (dark mode) | Gợn sóng, viền, vệt sáng đều nhìn rõ (FR-O10) | [ ] |

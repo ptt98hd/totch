@@ -1,0 +1,1 @@
+* Fixed a touch ripple circle staying on screen where you touched the notch.

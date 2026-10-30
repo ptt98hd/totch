@@ -43,6 +43,10 @@ Quy tắc:
   `fillMaxSize()`.
 - Khi lớp vẽ chuyển sang **rảnh** (không island, không vòng sáng, không viền thông báo, không hiệu ứng đang chạy), sau
   frame cuối cửa sổ được `invalidate()` **toàn bộ** một lần → buffer được xóa sạch.
+- v1.9.2: animation của một hiệu ứng **không** chạy trong effect bị khởi động lại bởi chính chạm đó. Bản 1.9.0–1.9.1
+  chạy gợn sóng trong `LaunchedEffect(press)`: nhả tay (`press = null`) khởi động lại effect, hủy animation trước khi
+  gợn sóng tự gỡ khỏi danh sách → vòng tròn đứng yên mãi tại điểm chạm. Gợn sóng chạy trong scope của composition
+  (`rememberCoroutineScope`) và luôn gỡ trong `finally`.
 
 ## 2. Viền báo thông báo (FR-O1, NI-*)
 
