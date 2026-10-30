@@ -61,4 +61,9 @@ class StringsTest {
         assert(pages.size > 40)
         pages.forEach { assert(!vi[it].isNullOrBlank()) { it } }
     }
+
+    @Test fun `UI-81 media and notifications access row`() {
+        assertEquals("Media & notifications", en["permission_media"])
+        assertEquals("Media và thông báo", vi["permission_media"])
+    }
 }

@@ -34,6 +34,13 @@ class GestureEngineTest {
         override fun onFailed(action: Action, reason: String) { failures += action }
     }
 
+    private val observed = mutableListOf<String>()
+    private val observer = object : EngineObserver {
+        override fun onPress(x: Float, y: Float, timeMs: Long) { observed += "press $x,$y@$timeMs" }
+        override fun onRelease() { observed += "release" }
+        override fun onGesture(g: Gesture) { observed += g.name }
+    }
+
     private fun TestScope.engine(
         settings: Settings = base,
         scope: CoroutineScope = backgroundScope,
@@ -44,6 +51,7 @@ class GestureEngineTest {
         density = 2f,
         dispatch = { dispatched += it; result },
         feedback = feedback,
+        observer = observer,
     ).apply {
         updateSettings(settings)
         region = this@GestureEngineTest.region
@@ -315,5 +323,39 @@ class GestureEngineTest {
         runCurrent()
         assertEquals(2, dispatched.size)
         assertEquals(2, haptics)
+    }
+
+    @Test
+    fun `EN-16 EN-17 press and release inside the region only`() = runTest {
+        val e = engine(base.bind(Gesture.TAP to Action.Home).withGestureOn(Gesture.DOUBLE_TAP, false))
+        e.onTouch(down(0, x = 10f, y = 300f))
+        e.onTouch(up(50, x = 10f, y = 300f))
+        assertEquals(emptyList(), observed)
+        e.onTouch(down(100))
+        e.onTouch(TouchEvent(TouchAction.MOVE, 500f, 40f, 110, pointerCount = 2))
+        e.onTouch(up(150))
+        e.onTouch(TouchEvent(TouchAction.DOWN, 500f, 40f, 200, pointerCount = 2))
+        e.onTouch(TouchEvent(TouchAction.CANCEL, 500f, 40f, 210))
+        e.onTouch(down(300))
+        e.onTouch(TouchEvent(TouchAction.CANCEL, 500f, 40f, 310))
+        assertEquals(listOf("press 500.0,40.0@100", "release", "press 500.0,40.0@300", "release"), observed)
+    }
+
+    @Test
+    fun `EN-18 recognized gestures that are on are reported, even Nothing or without haptics`() = runTest {
+        val s = base.bind(Gesture.TAP to Action.None).withGestureOn(Gesture.TAP, true)
+            .withGestureOn(Gesture.DOUBLE_TAP, false).copy(haptics = false)
+        val e = engine(s)
+        e.onTouch(down(0))
+        e.onTouch(up(50))
+        runCurrent()
+        assertEquals(listOf("press 500.0,40.0@0", "release", "TAP"), observed)
+        observed.clear()
+        e.updateSettings(s.withGestureOn(Gesture.TAP, false))
+        e.onTouch(down(1000))
+        e.onTouch(up(1050))
+        advanceTimeBy(1000)
+        runCurrent()
+        assertEquals(listOf("press 500.0,40.0@1000", "release"), observed)
     }
 }

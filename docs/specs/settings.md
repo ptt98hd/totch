@@ -113,6 +113,9 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 | ST-34 | (v1.8.2, FR-D15) `Settings().accessibilityWanted == false`; JSON cũ không có key → `false`; round-trip `accessibilityWanted=true` |
 | ST-30 | (v1.8, FR-S2 sửa, FR-S10) `Settings().bindings` = `None` cho **cả 9** cử chỉ, `isGestureOn(g)` = false với mọi g; `Settings().longPressMs == 300`; JSON đã lưu (có `bindings`, `longPressMs`) giữ nguyên giá trị cũ |
 
+**v1.9** — field mới `notificationIndicator`, `island`, `islandActivities`, `touchEffects` và tiêu chí ST-37, ST-38: xem
+[notch-overlay §5](notch-overlay.md).
+
 ## 3. `SettingsRepository` (`:app`)
 - DataStore Preferences, key `settings_json`.
 - `settings: Flow<Settings>`; `suspend fun update(transform: (Settings) -> Settings)` — luôn lưu bản `sanitized()`.

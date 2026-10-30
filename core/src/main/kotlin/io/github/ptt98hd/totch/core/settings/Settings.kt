@@ -4,6 +4,7 @@ import io.github.ptt98hd.totch.core.action.OneHandedMethod
 import io.github.ptt98hd.totch.core.gesture.GestureConfig
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
+import io.github.ptt98hd.totch.core.overlay.IslandActivity
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -93,6 +94,13 @@ data class Settings(
      * unbound while Totch runs (switched off). Lets Totch turn it back on when Android drops it (FR-D15, DM-53).
      */
     val accessibilityWanted: Boolean = false,
+    /** Border around the notch lights while notifications are unseen (FR-O1). */
+    val notificationIndicator: Boolean = false,
+    /** Dynamic Island around the notch (FR-O2…FR-O5), showing [islandActivities]. */
+    val island: Boolean = false,
+    val islandActivities: Set<IslandActivity> = IslandActivity.entries.toSet(),
+    /** Ripple, glow and squish when the notch is touched (FR-O6). */
+    val touchEffects: Boolean = false,
 ) {
     /** Clamps values to FR-S4 limits and ensures every [Gesture] has a binding. */
     fun sanitized(): Settings = copy(
@@ -111,6 +119,9 @@ data class Settings(
         },
     )
 }
+
+/** ST-38: what the island may show; nothing while it is switched off. */
+fun Settings.activeIslandActivities(): Set<IslandActivity> = if (island) islandActivities else emptySet()
 
 fun Settings.actionFor(g: Gesture): Action = bindings[g] ?: Action.None
 

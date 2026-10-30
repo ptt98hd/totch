@@ -1,11 +1,14 @@
 package io.github.ptt98hd.totch.ui.notch
 
 import app.cash.turbine.test
+import io.github.ptt98hd.totch.Requirements
+import io.github.ptt98hd.totch.core.overlay.IslandActivity
 import io.github.ptt98hd.totch.core.settings.ManualRegionDp
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
 import io.github.ptt98hd.totch.ui.FakeTouchArea
 import io.github.ptt98hd.totch.ui.MainDispatcherRule
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -100,6 +103,57 @@ class NotchSettingsViewModelTest {
             assertEquals(800, longPressMs)
             assertEquals(60, swipeMinDistanceDp)
             assertEquals(10, paddingDp)
+        }
+    }
+
+    @Test
+    fun `UI-78 overlay switches are persisted`() = runTest {
+        val repo = FakeSettingsRepository(custom)
+        val vm = NotchSettingsViewModel(repo, FakeTouchArea())
+        vm.setNotificationIndicator(true)
+        vm.setIsland(true)
+        vm.setIslandActivity(IslandActivity.CHARGING, false)
+        vm.setTouchEffects(true)
+        assertEquals(
+            custom.copy(
+                notificationIndicator = true,
+                island = true,
+                islandActivities = IslandActivity.entries.toSet() - IslandActivity.CHARGING,
+                touchEffects = true,
+            ),
+            repo.current,
+        )
+    }
+
+    @Test
+    fun `UI-79 switching off the last activity switches the island off`() = runTest {
+        val repo = FakeSettingsRepository(Settings(island = true, islandActivities = setOf(IslandActivity.MEDIA)))
+        val vm = NotchSettingsViewModel(repo, FakeTouchArea())
+        vm.setIslandActivity(IslandActivity.MEDIA, false)
+        assertFalse(repo.current.island)
+        assertEquals(setOf(IslandActivity.MEDIA), repo.current.islandActivities)
+        repo.update { it.copy(islandActivities = emptySet()) }
+        vm.setIsland(true)
+        assertTrue(repo.current.island)
+        assertEquals(IslandActivity.entries.toSet(), repo.current.islandActivities)
+    }
+
+    @Test
+    fun `UI-80 overlay issues`() = runTest {
+        val requirements = MutableStateFlow(Requirements())
+        val vm = NotchSettingsViewModel(FakeSettingsRepository(), FakeTouchArea(), requirements)
+        vm.state.test {
+            val none = expectMostRecentItem()
+            OverlayFeature.entries.forEach { assertEquals(OverlayIssue.ACCESSIBILITY, none.overlayIssue(it), "$it") }
+            requirements.value = Requirements(accessibilityEnabled = true)
+            val a11y = expectMostRecentItem()
+            val needsAccess = setOf(OverlayFeature.INDICATOR, OverlayFeature.ISLAND_MEDIA, OverlayFeature.ISLAND_NOTIFICATIONS)
+            OverlayFeature.entries.forEach {
+                assertEquals(if (it in needsAccess) OverlayIssue.NOTIFICATION_ACCESS else null, a11y.overlayIssue(it), "$it")
+            }
+            requirements.value = Requirements(accessibilityEnabled = true, mediaAccessGranted = true)
+            val all = expectMostRecentItem()
+            OverlayFeature.entries.forEach { assertNull(all.overlayIssue(it), "$it") }
         }
     }
 }

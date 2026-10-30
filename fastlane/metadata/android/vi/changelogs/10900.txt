@@ -1,0 +1,4 @@
+* Báo thông báo: viền notch sáng theo màu app khi có thông báo chưa xem.
+* Dynamic Island quanh notch: media đang phát (bấm để điều khiển), thông báo mới, sạc pin, chế độ âm thanh và âm lượng.
+* Hiệu ứng chạm: gợn sóng, viền sáng và co giãn khi chạm notch.
+* Mặc định tắt (Notch › Hiệu ứng), cần Trợ năng. Chỉ đọc metadata thông báo, không đọc nội dung.

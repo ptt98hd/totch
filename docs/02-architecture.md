@@ -40,6 +40,7 @@ totch/
 │       ├── input/                # GeteventParser, InputDeviceInfo, CoordinateMapper
 │       ├── region/               # NotchRegionResolver
 │       ├── action/               # ActionDispatcher, ActionExecutor, ShellCommands
+│       ├── overlay/              # v1.9: NotificationIndicator, IslandController, IslandLayout, TouchEffect
 │       └── settings/             # SettingsCodec (JSON), validation/clamp
 ├── app/                          # Android application
 │   └── src/main/java/io/github/ptt98hd/totch/
@@ -50,6 +51,7 @@ totch/
 │       ├── accessibility/        # NotchAccessibilityService, AccessibilityExecutor
 │       ├── service/              # NotchForegroundService, BootReceiver
 │       ├── action/               # LocalExecutor (torch, media, volume), AppLauncher
+│       ├── overlay/              # v1.9: OverlayController, NotchOverlayWindow (Compose), nguồn media / pin / âm thanh
 │       └── ui/                   # theme/, home/, gestures/, notch/, settings/ (app settings + about), navigation
 └── docs/
 ```
@@ -279,3 +281,7 @@ duy nhất trên `Dispatchers.Default` → không polling (NFR-3).
   shortcut tĩnh đọc được từ manifest của app (qua `<queries>` sẵn có) và mở bằng intent của chính nó.
 - **ADR-7 Highlight notch trong Activity** (v1.1) — vẽ trong cửa sổ của app (edge-to-edge, cutout `shortEdges`)
   thay vì overlay: chạy được ở cả 2 mode, không cần quyền, cập nhật theo bản nháp khi kéo slider.
+- **ADR-8 Lớp hiển thị trong overlay Trợ năng** (v1.9) — chỉ `TYPE_ACCESSIBILITY_OVERLAY` nằm trên status bar; cửa sổ
+  vẽ `FLAG_NOT_TOUCHABLE` (Compose, trong service) tách khỏi cửa sổ chạm `NotchView` để vẽ không ảnh hưởng nhận chạm.
+  Quyết định (island hiện gì, bao lâu, hình học, hit-test, viền thông báo) nằm trong `:core/overlay` thuần, có test; `:app`
+  chỉ nối nguồn dữ liệu Android và vẽ ([notch-overlay](specs/notch-overlay.md)).

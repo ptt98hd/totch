@@ -23,6 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -54,11 +55,15 @@ fun SwitchRow(
     onCheckedChange: (Boolean) -> Unit,
     icon: ImageVector? = null,
     summary: String? = null,
+    /** The summary is a reason in the error color (UI-80). */
+    error: Boolean = false,
+    modifier: Modifier = Modifier,
 ) {
     TotchListItem(
         headline = title,
-        modifier = Modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
+        modifier = modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
         supporting = summary,
+        supportingColor = if (error) MaterialTheme.colorScheme.error else Color.Unspecified,
         leading = icon?.let { { TonalIcon(it) } },
         trailing = { TotchSwitch(checked = checked, onCheckedChange = null) },
     )
