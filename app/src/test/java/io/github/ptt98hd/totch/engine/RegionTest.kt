@@ -77,4 +77,26 @@ class RegionTest {
         assertEquals(display, rotated.natural())
         assertEquals(notchRegion(Settings(), display), engineRegion(Settings(), display))
     }
+
+    @Test
+    fun `NR-18 fromNatural is the inverse of toNatural`() {
+        val notch = Rect(500, 0, 580, 80)
+        assertEquals(Rect(0, 500, 80, 580), fromNatural(notch, rotation = 1, widthPx = 2400, heightPx = 1080))
+        assertEquals(Rect(2320, 500, 2400, 580), fromNatural(notch, rotation = 3, widthPx = 2400, heightPx = 1080))
+        assertEquals(Rect(500, 2320, 580, 2400), fromNatural(notch, rotation = 2, widthPx = 1080, heightPx = 2400))
+        assertEquals(notch, fromNatural(notch, rotation = 0, widthPx = 1080, heightPx = 2400))
+        val r = Rect(100, 20, 300, 260)
+        listOf(0 to (1080 to 2400), 1 to (2400 to 1080), 2 to (1080 to 2400), 3 to (2400 to 1080)).forEach { (rotation, size) ->
+            val (w, h) = size
+            assertEquals(r, toNatural(fromNatural(r, rotation, w, h), rotation, w, h), "rotation $rotation")
+        }
+    }
+
+    @Test
+    fun `NR-19 points to natural coordinates`() {
+        assertEquals(540f to 40f, pointToNatural(40f, 540f, rotation = 1, widthPx = 2400, heightPx = 1080))
+        assertEquals(540f to 40f, pointToNatural(2360f, 540f, rotation = 3, widthPx = 2400, heightPx = 1080))
+        assertEquals(540f to 40f, pointToNatural(540f, 2360f, rotation = 2, widthPx = 1080, heightPx = 2400))
+        assertEquals(540f to 40f, pointToNatural(540f, 40f, rotation = 0, widthPx = 1080, heightPx = 2400))
+    }
 }

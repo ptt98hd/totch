@@ -47,7 +47,7 @@ import io.github.ptt98hd.totch.ui.common.Gutter
 import io.github.ptt98hd.totch.ui.common.SectionHeader
 import io.github.ptt98hd.totch.ui.common.TonalIcon
 import io.github.ptt98hd.totch.ui.common.TotchListItem
-import io.github.ptt98hd.totch.ui.common.TotchSwitch
+import io.github.ptt98hd.totch.ui.common.SplitSwitch
 import io.github.ptt98hd.totch.ui.common.TotchTopBar
 import io.github.ptt98hd.totch.ui.common.actionDisplayName
 import io.github.ptt98hd.totch.ui.common.icon
@@ -176,7 +176,7 @@ private fun GestureListItem(row: GestureRow, onClick: () -> Unit, onSwitchChange
         leading = { TonalIcon(row.gesture.icon) },
         trailing = {
             val switchDescription = stringResource(R.string.gesture_switch_cd, stringResource(row.gesture.labelRes))
-            TotchSwitch(
+            SplitSwitch( // FR-U64
                 checked = row.on,
                 onCheckedChange = onSwitchChange,
                 enabled = row.enabled && need == null,

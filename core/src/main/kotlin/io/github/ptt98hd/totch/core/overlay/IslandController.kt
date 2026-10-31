@@ -45,6 +45,13 @@ enum class IslandTap { NONE, EXPANDED, COLLAPSED, OPEN_NOTIFICATIONS }
 class IslandController(activities: Set<IslandActivity>) {
     var activities: Set<IslandActivity> = activities
 
+    /** IS-15: false while the screen is rotated — media does not expand; setting it collapses. */
+    var expandable: Boolean = true
+        set(value) {
+            field = value
+            if (!value) collapse()
+        }
+
     private var media: MediaInfo? = null
     /** Media was seen playing, so it is shown (also while paused, until [lingerUntil]). */
     private var mediaShown = false
@@ -95,6 +102,8 @@ class IslandController(activities: Set<IslandActivity>) {
         is IslandContent.Media -> if (c.expanded) {
             collapse()
             IslandTap.COLLAPSED
+        } else if (!expandable) {
+            IslandTap.NONE
         } else {
             expanded = true
             expandedUntil = nowMs + EXPANDED_MS

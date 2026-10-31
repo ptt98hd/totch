@@ -31,6 +31,10 @@ Yêu cầu: FR-U1…FR-U42, FR-A20, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-
   quyền / cập nhật hiện ở dòng — dài **≤ 30 ký tự** ở cả en và vi (với `%1$s` không tính phần tham số), để vừa một dòng
   cạnh icon + switch trên màn 360 dp. Lý do không khả dụng đổi "Requires …" → "Needs …". Dòng phụ ghép có tên do người
   dùng / app đặt (tên hành động, tên app) vẫn có thể bị "…" khi tên dài.
+- **Switch tách phần mở** (v1.9.3, FR-U64): dòng có switch mà chạm phần bên trái **mở** hộp thoại / bảng chọn (thay vì bật
+  tắt) — dòng Dynamic Island khi island bật (FR-U63), dòng cử chỉ ở Gestures (mở picker) — vẽ switch bằng `SplitSwitch`:
+  **vạch dọc** `VerticalDivider` (cao 32 dp, màu `outlineVariant`) rồi khoảng 12 dp rồi `TotchSwitch`. Dòng mà cả dòng
+  bật / tắt switch không có vạch.
 - Chuỗi trong `strings.xml` (en) và `values-vi/strings.xml`.
 
 | ID | Tiêu chí |
@@ -41,6 +45,7 @@ Yêu cầu: FR-U1…FR-U42, FR-A20, FR-A15, FR-G12…FR-G14, FR-A14, FR-D10, FR-
 | UI-44 | (v1.7) Top bar: bên phải đúng 2 nút — Check for updates (mở hộp thoại cập nhật, update §8) rồi Buy me a coffee (mở hộp thoại ủng hộ) |
 | UI-45 | (v1.7) Mọi dòng danh sách cao ≥ 72 dp, tiêu đề và mô tả một dòng (kiểm thủ công MT-U40) |
 | UI-82 | (v1.9.1, FR-U60) Các chuỗi mô tả ở trên dài ≤ 30 ký tự, en và vi (kiểm bằng `StringsTest`) |
+| UI-83 | (v1.9.3, FR-U64) Dòng Dynamic Island (island bật) và dòng cử chỉ có vạch dọc giữa phần mở và switch; dòng chỉ bật / tắt (vd. Hiệu ứng chạm, Settings › Hệ thống) không có (kiểm thủ công MT-U64) |
 | UI-70 | (v1.8.1, FR-U49) `navLabels = false` → bottom bar không có nhãn; `true` → có nhãn (kiểm thủ công MT-U50) |
 
 ### Buy me a coffee (v1.7 — FR-U40, prototype)

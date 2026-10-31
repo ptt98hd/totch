@@ -37,12 +37,12 @@ class EngineStatusTest {
     }
 
     @Test
-    fun `DM-42 Accessibility alone runs, but only in portrait`() {
+    fun `DM-42 Accessibility alone runs, rotated only with landscape gestures`() {
         val none = ShizukuState(running = false, granted = false)
         assertEquals(EngineStatus.Running, status(on, none, PipelineState.Idle, accessibility = true))
         assertEquals(EngineStatus.PausedRotation, status(on, none, PipelineState.Idle, rotation = 1, accessibility = true))
         assertEquals(
-            EngineStatus.PausedRotation,
+            EngineStatus.Running,
             status(on.copy(landscapeGestures = true), none, PipelineState.Idle, rotation = 1, accessibility = true),
         )
     }

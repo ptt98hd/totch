@@ -298,7 +298,7 @@
     <string name="setting_island_sound">Âm thanh</string>
     <string name="setting_island_sound_summary">Chế độ âm thanh và âm lượng</string>
     <string name="setting_touch_effects">Hiệu ứng chạm</string>
-    <string name="setting_touch_effects_summary">Gợn sóng và co giãn khi chạm</string>
+    <string name="setting_touch_effects_summary">Vòng sáng và icon khi chạm</string>
     <string name="overlay_needs_accessibility">Cần Trợ năng</string>
     <string name="overlay_needs_notification_access">Cần quyền Media và thông báo</string>
     <string name="island_sound_ring">Đổ chuông</string>

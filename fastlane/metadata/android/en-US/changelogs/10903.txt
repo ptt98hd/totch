@@ -1,0 +1,4 @@
+* Rotation is detected reliably, also after leaving a full-screen video.
+* The Dynamic Island and touch effects stay on the real notch when the screen is rotated; with Gestures in landscape, the Accessibility touch source works rotated too, with swipes relative to the notch.
+* Simpler touch effects: a glow ring, the island stretches as you hold or swipe, then shows the gesture and action icons.
+* Rows whose switch sits next to a part that opens a dialog now have a divider between the two.

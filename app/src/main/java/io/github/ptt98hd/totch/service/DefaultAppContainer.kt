@@ -46,7 +46,6 @@ import io.github.ptt98hd.totch.engine.touchSource
 import io.github.ptt98hd.totch.engine.detectedRegionDp
 import io.github.ptt98hd.totch.engine.engineRegion
 import io.github.ptt98hd.totch.engine.highlightArea
-import io.github.ptt98hd.totch.engine.notchRegion
 import io.github.ptt98hd.totch.engine.resolveEngineStatus
 import io.github.ptt98hd.totch.locale.AppLocales
 import io.github.ptt98hd.totch.core.model.Action
@@ -87,12 +86,11 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
 
     val display = DisplayMonitor(app, scope)
 
-    /** Notch region for the current settings and display, independent of `enabled`; `null` when rotated. */
-    val region: StateFlow<Rect?> = combine(settings, display.state, ::notchRegion)
-        .stateIn(scope, SharingStarted.Eagerly, null)
-
-    /** Region the engine listens to, in natural coordinates; also set while rotated with landscape gestures (FR-R8). */
-    private val engineRegion: StateFlow<Rect?> = combine(settings, display.state, ::engineRegion)
+    /**
+     * Region the engine listens to, in natural coordinates; also set while rotated with landscape gestures (FR-R8). The
+     * accessibility overlay sits on it too (FR-R9).
+     */
+    val engineRegion: StateFlow<Rect?> = combine(settings, display.state, ::engineRegion)
         .stateIn(scope, SharingStarted.Eagerly, null)
 
     val shizuku = ShizukuManager()

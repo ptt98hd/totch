@@ -61,6 +61,27 @@ fun toNatural(rect: Rect, rotation: Int, widthPx: Int, heightPx: Int): Rect {
     return Rect(minOf(x1, x2), minOf(y1, y2), maxOf(x1, x2), maxOf(y1, y2))
 }
 
+/** NR-18: [rect] in natural coordinates seen on a display rotated by [rotation] ([widthPx] × [heightPx] as rotated). */
+fun fromNatural(rect: Rect, rotation: Int, widthPx: Int, heightPx: Int): Rect {
+    fun point(x: Int, y: Int): Pair<Int, Int> = when (rotation) {
+        1 -> y to heightPx - x
+        2 -> widthPx - x to heightPx - y
+        3 -> widthPx - y to x
+        else -> x to y
+    }
+    val (x1, y1) = point(rect.left, rect.top)
+    val (x2, y2) = point(rect.right, rect.bottom)
+    return Rect(minOf(x1, x2), minOf(y1, y2), maxOf(x1, x2), maxOf(y1, y2))
+}
+
+/** NR-19: a point of a display rotated by [rotation] ([widthPx] × [heightPx] as rotated) in natural coordinates. */
+fun pointToNatural(x: Float, y: Float, rotation: Int, widthPx: Int, heightPx: Int): Pair<Float, Float> = when (rotation) {
+    1 -> heightPx - y to x
+    2 -> widthPx - x to heightPx - y
+    3 -> y to widthPx - x
+    else -> x to y
+}
+
 /** Notch touch region for [settings] on [display], or `null` when inactive (FR-R4). */
 fun notchRegion(settings: Settings, display: DisplaySnapshot): Rect? {
     fun px(dp: Int) = (dp * display.density).roundToInt()
@@ -126,7 +147,7 @@ fun resolveEngineStatus(
     }
     return when (touchSource(shizuku, pipeline, accessibility)) {
         TouchSource.NONE -> EngineStatus.NeedsAccess // DM-41
-        TouchSource.ACCESSIBILITY -> if (rotation != 0) EngineStatus.PausedRotation else EngineStatus.Running // DM-42
+        TouchSource.ACCESSIBILITY -> if (rotation != 0 && !settings.landscapeGestures) EngineStatus.PausedRotation else EngineStatus.Running // DM-42
         TouchSource.SHIZUKU -> when {
             pipeline is PipelineState.Failed -> EngineStatus.Error(errorMessage(pipeline.error))
             rotation != 0 && !settings.landscapeGestures -> EngineStatus.PausedRotation // DM-31

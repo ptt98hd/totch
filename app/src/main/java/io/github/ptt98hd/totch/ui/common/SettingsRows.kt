@@ -72,7 +72,10 @@ fun SwitchRow(
         supporting = summary,
         supportingColor = if (error) MaterialTheme.colorScheme.error else Color.Unspecified,
         leading = icon?.let { { TonalIcon(it) } },
-        trailing = { TotchSwitch(checked = checked, onCheckedChange = if (onClick != null) onCheckedChange else null) },
+        trailing = {
+            if (onClick != null) SplitSwitch(checked = checked, onCheckedChange = onCheckedChange) // FR-U64
+            else TotchSwitch(checked = checked, onCheckedChange = null)
+        },
         containerColor = containerColor,
     )
 }

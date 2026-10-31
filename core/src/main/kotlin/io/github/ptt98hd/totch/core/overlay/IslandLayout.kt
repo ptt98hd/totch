@@ -21,15 +21,21 @@ object IslandLayout {
         content == IslandContent.Hidden -> notch // IG-1
         content is IslandContent.Media && content.expanded -> // IG-3
             Rect(m.dp(12), notch.top, m.screenWidthPx - m.dp(12), notch.bottom + m.dp(136))
-        else -> { // IG-2
-            val wing = notch.height + m.dp(if (content is IslandContent.Sound) 40 else 16)
-            Rect(
-                maxOf(notch.left - wing, m.dp(8)),
-                notch.top,
-                minOf(notch.right + wing, m.screenWidthPx - m.dp(8)),
-                notch.bottom,
-            )
-        }
+        else -> stretched(notch, m, notch.height + m.dp(if (content is IslandContent.Sound) 40 else 16)) // IG-2
+    }
+
+    /** TF-7: the wing of the touch-feedback result, as of a compact island. */
+    fun feedbackWing(notch: Rect, m: IslandMetrics): Int = notch.height + m.dp(16)
+
+    /** TF-7: [notch] grown by [stretchPx] on each side, kept off the screen edges. */
+    fun stretched(notch: Rect, m: IslandMetrics, stretchPx: Int): Rect {
+        if (stretchPx <= 0) return notch
+        return Rect(
+            maxOf(notch.left - stretchPx, m.dp(8)),
+            notch.top,
+            minOf(notch.right + stretchPx, m.screenWidthPx - m.dp(8)),
+            notch.bottom,
+        )
     }
 
     /** IG-4: the media buttons along the bottom of an expanded [pill]. */

@@ -28,18 +28,21 @@ interface EngineFeedback {
 
 /** What the notch overlay draws touch effects from (notch-overlay §4, EN-16…EN-18). */
 interface EngineObserver {
-    /** A single finger went down inside the region. */
+    /** A single finger went down inside the region (natural coordinates, like the engine). */
     fun onPress(x: Float, y: Float, timeMs: Long)
+    /** That finger moved (EN-19). */
+    fun onMove(x: Float, y: Float)
     /** That finger went up or the touch was cancelled. */
     fun onRelease()
-    /** A switched-on gesture was recognized, whatever its action and the haptics setting. */
-    fun onGesture(g: Gesture)
+    /** A switched-on gesture was recognized, whatever its [action] (`Action.None` = Nothing) and the haptics setting. */
+    fun onGesture(g: Gesture, action: Action)
 
     companion object {
         val None = object : EngineObserver {
             override fun onPress(x: Float, y: Float, timeMs: Long) = Unit
+            override fun onMove(x: Float, y: Float) = Unit
             override fun onRelease() = Unit
-            override fun onGesture(g: Gesture) = Unit
+            override fun onGesture(g: Gesture, action: Action) = Unit
         }
     }
 }
@@ -123,7 +126,7 @@ class GestureEngine(
 
     private fun now() = clock() + clockOffsetMs
 
-    /** EN-16, EN-17 */
+    /** EN-16, EN-17, EN-19 */
     private fun observe(event: TouchEvent) {
         when (event.action) {
             TouchAction.DOWN -> if (event.pointerCount == 1 && region?.contains(event.x, event.y) == true) {
@@ -134,7 +137,7 @@ class GestureEngine(
                 pressed = false
                 observer.onRelease()
             }
-            TouchAction.MOVE -> Unit
+            TouchAction.MOVE -> if (pressed && event.pointerCount == 1) observer.onMove(event.x, event.y)
         }
     }
 
@@ -153,10 +156,10 @@ class GestureEngine(
     private fun emit(gestures: List<Gesture>) {
         for (g in gestures) {
             if (!settings.isGestureOn(g, canBlockTouches)) continue
-            observer.onGesture(g) // EN-18
+            val action = settings.effectiveAction(g, canBlockTouches)
+            observer.onGesture(g, action) // EN-18
             // EN-13: vibrate now; the action may be slow or still queued behind another one. EN-15: Nothing vibrates too.
             if (settings.haptics) feedback.onRecognized()
-            val action = settings.effectiveAction(g, canBlockTouches)
             if (action != Action.None) actions.trySend(action)
         }
     }

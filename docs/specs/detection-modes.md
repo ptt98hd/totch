@@ -197,8 +197,14 @@ fun touchSource(shizuku: ShizukuState, pipeline: PipelineState, accessibility: B
 ngoài vùng, nên vuốt hoạt động. Khi nguồn = `SHIZUKU`, overlay không chuyển (tránh nhận cử chỉ hai lần). Đổi nguồn →
 `engine.reset()`.
 
-Nguồn `ACCESSIBILITY` chỉ chạy ở hướng dọc (vùng overlay = `region` theo hướng hiện tại, `null` khi xoay):
-`landscapeGestures` (FR-R8) chỉ có tác dụng với Shizuku.
+~~Nguồn `ACCESSIBILITY` chỉ chạy ở hướng dọc (vùng overlay = `region` theo hướng hiện tại, `null` khi xoay):
+`landscapeGestures` (FR-R8) chỉ có tác dụng với Shizuku.~~ v1.9.3 (FR-R9): cả hai nguồn dùng **cùng** vùng của engine —
+`engineRegion` trong **hệ tọa độ tự nhiên** (ROTATION_0, notch-region §FR-R8). Overlay đặt tại rect đó đổi sang hướng
+hiện tại (`fromNatural`, [notch-overlay §8](notch-overlay.md)), và đổi `rawX/rawY` của mỗi chạm về tọa độ tự nhiên
+(`pointToNatural`) trước khi chuyển cho engine — nên hướng vuốt tính theo notch: `SWIPE_DOWN` = vuốt ra xa cạnh có camera.
+Ở hướng dọc mọi phép đổi là đồng nhất (giữ nguyên hành vi cũ). Khi xoay, overlay chỉ cần cho nguồn `ACCESSIBILITY` hoặc
+island bấm được (không chặn vuốt xuống, như §7) và đặt `systemGestureExclusionRects` = cả view để vuốt từ cạnh không
+thành cử chỉ Back của hệ thống.
 
 Ánh xạ `MotionEvent` → `TouchEvent` (`touchEventOf(actionMasked, rawX, rawY, eventTime, pointerCount)`, hàm thuần):
 `ACTION_DOWN` → DOWN, `ACTION_MOVE` → MOVE, `ACTION_UP` → UP, `ACTION_CANCEL` → CANCEL, `ACTION_POINTER_DOWN` /
@@ -207,7 +213,7 @@ Nguồn `ACCESSIBILITY` chỉ chạy ở hướng dọc (vùng overlay = `region
 Trạng thái (`resolveEngineStatus(settings, shizuku, pipeline, rotation, accessibility)`):
 `!enabled` → như cũ (`Stopping` / `Disabled`); nguồn `NONE` → `NeedsAccess`; nguồn `SHIZUKU` → pipeline lỗi `Error` →
 xoay (và `!landscapeGestures`) `PausedRotation` → pipeline chạy `Running`, còn lại `Starting`; nguồn `ACCESSIBILITY` →
-xoay `PausedRotation`, còn lại `Running`.
+xoay (và `!landscapeGestures`, v1.9.3) `PausedRotation`, còn lại `Running`.
 
 Foreground service (DM-1) vẫn chạy khi `enabled` ở cả hai nguồn (giữ process sống, thông báo trạng thái). Thông báo khi
 `NeedsAccess`: "Turn on Accessibility or Shizuku" / "Bật Trợ năng hoặc Shizuku".
@@ -216,7 +222,7 @@ Foreground service (DM-1) vẫn chạy khi `enabled` ở cả hai nguồn (giữ
 |---|---|
 | DM-40 | `touchSource` đúng bảng trên |
 | DM-41 | `enabled`, Shizuku chưa chạy / chưa cấp quyền, Trợ năng tắt → `NeedsAccess` |
-| DM-42 | `enabled`, Shizuku chưa sẵn sàng, Trợ năng bật → `Running` (pipeline `Idle`); xoay → `PausedRotation` kể cả khi `landscapeGestures` |
+| DM-42 | `enabled`, Shizuku chưa sẵn sàng, Trợ năng bật → `Running` (pipeline `Idle`); xoay → `PausedRotation`; ~~kể cả khi `landscapeGestures`~~ v1.9.3 (FR-R9): xoay + `landscapeGestures` → `Running` |
 | DM-43 | Shizuku sẵn sàng, pipeline `Failed`, Trợ năng bật → `Running` (dự phòng); Trợ năng tắt → `Error` |
 | DM-44 | `touchEventOf` ánh xạ đúng như trên; `ACTION_POINTER_DOWN` giữ `pointerCount` = 2; hành động khác (vd. `ACTION_HOVER_MOVE`) → `null` |
 | DM-45 | (thủ công) Không có Shizuku, bật Trợ năng: chạm / chạm đúp / vuốt tại notch chạy đúng hành động, chạm ở notch không tới app bên dưới |

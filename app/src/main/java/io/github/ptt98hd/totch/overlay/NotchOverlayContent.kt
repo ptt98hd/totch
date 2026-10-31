@@ -3,11 +3,9 @@ package io.github.ptt98hd.totch.overlay
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
@@ -52,8 +50,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,10 +60,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -90,12 +84,9 @@ import io.github.ptt98hd.totch.core.overlay.IslandContent
 import io.github.ptt98hd.totch.core.overlay.IslandControl
 import io.github.ptt98hd.totch.core.overlay.IslandLayout
 import io.github.ptt98hd.totch.core.overlay.SoundMode
-import io.github.ptt98hd.totch.core.overlay.TouchEffect
-import io.github.ptt98hd.totch.core.overlay.pressProgress
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.LocalView
@@ -103,52 +94,111 @@ import io.github.ptt98hd.totch.core.overlay.IslandMotion
 import io.github.ptt98hd.totch.core.overlay.IslandStep
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Constraints
+import io.github.ptt98hd.totch.core.model.Action
+import io.github.ptt98hd.totch.core.overlay.TouchFeedback
+import io.github.ptt98hd.totch.core.overlay.islandShown
+import io.github.ptt98hd.totch.core.overlay.pressStretch
+import io.github.ptt98hd.totch.ui.common.icon
+import kotlin.math.roundToInt
 
 private val ChargingGreen = Color(0xFF34C759)
-private const val SQUISH_SCALE = 1.12f
 private const val HALO_ALPHA = 0.55f
-/** Extra width of the dark halo on each side of a touch-effect stroke. */
+/** Extra width of the dark halo on each side of a touch-feedback ring. */
 private const val HALO_DP = 3
 /** The island's icons fade in once it has mostly grown. */
 private const val BODY_DELAY_MS = 180L
+/** While pressed, the pill moves this fraction of the way to the finger's shape every frame (§4). */
+private const val FOLLOW = 0.35f
 
-/** A ripple started by a press, in window pixels (= screen pixels, the window sits at the top-left corner). */
-private class Ripple(val center: Offset) {
-    val progress = Animatable(0f)
-}
+/** Degrees that turn the island's icons upright again inside the rotated natural layer (§8). */
+private val LocalUpright = compositionLocalOf { 0f }
 
-/** Draws [frame] (notch-overlay §2–§4): island pill with its ring, indicator ring and touch effects. */
+/** Draws [frame] (notch-overlay §2–§4, §8): island pill with its ring, indicator ring and touch feedback. */
 @Composable
 fun NotchOverlayContent(hub: OverlayHub, frame: OverlayFrame) {
+    val layer = naturalLayer(frame.rotation, frame.window.width, frame.window.height)
+    CompositionLocalProvider(LocalUpright provides -layer.degrees) {
+        // §8: everything below is laid out in natural coordinates, then rotated onto the edge with the notch.
+        Box(
+            Modifier
+                .fillMaxSize()
+                .layout { measurable, constraints ->
+                    val natural = measurable.measure(Constraints.fixed(frame.metrics.screenWidthPx, frame.heightPx))
+                    layout(constraints.maxWidth, constraints.maxHeight) {
+                        natural.placeWithLayer(layer.x, layer.y) {
+                            rotationZ = layer.degrees
+                            transformOrigin = TransformOrigin(0f, 0f)
+                        }
+                    }
+                },
+        ) { NaturalContent(hub, frame) }
+    }
+}
+
+@Composable
+private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
     val statusBar by hub.statusBarVisible.collectAsState()
     val islandState by hub.islandContent.collectAsState()
     val indicatorState by hub.indicatorState.collectAsState()
-    val press by hub.press.collectAsState()
-    if (!statusBar) return // OV-4
+    val touchState by hub.feedback.collectAsState()
 
     val accent = colorResource(android.R.color.system_accent1_200)
     // FR-O10: a light core over a dark halo reads on light and dark status bars alike.
     val effectCore = colorResource(android.R.color.system_accent1_100)
     val effectHalo = colorResource(android.R.color.system_accent1_900).copy(alpha = HALO_ALPHA)
-    val content = if (frame.island) islandState else IslandContent.Hidden
-    val indicatorOn = frame.indicator && indicatorState != null
+    val notch = frame.notch
+    val m = frame.metrics
+    val content = if (frame.island) islandShown(islandState, statusBar) else IslandContent.Hidden // OV-4
+    val indicatorOn = frame.indicator && statusBar && indicatorState != null
     val indicatorColor = indicatorState?.color?.let { Color(it) } ?: accent
+    // Touch feedback (§4) takes the island's place while it lasts.
+    val feedback = if (frame.touchEffects) touchState else TouchFeedback.Idle
+    val touching = feedback != TouchFeedback.Idle
+    val pressing = feedback is TouchFeedback.Pressing
+    val wing = IslandLayout.feedbackWing(notch, m)
 
-    // Island shape: ring around the notch → grow (spring, dampingRatio 0.7) → shrink → ring out (IM-1…IM-3).
-    val target = IslandMotion.target(content, frame.notch, frame.metrics)
+    // Shape: ring around the notch → grow (spring, dampingRatio 0.7) → shrink → ring out (IM-1…IM-3).
+    val target = when (feedback) {
+        is TouchFeedback.Result -> IslandLayout.stretched(notch, m, wing)
+        is TouchFeedback.Pressing, TouchFeedback.Waiting -> notch
+        TouchFeedback.Idle -> IslandMotion.target(content, notch, m)
+    }
     val shown = target != null
-    val shape = target ?: frame.notch
-    val expanded = content is IslandContent.Media && content.expanded
-    val targetCorner = if (expanded) frame.metrics.dp(28).toFloat() else frame.notch.height / 2f
-    val left = remember { Animatable(frame.notch.left.toFloat()) }
-    val right = remember { Animatable(frame.notch.right.toFloat()) }
-    val bottom = remember { Animatable(frame.notch.bottom.toFloat()) }
-    val corner = remember { Animatable(frame.notch.height / 2f) }
+    val shape = target ?: notch
+    val expanded = !touching && content is IslandContent.Media && content.expanded
+    val targetCorner = if (expanded) m.dp(28).toFloat() else notch.height / 2f
+    val left = remember { Animatable(notch.left.toFloat()) }
+    val right = remember { Animatable(notch.right.toFloat()) }
+    val bottom = remember { Animatable(notch.bottom.toFloat()) }
+    val corner = remember { Animatable(notch.height / 2f) }
     val ring = remember { Animatable(0f) }
     var grown by remember { mutableStateOf(false) }
-    LaunchedEffect(shape, targetCorner, shown) {
+    val currentFeedback by rememberUpdatedState(feedback)
+    LaunchedEffect(shape, targetCorner, shown, pressing) {
+        if (pressing) {
+            // The ring comes in while the pill already follows the finger and the hold time (TF-6).
+            grown = false
+            if (ring.value < 1f) launch { ring.animateTo(1f, tween(IslandMotion.RING_IN_MS)) }
+            while (true) {
+                withFrameMillis { }
+                val p = currentFeedback as? TouchFeedback.Pressing ?: break
+                val stretch = pressStretch(p, SystemClock.uptimeMillis(), frame.longPressMs, wing.toFloat())
+                val goal = IslandLayout.stretched(notch, m, stretch.roundToInt())
+                left.snapTo(lerp(left.value, goal.left.toFloat(), FOLLOW))
+                right.snapTo(lerp(right.value, goal.right.toFloat(), FOLLOW))
+                bottom.snapTo(lerp(bottom.value, goal.bottom.toFloat(), FOLLOW))
+                corner.snapTo(lerp(corner.value, notch.height / 2f, FOLLOW))
+            }
+            return@LaunchedEffect
+        }
         val steps = IslandMotion.steps(ringLit = ring.value >= 1f, shown = shown)
-        if (!shown || IslandStep.RING_IN in steps) grown = false
+        if (!shown || IslandStep.RING_IN in steps || currentFeedback is TouchFeedback.Result) grown = false
         val shapeSpec = spring<Float>(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow)
         for (step in steps) when (step) {
             IslandStep.RING_IN -> ring.animateTo(1f, tween(IslandMotion.RING_IN_MS))
@@ -167,66 +217,14 @@ fun NotchOverlayContent(hub: OverlayHub, frame: OverlayFrame) {
         content is IslandContent.Notification -> indicatorColor
         else -> accent
     }
-    // Keep the last color while the ring fades out after the content is gone.
+    // Keep the last look while the ring fades out after the content is gone.
     var ringColor by remember { mutableStateOf(islandRingColor) }
-    SideEffect { if (shown) ringColor = islandRingColor }
-
-    // Touch effects (§4): squish while pressed, nudge in the swipe direction, flashes, ripples, streaks.
-    val effects = frame.touchEffects
-    val pressed = effects && press != null
-    val squish by animateFloatAsState(
-        if (pressed) SQUISH_SCALE else 1f,
-        spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMedium),
-        label = "squish",
-    )
-    val nudge = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
-    val flash = remember { Animatable(0f) }
-    val streak = remember { Animatable(0f) }
-    var streakDir by remember { mutableStateOf(Offset.Zero) }
-    var glowHeld by remember { mutableStateOf(false) }
-    val ripples = remember { mutableStateListOf<Ripple>() }
-    val rippleScope = rememberCoroutineScope()
-    var progress by remember { mutableFloatStateOf(0f) }
-
-    LaunchedEffect(effects) {
-        if (!effects) return@LaunchedEffect
-        hub.effects.collect { effect ->
-            when (effect) {
-                TouchEffect.Pulse -> launch { flash.snapTo(1f); flash.animateTo(0f, tween(350)) }
-                TouchEffect.DoublePulse -> launch {
-                    repeat(2) { flash.snapTo(1f); flash.animateTo(0f, tween(220)) }
-                }
-                TouchEffect.Glow -> glowHeld = true
-                is TouchEffect.Streak -> {
-                    val dir = Offset(effect.dx.toFloat(), effect.dy.toFloat())
-                    streakDir = dir
-                    launch { streak.snapTo(0f); streak.animateTo(1f, tween(380)) }
-                    launch {
-                        nudge.animateTo(dir * frame.metrics.dp(6).toFloat(), tween(90))
-                        nudge.animateTo(Offset.Zero, spring(dampingRatio = 0.4f, stiffness = Spring.StiffnessMedium))
-                    }
-                }
-            }
+    var touchRing by remember { mutableStateOf(false) }
+    SideEffect {
+        if (shown) {
+            ringColor = islandRingColor
+            touchRing = touching
         }
-    }
-    LaunchedEffect(press, effects) {
-        val p = press
-        if (p == null || !effects) {
-            progress = 0f
-            glowHeld = false
-            return@LaunchedEffect
-        }
-        val ripple = Ripple(Offset(p.x, p.y))
-        ripples += ripple
-        // FR-O9: outlive this effect, which restarts on release — a tap is shorter than the ripple.
-        rippleScope.launch {
-            try {
-                ripple.progress.animateTo(1f, tween(400))
-            } finally {
-                ripples -= ripple
-            }
-        }
-        while (true) withFrameMillis { progress = pressProgress(p.timeMs, SystemClock.uptimeMillis(), frame.longPressMs) }
     }
 
     // Indicator (§2): breathing glow in the newest notification's color.
@@ -239,14 +237,9 @@ fun NotchOverlayContent(hub: OverlayHub, frame: OverlayFrame) {
 
     // FR-O9: once nothing is drawn, repaint the whole window so no stale pixels stay on the transparent buffer.
     val view = LocalView.current
-    val pressedNow by rememberUpdatedState(pressed)
+    val touchingNow by rememberUpdatedState(touching)
     val indicatorNow by rememberUpdatedState(indicatorOn)
-    val idle by remember {
-        derivedStateOf {
-            !indicatorNow && !pressedNow && ring.value == 0f && squish == 1f && flash.value == 0f && !glowHeld &&
-                ripples.isEmpty() && !streak.isRunning && nudge.value == Offset.Zero
-        }
-    }
+    val idle by remember { derivedStateOf { !indicatorNow && !touchingNow && ring.value == 0f } }
     LaunchedEffect(idle) {
         if (!idle) return@LaunchedEffect
         withFrameNanos { }
@@ -255,86 +248,57 @@ fun NotchOverlayContent(hub: OverlayHub, frame: OverlayFrame) {
 
     Box(Modifier.fillMaxSize()) {
         Canvas(Modifier.fillMaxSize()) {
-            val cx = (left.value + right.value) / 2f
-            val cy = (frame.notch.top + bottom.value) / 2f
-            val w = (right.value - left.value) * squish
-            val h = (bottom.value - frame.notch.top) * squish
-            val origin = Offset(cx - w / 2f, cy - h / 2f) + nudge.value
-            val size = Size(w, h)
-            val radius = corner.value * squish
+            val origin = Offset(left.value, notch.top.toFloat())
+            val size = Size(right.value - left.value, bottom.value - notch.top)
+            val radius = corner.value
 
-            val blobAlpha = maxOf(ring.value, if (effects && (pressed || squish > 1.001f)) 1f else 0f)
+            val blobAlpha = maxOf(ring.value, if (touching) 1f else 0f)
             if (blobAlpha > 0f) drawRoundRect(Color.Black.copy(alpha = blobAlpha), origin, size, CornerRadius(radius))
 
-            val ringWidth = frame.metrics.dp(3).toFloat()
+            val ringWidth = m.dp(3).toFloat()
             val ringOrigin = origin - Offset(ringWidth, ringWidth)
-            val ringSize = Size(w + 2 * ringWidth, h + 2 * ringWidth)
-            if (ring.value > 0f) glowRing(ringColor, ring.value, ringOrigin, ringSize, radius + ringWidth)
-            if (indicatorOn) glowRing(indicatorColor, breathing, ringOrigin, ringSize, radius + ringWidth)
-            val touchGlow = if (effects) maxOf(progress, flash.value, if (glowHeld) 1f else 0f) else 0f
-            if (touchGlow > 0f) {
-                haloRing(effectHalo, touchGlow, ringOrigin, ringSize, radius + ringWidth)
-                glowRing(effectCore, touchGlow, ringOrigin, ringSize, radius + ringWidth)
-            }
-
-            ripples.forEach { r ->
-                val t = r.progress.value
-                val rippleRadius = frame.metrics.dp(8) + t * frame.metrics.dp(48)
-                val core = frame.metrics.dp(3).toFloat()
-                drawCircle(
-                    color = effectHalo.copy(alpha = effectHalo.alpha * (1f - t)),
-                    radius = rippleRadius,
-                    center = r.center,
-                    style = Stroke(width = core + 2 * frame.metrics.dp(HALO_DP)),
-                )
-                drawCircle(
-                    color = effectCore.copy(alpha = 0.95f * (1f - t)),
-                    radius = rippleRadius,
-                    center = r.center,
-                    style = Stroke(width = core),
-                )
-            }
-            if (effects && streak.value in 0.001f..0.999f) {
-                val t = streak.value
-                val length = frame.metrics.dp(64).toFloat()
-                val start = Offset(cx, cy) + streakDir * (t * length)
-                val end = start + streakDir * frame.metrics.dp(28).toFloat()
-                val core = frame.metrics.dp(5).toFloat()
-                listOf(effectHalo to core + 2 * frame.metrics.dp(HALO_DP), effectCore to core).forEach { (color, width) ->
-                    drawLine(
-                        brush = Brush.linearGradient(
-                            listOf(color.copy(alpha = 0f), color.copy(alpha = color.alpha * (1f - t))),
-                            start,
-                            end,
-                        ),
-                        start = start,
-                        end = end,
-                        strokeWidth = width,
-                        cap = StrokeCap.Round,
-                    )
+            val ringSize = Size(size.width + 2 * ringWidth, size.height + 2 * ringWidth)
+            if (ring.value > 0f) {
+                if (touchRing) {
+                    haloRing(effectHalo, ring.value, ringOrigin, ringSize, radius + ringWidth)
+                    glowRing(effectCore, ring.value, ringOrigin, ringSize, radius + ringWidth)
+                } else {
+                    glowRing(ringColor, ring.value, ringOrigin, ringSize, radius + ringWidth)
                 }
             }
+            if (indicatorOn && !touching) glowRing(indicatorColor, breathing, ringOrigin, ringSize, radius + ringWidth)
         }
 
         // FR-O9: fill the window so the island's layer bounds cover everything drawn in it.
+        val body: Any = when {
+            !grown -> IslandContent.Hidden
+            feedback is TouchFeedback.Result -> feedback
+            touching -> IslandContent.Hidden
+            else -> content
+        }
         AnimatedContent(
-            targetState = if (grown) content else IslandContent.Hidden,
+            targetState = body,
             modifier = Modifier.fillMaxSize(),
             transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(100)) },
-            contentKey = { it::class to (it as? IslandContent.Media)?.expanded },
+            contentKey = { if (it is IslandContent) it::class to (it as? IslandContent.Media)?.expanded else it },
             label = "island",
-        ) { shown ->
+        ) { shownBody ->
             Box(Modifier.fillMaxSize()) {
-                if (shown != IslandContent.Hidden) {
-                    val pill = IslandLayout.pill(shown, frame.notch, frame.metrics)
-                    IslandBody(hub, shown, pill, frame, indicatorColor, accent)
+                when (shownBody) {
+                    is TouchFeedback.Result -> ResultBody(shownBody, IslandLayout.stretched(notch, m, wing), frame)
+                    is IslandContent -> if (shownBody != IslandContent.Hidden) {
+                        val pill = IslandLayout.pill(shownBody, notch, m)
+                        IslandBody(hub, shownBody, pill, frame, indicatorColor, accent)
+                    }
                 }
             }
         }
     }
 }
 
-/** FR-O10: the dark halo under a touch glow, wider than [glowRing] so it outlines it on light backgrounds. */
+private fun lerp(from: Float, to: Float, fraction: Float) = from + (to - from) * fraction
+
+/** FR-O10: the dark halo under a touch ring, wider than [glowRing] so it outlines it on light backgrounds. */
 private fun DrawScope.haloRing(color: Color, alpha: Float, origin: Offset, size: Size, radius: Float) {
     drawRoundRect(
         color = color.copy(alpha = (color.alpha * alpha).coerceIn(0f, 1f)),
@@ -359,6 +323,30 @@ private fun DrawScope.glowRing(color: Color, alpha: Float, origin: Offset, size:
     }
 }
 
+/** FR-O14: the gesture that ran on the left, its action on the right. */
+@Composable
+private fun ResultBody(result: TouchFeedback.Result, pill: Rect, frame: OverlayFrame) {
+    val notch = frame.notch
+    val icon = islandIconSize(pill, frame)
+    Slot(Rect(pill.left, pill.top, notch.left, pill.bottom)) {
+        Icon(result.gesture.icon, null, Modifier.size(icon), tint = Color.White)
+    }
+    Slot(Rect(notch.right, pill.top, pill.right, pill.bottom)) {
+        val app = when (val a = result.action) {
+            is Action.LaunchApp -> a.packageName
+            is Action.LaunchShortcut -> a.packageName
+            is Action.LaunchActivity -> a.packageName
+            else -> null
+        }
+        val appIcon = app?.let { rememberAppIcon(it) }
+        if (appIcon != null) AppIconImage(appIcon, icon) else Icon(result.action.icon, null, Modifier.size(icon), tint = Color.White)
+    }
+}
+
+@Composable
+private fun islandIconSize(pill: Rect, frame: OverlayFrame): Dp =
+    (pill.height - frame.metrics.dp(10)).coerceIn(frame.metrics.dp(14), frame.metrics.dp(26)).pxDp()
+
 @Composable
 private fun Int.pxDp(): Dp = with(LocalDensity.current) { this@pxDp.toDp() }
 
@@ -376,7 +364,7 @@ private fun IslandBody(
         ExpandedMedia(hub, content, pill, frame)
         return
     }
-    val icon = (pill.height - frame.metrics.dp(10)).coerceIn(frame.metrics.dp(14), frame.metrics.dp(26)).pxDp()
+    val icon = islandIconSize(pill, frame)
     // Left wing: between the pill's left end and the notch; right wing: after the notch.
     Slot(Rect(pill.left, pill.top, notch.left, pill.bottom)) {
         when (content) {
@@ -403,10 +391,12 @@ private fun IslandBody(
 @Composable
 private fun Slot(rect: Rect, content: @Composable BoxScope.() -> Unit) {
     if (rect.width <= 0) return
+    val upright = LocalUpright.current
     Box(
         Modifier
             .offset { IntOffset(rect.left, rect.top) }
-            .size(rect.width.pxDp(), rect.height.pxDp()),
+            .size(rect.width.pxDp(), rect.height.pxDp())
+            .graphicsLayer { rotationZ = upright }, // §8: icons stay upright when rotated
         contentAlignment = Alignment.Center,
         content = content,
     )
