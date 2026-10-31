@@ -37,8 +37,9 @@ class GestureEngineTest {
     private val observed = mutableListOf<String>()
     private val observer = object : EngineObserver {
         override fun onPress(x: Float, y: Float, timeMs: Long) { observed += "press $x,$y@$timeMs" }
+        override fun onMove(x: Float, y: Float) { observed += "move $x,$y" }
         override fun onRelease() { observed += "release" }
-        override fun onGesture(g: Gesture) { observed += g.name }
+        override fun onGesture(g: Gesture, action: Action) { observed += "${g.name}→$action" }
     }
 
     private fun TestScope.engine(
@@ -349,7 +350,7 @@ class GestureEngineTest {
         e.onTouch(down(0))
         e.onTouch(up(50))
         runCurrent()
-        assertEquals(listOf("press 500.0,40.0@0", "release", "TAP"), observed)
+        assertEquals(listOf("press 500.0,40.0@0", "release", "TAP→None"), observed)
         observed.clear()
         e.updateSettings(s.withGestureOn(Gesture.TAP, false))
         e.onTouch(down(1000))
@@ -357,5 +358,26 @@ class GestureEngineTest {
         advanceTimeBy(1000)
         runCurrent()
         assertEquals(listOf("press 500.0,40.0@1000", "release"), observed)
+    }
+
+    @Test
+    fun `EN-18 the gesture comes with its action`() = runTest {
+        val e = engine(base.bind(Gesture.SWIPE_RIGHT to Action.MediaNext))
+        e.onTouch(down(0))
+        e.onTouch(TouchEvent(TouchAction.UP, 590f, 40f, 50))
+        runCurrent()
+        assertEquals("SWIPE_RIGHT→MediaNext", observed.last())
+    }
+
+    @Test
+    fun `EN-19 moves are reported between press and release only`() = runTest {
+        val e = engine(base.bind(Gesture.TAP to Action.Home).withGestureOn(Gesture.DOUBLE_TAP, false))
+        e.onTouch(TouchEvent(TouchAction.MOVE, 450f, 40f, 0))
+        e.onTouch(down(10))
+        e.onTouch(TouchEvent(TouchAction.MOVE, 510f, 40f, 20))
+        e.onTouch(TouchEvent(TouchAction.MOVE, 520f, 40f, 30, pointerCount = 2))
+        e.onTouch(TouchEvent(TouchAction.CANCEL, 520f, 40f, 40))
+        e.onTouch(TouchEvent(TouchAction.MOVE, 530f, 40f, 50))
+        assertEquals(listOf("press 500.0,40.0@10", "move 510.0,40.0", "release"), observed)
     }
 }

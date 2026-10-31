@@ -161,4 +161,17 @@ class IslandControllerTest {
         assertEquals(IslandContent.Volume(0.2f), island.content)
         assertEquals(1_000 + VOLUME_MS, island.nextDeadlineMs())
     }
+
+    @Test fun `IS-15 media does not expand while rotated`() {
+        island.setMedia(playing, 0)
+        island.onTap(100)
+        assertEquals(IslandContent.Media(playing, expanded = true), island.content)
+        island.expandable = false
+        assertEquals(IslandContent.Media(playing, expanded = false), island.content)
+        assertNull(island.nextDeadlineMs())
+        assertEquals(IslandTap.NONE, island.onTap(200))
+        assertEquals(IslandContent.Media(playing, expanded = false), island.content)
+        island.expandable = true
+        assertEquals(IslandTap.EXPANDED, island.onTap(300))
+    }
 }

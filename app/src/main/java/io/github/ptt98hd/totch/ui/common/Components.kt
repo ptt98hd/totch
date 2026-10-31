@@ -5,6 +5,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Favorite
@@ -42,6 +43,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Switch
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
@@ -450,6 +452,24 @@ fun TotchSwitch(
             )
         },
     )
+}
+
+/**
+ * FR-U64: the switch of a row whose body opens a dialog or sheet — a vertical divider keeps the part that opens apart
+ * from the switch.
+ */
+@Composable
+fun SplitSwitch(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        VerticalDivider(Modifier.height(32.dp), color = MaterialTheme.colorScheme.outlineVariant)
+        Spacer(Modifier.width(12.dp))
+        TotchSwitch(checked, onCheckedChange, modifier, enabled)
+    }
 }
 
 /** FR-U61: the slider of the whole app — the Material 3 slider with its default thumb and track. */

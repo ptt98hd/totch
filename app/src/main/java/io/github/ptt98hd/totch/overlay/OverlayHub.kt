@@ -2,6 +2,7 @@ package io.github.ptt98hd.totch.overlay
 
 import android.graphics.Bitmap
 import android.os.SystemClock
+import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.overlay.IndicatorState
 import io.github.ptt98hd.totch.core.overlay.IslandContent
@@ -12,8 +13,8 @@ import io.github.ptt98hd.totch.core.overlay.IslandTap
 import io.github.ptt98hd.totch.core.overlay.MediaInfo
 import io.github.ptt98hd.totch.core.overlay.NotificationIndicator
 import io.github.ptt98hd.totch.core.overlay.NotificationMeta
-import io.github.ptt98hd.totch.core.overlay.TouchEffect
-import io.github.ptt98hd.totch.core.overlay.touchEffectFor
+import io.github.ptt98hd.totch.core.overlay.TouchFeedback
+import io.github.ptt98hd.totch.core.overlay.TouchFeedbackController
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.settings.activeIslandActivities
 import io.github.ptt98hd.totch.engine.EngineObserver
@@ -22,28 +23,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-/** A finger down on the notch, for the press glow and squish (notch-overlay §4). */
-data class Press(val x: Float, val y: Float, val timeMs: Long)
-
 /**
  * State drawn by the notch overlay (docs/specs/notch-overlay.md): the notification indicator, the Dynamic Island and
  * touch effects. Decisions are made by the pure `:core` classes; every mutation runs on the main thread.
  */
-class OverlayHub(ownPackage: String, settings: StateFlow<Settings>) : EngineObserver {
+class OverlayHub(ownPackage: String, private val settings: StateFlow<Settings>) : EngineObserver {
     private val main = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val indicator = NotificationIndicator(ownPackage)
     private val island = IslandController(settings.value.activeIslandActivities())
+    private val touch = TouchFeedbackController()
     private var timer: Job? = null
+    private var touchTimer: Job? = null
 
     private val _indicator = MutableStateFlow<IndicatorState?>(null)
     val indicatorState: StateFlow<IndicatorState?> = _indicator.asStateFlow()
@@ -54,11 +51,8 @@ class OverlayHub(ownPackage: String, settings: StateFlow<Settings>) : EngineObse
     /** Cover art of the media on the island, or null (the app icon is drawn instead). */
     val mediaArt = MutableStateFlow<Bitmap?>(null)
 
-    private val _press = MutableStateFlow<Press?>(null)
-    val press: StateFlow<Press?> = _press.asStateFlow()
-
-    private val _effects = MutableSharedFlow<TouchEffect>(extraBufferCapacity = 8)
-    val effects: SharedFlow<TouchEffect> = _effects.asSharedFlow()
+    private val _feedback = MutableStateFlow<TouchFeedback>(TouchFeedback.Idle)
+    val feedback: StateFlow<TouchFeedback> = _feedback.asStateFlow()
 
     /** The overlay window reports whether the status bar is shown (OV-4). */
     val statusBarVisible = MutableStateFlow(true)
@@ -122,6 +116,12 @@ class OverlayHub(ownPackage: String, settings: StateFlow<Settings>) : EngineObse
         return tap
     }
 
+    /** IS-15: media expands only in the natural orientation. */
+    fun setExpandable(expandable: Boolean) = onMain {
+        island.expandable = expandable
+        publish()
+    }
+
     fun onIslandControl(control: IslandControl) {
         island.onInteraction(now())
         mediaControl(control)
@@ -139,18 +139,32 @@ class OverlayHub(ownPackage: String, settings: StateFlow<Settings>) : EngineObse
         }
     }
 
-    // Touch effects (EN-16…EN-18); called from the engine's threads.
+    // Touch feedback (EN-16…EN-19, TF-*); called from the engine's threads.
 
-    override fun onPress(x: Float, y: Float, timeMs: Long) {
-        _press.value = Press(x, y, timeMs)
+    override fun onPress(x: Float, y: Float, timeMs: Long) = onTouch { touch.onPress(x, y, now()) }
+
+    override fun onMove(x: Float, y: Float) = onTouch { touch.onMove(x, y) }
+
+    override fun onRelease() = onTouch {
+        touch.onRelease(now(), settings.value.doubleTapMs + TouchFeedbackController.WAIT_MARGIN_MS)
     }
 
-    override fun onRelease() {
-        _press.value = null
+    override fun onGesture(g: Gesture, action: Action) = onTouch { touch.onGesture(g, action, now()) }
+
+    private fun onTouch(block: () -> Unit) = onMain {
+        block()
+        publishTouch()
     }
 
-    override fun onGesture(g: Gesture) {
-        _effects.tryEmit(touchEffectFor(g))
+    private fun publishTouch() {
+        _feedback.value = touch.state
+        touchTimer?.cancel()
+        val deadline = touch.nextDeadlineMs() ?: return run { touchTimer = null }
+        touchTimer = main.launch {
+            delay((deadline - now()).coerceAtLeast(0))
+            touch.onTick(now())
+            publishTouch()
+        }
     }
 
     private fun now() = SystemClock.uptimeMillis()

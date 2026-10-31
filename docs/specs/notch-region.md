@@ -68,3 +68,5 @@ Cutout tự nhiên = các bounding rect của cutout (mọi cạnh) sau quy đ�
 | NR-15 | ROTATION_90, màn hiện tại 2400×1080, rect `(0,500,80,580)` | `(500,0,580,80)` |
 | NR-16 | ROTATION_270, màn 2400×1080, rect `(2320,500,2400,580)` | `(500,0,580,80)`; ROTATION_180, màn 1080×2400, `(500,2320,580,2400)` → `(500,0,580,80)`; ROTATION_0 → giữ nguyên |
 | NR-17 | `engineRegion`: rotation 1, `landscapeGestures=false` → `null`; `true` → bằng `notchRegion` của snapshot dọc tương ứng |
+
+v1.9.3 (FR-R9, FR-O15): chiều ngược lại — `fromNatural` (rect) và `pointToNatural` (điểm) — xem [notch-overlay §8](notch-overlay.md) (NR-18, NR-19).

@@ -365,7 +365,7 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-O7 | Cắm sạc | Viên với tia sét xanh và % pin trong 3 s | [ ] |
 | MT-O8 | Đổi Chuông / Rung / Im lặng, bật/tắt Không làm phiền, bấm phím âm lượng | Viên icon + nhãn (2 s); âm lượng → thanh mức (1,5 s) | [ ] |
 | MT-O9 | Bật Hiệu ứng chạm; chạm, giữ, vuốt trái/phải/xuống tại notch | Gợn sóng, viền sáng dần khi giữ, nháy khi chạm, vệt sáng theo hướng vuốt; viên đen phình rồi nảy về; cử chỉ vẫn chạy như cũ | [ ] |
-| MT-O10 | Video toàn màn hình / game; xoay ngang | Không vẽ island / viền | [ ] |
+| MT-O10 | Video toàn màn hình / game; ~~xoay ngang~~ (v1.9.3: MT-O18) | Không vẽ island / viền | [ ] |
 | MT-O11 | Chỉ Shizuku (Trợ năng tắt) | Không có overlay, cử chỉ vẫn chạy | [ ] |
 
 ## 21. v1.9.1
@@ -381,6 +381,18 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-U61 | Kéo các thanh trượt màn Notch | Nút kéo mặc định Material 3 | [ ] |
 | MT-U62 | Home › Nâng cao trên máy có Tự khởi chạy | Icon trong ô vuông bo góc như Shizuku | [ ] |
 | MT-U63 | Notch › Hiệu ứng: island tắt → chạm dòng; island bật → chạm dòng; tắt hết hoạt động trong hộp thoại | Tắt: chạm = bật. Bật: mở hộp thoại 4 switch. Tắt hoạt động cuối → island tắt, hộp thoại đóng | [ ] |
+
+
+## 22. v1.9.3
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-O17 | Xem video YouTube toàn màn hình ngang rồi thoát; xoay dọc / ngang nhanh nhiều lần | Sau mỗi lần, island ở đúng notch và trạng thái Home đúng (không kẹt "Tạm dừng khi xoay ngang" khi đã dọc) (FR-O13) | [ ] |
+| MT-O18 | Island media đang hiện; xoay 90° và 270° | Viên nằm dọc theo cạnh có camera, icon đứng thẳng; bấm viên không mở rộng (FR-O15) | [ ] |
+| MT-O19 | Bật Nhận cử chỉ khi xoay ngang, chỉ Trợ năng (không Shizuku); xoay ngang; chạm, vuốt ra xa camera, vuốt dọc theo cạnh camera | Chạm / vuốt xuống / trái / phải chạy đúng hành động (FR-R9); vuốt không mở Back | [ ] |
+| MT-O20 | Bật Hiệu ứng chạm: chạm, chạm đúp, nhấn giữ, vuốt xuống / trái / phải, vuốt giữ | Chạm xuống: vòng sáng; giữ: viên giãn ngang dần; vuốt: viên giãn theo ngón tay; hành động chạy → viên giãn, icon cử chỉ trái + icon hành động phải, rồi thu lại; không còn vòng tròn lan ra (FR-O14) | [ ] |
+| MT-O21 | Video toàn màn hình; chạm notch | Island hoạt động không hiện; hiệu ứng chạm vẫn hiện ở đúng notch (FR-O15) | [ ] |
+| MT-U64 | Notch › Hiệu ứng (island bật), Gestures | Vạch dọc giữa phần mở và switch ở dòng Dynamic Island và các dòng cử chỉ; dòng Hiệu ứng chạm không có (FR-U64) | [ ] |
 
 ## Lịch sử kết quả
 

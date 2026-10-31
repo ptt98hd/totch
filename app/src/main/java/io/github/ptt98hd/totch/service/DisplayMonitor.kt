@@ -1,6 +1,9 @@
 package io.github.ptt98hd.totch.service
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Point
 import android.hardware.display.DisplayManager
 import android.os.Handler
@@ -12,31 +15,43 @@ import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.engine.DisplaySnapshot
 import io.github.ptt98hd.totch.engine.toNatural
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.stateIn
 import kotlin.math.roundToInt
 
-/** Default display size, rotation, cutout and status bar height; updated by DisplayManager callbacks. */
+/**
+ * Default display size, rotation, cutout and status bar height. Re-read on DisplayManager callbacks, configuration
+ * changes and whatever else calls [refresh] (FR-O13, notch-overlay §7).
+ */
 class DisplayMonitor(private val context: Context, scope: CoroutineScope) {
     private val displayManager = context.getSystemService(DisplayManager::class.java)
+    private val refresher = DisplayRefresher(scope, ::snapshot)
 
-    val state: StateFlow<DisplaySnapshot> = callbackFlow {
-        val listener = object : DisplayManager.DisplayListener {
-            override fun onDisplayChanged(displayId: Int) {
-                if (displayId == Display.DEFAULT_DISPLAY) trySend(snapshot())
-            }
+    val state: StateFlow<DisplaySnapshot> = refresher.state
 
-            override fun onDisplayAdded(displayId: Int) = Unit
-            override fun onDisplayRemoved(displayId: Int) = Unit
-        }
-        displayManager.registerDisplayListener(listener, Handler(Looper.getMainLooper()))
-        send(snapshot())
-        awaitClose { displayManager.unregisterDisplayListener(listener) }
-    }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, snapshot())
+    init {
+        displayManager.registerDisplayListener(
+            object : DisplayManager.DisplayListener {
+                override fun onDisplayChanged(displayId: Int) {
+                    if (displayId == Display.DEFAULT_DISPLAY) refresh()
+                }
+
+                override fun onDisplayAdded(displayId: Int) = Unit
+                override fun onDisplayRemoved(displayId: Int) = Unit
+            },
+            Handler(Looper.getMainLooper()),
+        )
+        // Delivered to this process (it has a foreground service) on every rotation, also when no display event is.
+        context.registerReceiver(
+            object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) = refresh()
+            },
+            IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED),
+            Context.RECEIVER_NOT_EXPORTED,
+        )
+    }
+
+    /** The display may have changed: read it now and again shortly (DR-2). */
+    fun refresh() = refresher.refresh()
 
     /**
      * Uses [Display] APIs because the app context is not a UI context (the foreground service has

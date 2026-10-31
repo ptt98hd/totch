@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), v1.8.3 (§21), v1.9 (§22), **v1.9.1–1.9.2** (§23) · Cập nhật: 2026-10-30
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), v1.8.3 (§21), v1.9 (§22), v1.9.1–1.9.2 (§23), **v1.9.3** (§24) · Cập nhật: 2026-10-31
 
 ## 1. Tầm nhìn
 
@@ -332,3 +332,13 @@ tham chiếu ID tương ứng.
 | FR-U61 | Thanh trượt dùng **nút kéo mặc định của Material 3** (không tùy biến). Thay FR-U53 và phần nút kéo của FR-U57 | [ui §3](specs/ui.md) |
 | FR-U62 | Home › Nâng cao: dòng **Auto-start** hiển thị **đồng nhất** với các dòng khác trong Home (icon trong ô vuông bo góc 40 dp như Shizuku / quyền), giữ mũi tên mở trang | [ui §3](specs/ui.md) |
 | FR-U63 | Notch › Hiệu ứng: dòng **Dynamic Island** giữ switch; bỏ 4 dòng con. Khi island **đang bật**, chạm vào dòng (ngoài switch) → **hộp thoại** bật/tắt từng hoạt động (Media, Thông báo, Sạc pin, Âm thanh); khi tắt, chạm dòng = bật | [notch-overlay §6](specs/notch-overlay.md) |
+
+## 24. Phiên bản 1.9.3
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-O13 | **Nhận đúng hướng xoay**, kể cả sau khi thoát video toàn màn hình: trạng thái màn hình (hướng, kích thước, cutout) được **đọc lại** mỗi khi có tín hiệu thay đổi — `DisplayListener`, broadcast `CONFIGURATION_CHANGED`, đổi cấu hình của service Trợ năng, đổi insets của cửa sổ overlay — và đọc thêm lần nữa sau 250 ms và 1000 ms (giá trị đọc ngay lúc callback có thể còn cũ) | [notch-overlay §7](specs/notch-overlay.md) |
+| FR-O14 | **Hiệu ứng chạm tối giản** thay gợn sóng / vệt sáng / co giãn (FR-O6, FR-O10): chạm xuống → **vòng sáng** quanh notch; giữ → viên **giãn ngang** dần; vuốt → viên giãn ngang **theo ngón tay**; vẫn giữ viền. Cử chỉ được nhận → viên giãn ra, trái là **icon cử chỉ**, phải là **icon hành động**, rồi thu lại. Nhả tay mà chưa có cử chỉ (chạm đơn chờ chạm đúp) → vòng sáng giữ quanh notch tới khi có kết quả | [notch-overlay §4](specs/notch-overlay.md) |
+| FR-O15 | Island và hiệu ứng chạm **luôn ở đúng notch vật lý** ở mọi hướng xoay: khi xoay, viên nằm dọc theo cạnh có camera, icon vẫn đứng thẳng; media không mở rộng khi xoay. App toàn màn hình (status bar ẩn): island hoạt động (media, sạc…) ẩn, hiệu ứng chạm **vẫn hiện**. Sửa OV-3, OV-4 | [notch-overlay §1, §8](specs/notch-overlay.md) |
+| FR-R9 | **Cử chỉ khi xoay ngang theo notch vật lý** với cả nguồn Trợ năng (trước chỉ Shizuku): vùng chạm nằm ở notch thật, hướng vuốt tính theo notch — vuốt **xuống** = vuốt ra xa cạnh có camera (khi xoay ngang là vuốt ngang), trái / phải = dọc theo cạnh đó. Vẫn theo công tắc **Nhận cử chỉ khi xoay ngang**. Sửa DM-42 | [detection-modes §8](specs/detection-modes.md), [notch-overlay §8](specs/notch-overlay.md) |
+| FR-U64 | Dòng có **switch** mà chạm phần bên trái mở hộp thoại / bảng chọn (Dynamic Island, các dòng cử chỉ) có **vạch phân cách dọc** giữa phần bấm mở và switch | [ui §1](specs/ui.md) |

@@ -1,4 +1,4 @@
-# Spec: Lớp hiển thị quanh notch (v1.9 — FR-O1…FR-O8; v1.9.1 — FR-O9…FR-O11, FR-U63)
+# Spec: Lớp hiển thị quanh notch (v1.9 — FR-O1…FR-O8; v1.9.1 — FR-O9…FR-O11, FR-U63; v1.9.3 — FR-O13…FR-O15, FR-R9)
 
 Yêu cầu: FR-O1…FR-O8 ([01 §22](../01-requirements.md)) · Module: `:core` (`io.github.ptt98hd.totch.core.overlay`: logic
 thuần) + `:app` (`overlay/`: overlay, nguồn dữ liệu Android)
@@ -13,22 +13,24 @@ Chỉ overlay `TYPE_ACCESSIBILITY_OVERLAY` của `NotchAccessibilityService` v�
 báo còn cần **quyền truy cập thông báo** (`MediaListenerService`, dòng Home › Permissions đổi tên thành
 **Media & notifications** / **Media và thông báo**, FR-O7).
 
-`overlayVisible(settings, accessibility, rotation, statusBarVisible): Boolean` (`:core`):
+~~`overlayVisible(settings, accessibility, rotation, statusBarVisible)`~~ v1.9.3: `overlayVisible(settings, accessibility):
+Boolean` (`:core`) — không còn phụ thuộc hướng xoay (§8) và status bar (OV-4 chỉ ẩn phần island):
 
 | ID | Given | Then |
 |---|---|---|
 | OV-1 | `enabled = false` (công tắc Totch tắt) | `false` |
 | OV-2 | Trợ năng chưa kết nối | `false` |
-| OV-3 | `rotation ≠ 0` | `false` (vùng notch chỉ có ở hướng dọc, như highlight) |
-| OV-4 | status bar đang ẩn (app toàn màn hình: video, game) | `false` — không đè lên nội dung toàn màn hình |
-| OV-5 | `enabled`, Trợ năng, `rotation = 0`, status bar hiện, và **ít nhất một** trong `island`, `touchEffects` bật (v1.9.1: bỏ `notificationIndicator`, FR-O12) | `true`; cả hai tắt → `false` |
+| OV-3 | ~~`rotation ≠ 0` → `false`~~ v1.9.3 (FR-O15): bỏ — vẽ ở mọi hướng, tại notch vật lý (§8) | |
+| OV-4 | status bar đang ẩn (app toàn màn hình: video, game). v1.9.3: `islandShown(content, statusBarVisible)` | ~~`false`~~ v1.9.3: island **hoạt động** (media, sạc, thông báo, âm thanh) và viền thông báo không vẽ — `islandShown` trả `Hidden`; hiệu ứng chạm (§4) **vẫn vẽ** vì do người dùng chạm. Status bar hiện → nội dung giữ nguyên |
+| OV-5 | `enabled`, Trợ năng, và **ít nhất một** trong `island`, `touchEffects` bật (v1.9.1: bỏ `notificationIndicator`, FR-O12) | `true`; cả hai tắt → `false` |
 
 Hình học dùng **vùng notch không padding** (`HighlightArea.notch`, notch-region §FR-R7) — vùng người dùng đã căn bằng
 slider Vị trí / Kích thước, nên viền và island bám đúng camera.
 
 Cửa sổ:
 - **Cửa sổ vẽ**: rộng toàn màn hình, từ cạnh trên, cao = `IslandLayout.EXPANDED` bottom + 24 dp (chỗ cho glow),
-  `FLAG_NOT_TOUCHABLE` (không nhận chạm), cutout `ALWAYS`. Nội dung vẽ bằng Compose.
+  `FLAG_NOT_TOUCHABLE` (không nhận chạm), cutout `ALWAYS`. Nội dung vẽ bằng Compose. v1.9.3: "rộng toàn màn hình, từ
+  cạnh trên" là trong **hệ tọa độ tự nhiên**; khi xoay, cửa sổ là dải dọc theo cạnh có notch (§8).
 - **Cửa sổ chạm** (`NotchView`, detection-modes §8): rect = vùng chạm notch (có padding), khi island đang hiện nội dung
   **bấm được** (media, thông báo) thì mở rộng thành hợp của vùng chạm và rect island. Chạm bắt đầu trong vùng chạm notch →
   cử chỉ như cũ (chuyển cho engine khi nguồn chạm = Trợ năng); bắt đầu ngoài → chạm vào island (§3.4). Khi nguồn chạm là
@@ -174,6 +176,7 @@ Thuần, thời gian qua tham số như `GestureRecognizer` (một timer, NFR-3)
 ```kotlin
 class IslandController(activities: Set<IslandActivity>) {
     var activities: Set<IslandActivity>          // đổi lúc chạy; ∅ = island tắt
+    var expandable: Boolean                      // v1.9.3: false khi xoay — media không mở rộng (IS-15)
     val content: IslandContent
     fun setMedia(media: MediaInfo?, nowMs: Long)
     fun onEvent(event: IslandEvent, nowMs: Long)
@@ -204,6 +207,7 @@ không tương tác, media dừng còn hiện 5000 ms (`MEDIA_LINGER_MS`).
 | IS-12 | hoạt động không có trong `activities` | sự kiện của nó bị bỏ qua; `MEDIA` không có → media không hiện (đang hiện → `Hidden`); `activities = ∅` → luôn `Hidden` |
 | IS-13 | `nextDeadlineMs()` | mốc sớm nhất trong: hết sự kiện tạm, tự thu gọn, hết `MEDIA_LINGER_MS`; `onTick` trước mốc không đổi gì |
 | IS-14 | `Volume` liên tiếp | mỗi lần cập nhật `fraction` và gia hạn 1500 ms (không nhấp nháy) |
+| IS-15 | (v1.9.3, FR-O15) `expandable = false` (màn đang xoay, §8) | `onTap` khi `Media` thu gọn → `NONE`, không mở rộng; đang mở rộng mà đặt `expandable = false` → thu gọn ngay. Mặc định `true` |
 
 ### 3.3 `IslandLayout` (`:core`, IG-*)
 
@@ -235,42 +239,77 @@ sealed interface IslandHit { data object Outside; data object Body; data class C
 (`OPEN_NOTIFICATIONS` → `GLOBAL_ACTION_NOTIFICATIONS` + `NotificationIndicator.onSeen()`); kéo xa quá `touchSlop` → bỏ.
 Bấm vào island có **rung nhẹ** nếu bật Rung phản hồi.
 
-## 4. Hiệu ứng chạm (FR-O6, TE-*)
+## 4. Hiệu ứng chạm (FR-O6; v1.9.3 — FR-O14, TF-*)
 
-Khi chạm vào notch (vùng chạm có padding):
-- **Gợn sóng + viền sáng**: lúc chạm xuống, một vòng sáng lan ra từ điểm chạm (400 ms, mờ dần); viền quanh notch sáng dần
-  theo **tiến độ nhấn giữ** (`pressProgress`), đạt đủ khi tới `longPressMs`. Cử chỉ được nhận diện → TAP / DOUBLE_TAP: nháy
-  viền (DOUBLE_TAP nháy 2 lần); LONG_PRESS: viền sáng đầy, rồi tắt khi nhả; vuốt: **vệt sáng** chạy theo hướng vuốt.
-- **Co giãn**: viên đen quanh notch (island, kể cả khi `Hidden` thì là chính vùng notch) phình **+12 %** khi chạm xuống và
-  nảy về (spring) khi nhả; vuốt → lệch `dp(6)` theo hướng vuốt rồi nảy về.
+~~v1.9–1.9.2: gợn sóng tại điểm chạm, viền sáng theo tiến độ giữ, nháy, vệt sáng theo hướng vuốt, viên đen co giãn /
+lệch theo hướng vuốt (TE-1).~~ v1.9.3 (FR-O14): tối giản — chỉ **viên đen quanh notch + vòng sáng**, viên giãn
+**ngang** (dọc theo cạnh có notch) và khi cử chỉ chạy thì hiện **icon cử chỉ** (trái) và **icon hành động** (phải):
 
-~~Màu hiệu ứng = màu nhấn Monet (`system_accent1_200`).~~ v1.9.1 (FR-O10): mỗi nét (gợn sóng, viền sáng, vệt sáng) vẽ
-**hai lớp**: **quầng tối** `system_accent1_900` alpha 0.55, rộng hơn lõi 3 dp mỗi bên, rồi **lõi sáng**
-`system_accent1_100` — lõi nổi trên nền tối, quầng nổi trên nền sáng (status bar sáng / tối tùy app, không theo theme hệ
-thống). Gợn sóng: lõi 3 dp alpha 0.95 → 0; vệt sáng: lõi 5 dp. Chỉ khi chạm **bắt đầu trong vùng chạm**; hiệu ứng không đổi việc
-nhận cử chỉ.
+| Cử chỉ | Chạm xuống | Đang chạm | Cử chỉ được nhận (hành động chạy) |
+|---|---|---|---|
+| Chạm / chạm đúp | vòng sáng quanh notch | — (nhả tay: vòng sáng giữ quanh notch, chờ kết quả) | viên giãn ra, trái icon cử chỉ, phải icon hành động |
+| Nhấn giữ | vòng sáng | viên giãn ngang dần theo thời gian giữ | như trên (lúc đủ `longPressMs`, ngón tay có thể vẫn đang giữ) |
+| Vuốt / vuốt giữ | vòng sáng | viên giãn ngang theo **khoảng cách ngón tay** đã đi | như trên; vuốt giữ chỉ hiện icon khi hành động chạy |
 
-Engine báo cho lớp hiển thị qua `EngineObserver` (`:app`, `engine/`):
+Không có cử chỉ (vuốt quá ngắn, cử chỉ tắt) → hết hạn chờ thì viên thu về notch và vòng sáng tắt (như IM-3). Kết quả hiện
+`RESULT_MS` = 1200 ms rồi thu lại. Trong lúc có phản hồi chạm, viên **thay** nội dung island (icon island ẩn); hết phản
+hồi → island trở lại như §3.5 (vòng sáng còn sáng → chỉ `MORPH`).
+
+Vẽ: viên đen + vòng sáng hai lớp như FR-O10 (quầng tối `system_accent1_900` alpha 0.55 rộng hơn 3 dp mỗi bên, lõi sáng
+`system_accent1_100`); icon trắng. Vòng sáng hiện dần (`RING_IN_MS`) **cùng lúc** với việc giãn theo ngón tay (không đợi).
+Khi đang chạm, hình viên bám mục tiêu mỗi frame (nội suy 35 % mỗi frame); khi có kết quả / thu lại dùng lò xo như §3.
+Chỉ khi chạm **bắt đầu trong vùng chạm**; hiệu ứng không đổi việc nhận cử chỉ.
+
+Engine báo cho lớp hiển thị qua `EngineObserver` (`:app`, `engine/`) — tọa độ **tự nhiên** (như `getevent`, §8):
 ```kotlin
-interface EngineObserver { fun onPress(x: Float, y: Float, timeMs: Long); fun onRelease(); fun onGesture(g: Gesture) }
+interface EngineObserver {
+    fun onPress(x: Float, y: Float, timeMs: Long)
+    fun onMove(x: Float, y: Float)                 // v1.9.3
+    fun onRelease()
+    fun onGesture(g: Gesture, action: Action)      // v1.9.3: kèm hành động thực tế (Action.None = Không làm gì)
+}
 ```
 
 ```kotlin
-sealed interface TouchEffect {
-    data object Pulse; data object DoublePulse; data object Glow
-    data class Streak(val dx: Int, val dy: Int)       // hướng đơn vị: (−1,0) trái, (1,0) phải, (0,1) xuống
+sealed interface TouchFeedback {
+    data object Idle
+    data class Pressing(val downX: Float, val downY: Float, val downMs: Long, val x: Float, val y: Float)
+    data object Waiting                                   // đã nhả, chờ cử chỉ (chạm đơn chờ chạm đúp)
+    data class Result(val gesture: Gesture, val action: Action)
 }
-fun touchEffectFor(g: Gesture): TouchEffect
-fun pressProgress(downMs: Long, nowMs: Long, longPressMs: Long): Float
+class TouchFeedbackController {                           // thuần, thời gian qua tham số (NFR-3)
+    val state: TouchFeedback
+    fun onPress(x: Float, y: Float, nowMs: Long)
+    fun onMove(x: Float, y: Float)
+    fun onRelease(nowMs: Long, waitMs: Long)              // waitMs = doubleTapMs + 100
+    fun onGesture(g: Gesture, action: Action, nowMs: Long)
+    fun onTick(nowMs: Long)
+    fun nextDeadlineMs(): Long?
+    companion object { const val RESULT_MS = 1200L; const val WAIT_MARGIN_MS = 100L }
+}
+fun pressStretch(p: TouchFeedback.Pressing, nowMs: Long, longPressMs: Long, maxPx: Float): Float
+fun pressProgress(downMs: Long, nowMs: Long, longPressMs: Long): Float   // TE-2, giữ nguyên
+object IslandLayout {
+    fun feedbackWing(notch: Rect, m: IslandMetrics): Int                 // h + dp(16), = wing của IG-2
+    fun stretched(notch: Rect, m: IslandMetrics, stretchPx: Int): Rect
+}
 ```
 
 | ID | Given | Then |
 |---|---|---|
-| TE-1 | `touchEffectFor` | TAP → `Pulse`, DOUBLE_TAP → `DoublePulse`, LONG_PRESS → `Glow`, SWIPE_DOWN / SWIPE_DOWN_HOLD → `Streak(0,1)`, SWIPE_LEFT(_HOLD) → `Streak(−1,0)`, SWIPE_RIGHT(_HOLD) → `Streak(1,0)` |
+| TE-1 | ~~`touchEffectFor`~~ | v1.9.3: bỏ (thay bằng TF-*) |
 | TE-2 | `pressProgress` | `(now − down) / longPressMs` kẹp `[0, 1]`; `longPressMs ≤ 0` → 1 |
+| TF-1 | controller mới | `Idle`, `nextDeadlineMs() = null` |
+| TF-2 | `onPress(x, y, t)` | `Pressing(x, y, t, x, y)`; `onMove(x2, y2)` → chỉ đổi `x`, `y`; `onMove` khi không `Pressing` → không đổi |
+| TF-3 | `onRelease(t, waitMs)` khi `Pressing` | `Waiting`, `nextDeadlineMs = t + waitMs`; `onTick` trước mốc không đổi, tại mốc → `Idle`, mốc `null`. `onRelease` khi `Idle` / `Result` → không đổi |
+| TF-4 | `onGesture(g, a, t)` (khi `Pressing`, `Waiting` hay `Idle`) | `Result(g, a)`, mốc `t + RESULT_MS`; tới mốc → `Idle`. Sau đó `onMove` / `onRelease` (ngón tay vẫn giữ sau nhấn giữ) không đổi `Result` |
+| TF-5 | `onPress` khi `Waiting` hoặc `Result` | `Pressing` mới (chạm mới thay thế), không còn mốc |
+| TF-6 | `pressStretch` | `drag = hypot(x − downX, y − downY)`; `hold` = `((now − down) − L/3) / (2L/3)` kẹp `[0,1]` × `maxPx` (`L = longPressMs`; `L ≤ 0` → `maxPx`) — chạm nhanh (< L/3) không giãn; kết quả `max(drag, hold)` kẹp `[0, maxPx]` |
+| TF-7 | `stretched(notch, m, s)` | `(notch.left − s, notch.top, notch.right + s, notch.bottom)`, trái/phải kẹp trong `[dp(8), screenWidthPx − dp(8)]`; `s ≤ 0` → `notch`. `feedbackWing` = `notch.height + dp(16)`; ví dụ IG-6: `stretched(notch, wing = 112)` = `(388,0,692,80)` |
 | EN-16 | engine, chạm xuống **trong** vùng, 1 ngón | `onPress(x, y, t)` một lần; chạm ngoài vùng / ≥ 2 ngón → không gọi |
 | EN-17 | sau `onPress`, UP hoặc CANCEL | `onRelease()` đúng một lần |
-| EN-18 | cử chỉ đang bật được nhận diện (kể cả Nothing, hoặc rung tắt) | `onGesture(g)`; cử chỉ tắt → không gọi |
+| EN-18 | cử chỉ đang bật được nhận diện (kể cả Nothing, hoặc rung tắt) | `onGesture(g, action)` với `action = effectiveAction(g)` (`Action.None` khi Nothing); cử chỉ tắt → không gọi |
+| EN-19 | (v1.9.3) sau `onPress`, MOVE 1 ngón | `onMove(x, y)`; trước `onPress` / sau `onRelease` / ≥ 2 ngón → không gọi |
 
 ## 5. Cài đặt (ST-37, ST-38)
 
@@ -298,7 +337,7 @@ Màn **Notch**: section mới **Hiệu ứng** / **Effects** ở **đầu** (tr�
    switch: **Media đang phát**, **Thông báo mới**, **Sạc pin**, **Âm thanh** (chế độ âm & âm lượng), mỗi dòng có lý do
    thiếu điều kiện như dưới; nút **Xong**. Island tắt → chạm dòng = bật switch. Tắt hoạt động cuối cùng (UI-79) → island
    tắt, hộp thoại đóng.
-3. **Touch effects** / **Hiệu ứng chạm** — "Gợn sóng và co giãn khi chạm notch"
+3. **Touch effects** / **Hiệu ứng chạm** — ~~"Gợn sóng và co giãn khi chạm notch"~~ v1.9.3: "Glow and icons on touch" / "Vòng sáng và icon khi chạm"
 
 Thiếu điều kiện → switch vẫn bật/tắt được (để chuẩn bị trước) nhưng mô tả đổi thành lý do, màu lỗi:
 "Cần Trợ năng" (cả ba); "Cần quyền Media và thông báo" (Báo thông báo, island Media, island Thông báo). v1.9.1 (FR-U60):
@@ -311,8 +350,64 @@ mô tả rút gọn — "Viền sáng khi có thông báo", "Gợn sóng và co 
 | UI-80 | `NotchSettingsUiState.overlayIssue(feature)`: Trợ năng chưa bật → `ACCESSIBILITY` (ưu tiên); có Trợ năng nhưng thiếu quyền thông báo, với ~~Báo thông báo /~~ Media / Thông báo → `NOTIFICATION_ACCESS`; Sạc / Âm thanh / Hiệu ứng chạm không cần quyền thông báo → `null` |
 | UI-81 | Home › Permissions: dòng `MEDIA_ACCESS` (luôn hiện) đổi nhãn thành **Media & notifications** / **Media và thông báo**; nhãn service listener trong cài đặt hệ thống: **Totch media & notifications** / **Totch media và thông báo** (kiểm bằng `StringsTest`) |
 
-## 7. Ngoài phạm vi / giới hạn
-- Không vẽ ở hướng ngang, trên màn hình khóa vẫn vẽ (overlay Trợ năng hiện trên keyguard).
+## 7. Đọc lại trạng thái màn hình (v1.9.3 — FR-O13, DR-*)
+
+Bản ≤ 1.9.2 chỉ đọc `Display` trong `DisplayManager.DisplayListener.onDisplayChanged`. Có máy gửi callback trước khi
+thông tin xoay / kích thước cập nhật (hoặc không gửi khi app toàn màn hình tự xoay rồi thoát) → giữ hướng cũ: island vẽ
+ở chỗ không có notch, engine báo sai `PausedRotation`. Sửa: `DisplayMonitor` dùng `DisplayRefresher` (thuần, test được):
+
+```kotlin
+class DisplayRefresher(scope: CoroutineScope, read: () -> DisplaySnapshot) {
+    val state: StateFlow<DisplaySnapshot>       // distinct
+    fun refresh()                               // đọc ngay, rồi đọc lại sau SETTLE_MS = [250, 1000]
+}
+```
+Tín hiệu gọi `refresh()`: `DisplayListener` (mọi sự kiện của màn mặc định), broadcast `Intent.ACTION_CONFIGURATION_CHANGED`
+(đăng ký động, trong process có foreground service), `NotchAccessibilityService.onConfigurationChanged`, và listener insets
+của cửa sổ vẽ (status bar ẩn / hiện, xoay). Sau mỗi lần cập nhật cửa sổ vẽ, `requestApplyInsets()` để trạng thái status
+bar (OV-4) cũng được đọc lại.
+
+| ID | Given | Then |
+|---|---|---|
+| DR-1 | tạo `DisplayRefresher` | `state` = `read()` ngay |
+| DR-2 | `refresh()` | đọc ngay; đọc lại tại +250 ms và +1000 ms (giá trị đổi giữa chừng → `state` cập nhật), sau đó không đọc nữa |
+| DR-3 | `refresh()` lần hai khi lần đầu còn chờ | lịch cũ bị hủy, tính lại từ lần gọi mới (không đọc thừa) |
+| DR-4 | (thủ công MT-O17) xem video toàn màn hình ngang rồi thoát / xoay qua lại nhanh | island và trạng thái engine theo đúng hướng hiện tại |
+
+## 8. Xoay màn hình (v1.9.3 — FR-O15, FR-R9, RO-*)
+
+Mọi thứ của lớp hiển thị (vùng notch, island, hiệu ứng chạm, hit test) tính trong **hệ tọa độ tự nhiên** (ROTATION_0 —
+notch ở cạnh trên), giống `getevent` và `engineRegion` (notch-region §FR-R8): `OverlayFrame.notch` =
+`highlightArea(settings, display.natural()).notch`, `IslandMetrics.screenWidthPx` = chiều rộng tự nhiên. Chỉ khi đặt
+cửa sổ mới đổi sang hướng hiện tại:
+
+- `fromNatural(rect, rotation, widthPx, heightPx)` (`widthPx`/`heightPx` của hướng hiện tại) — nghịch đảo của `toNatural`
+  (NR-18); `pointToNatural(x, y, rotation, widthPx, heightPx)` — đổi một điểm (NR-19).
+- **Cửa sổ vẽ**: rect tự nhiên `(0, 0, naturalWidth, frame.heightPx)` → `fromNatural`. Nội dung Compose đo ở kích thước
+  tự nhiên rồi đặt bằng một layer xoay: `naturalLayer(rotation, windowW, windowH) = NaturalLayer(degrees, x, y)` — điểm tự
+  nhiên `p` vẽ tại `rotate(p, degrees) + (x, y)` (xoay quanh góc trái trên, chiều kim đồng hồ):
+
+  | rotation | degrees | (x, y) |
+  |---|---|---|
+  | 0 | 0 | (0, 0) |
+  | 1 | 270 | (0, windowH) |
+  | 2 | 180 | (windowW, windowH) |
+  | 3 | 90 | (windowW, 0) |
+
+  Icon / chữ trong viên xoay ngược `−degrees` để luôn **đứng thẳng**. Media không mở rộng khi xoay (IS-15).
+- **Cửa sổ chạm** (`NotchView`): hợp (tự nhiên) của vùng chạm engine và viên island bấm được → `fromNatural`; mỗi
+  `MotionEvent` đổi `rawX/rawY` bằng `pointToNatural` rồi mới chia cho engine / hit test island. Khi xoay, view đặt
+  `systemGestureExclusionRects` = toàn view.
+
+| ID | Given | Then |
+|---|---|---|
+| NR-18 | `fromNatural` | nghịch đảo `toNatural` ở cả 4 hướng; ví dụ rotation 1, màn 2400×1080, `(500,0,580,80)` → `(0,500,80,580)`; rotation 3 → `(2320,500,2400,580)`; rotation 2, màn 1080×2400 → `(500,2320,580,2400)`; rotation 0 → giữ nguyên |
+| NR-19 | `pointToNatural` | rotation 1, màn 2400×1080: `(40, 540)` → `(540, 40)`; rotation 3: `(2360, 540)` → `(540, 40)`; rotation 2, màn 1080×2400: `(540, 2360)` → `(540, 40)`; rotation 0 → giữ nguyên |
+| RO-1 | `naturalLayer` | đúng bảng trên; với mọi hướng, ảnh của rect tự nhiên `(0,0,W,H)` qua layer = `fromNatural(...)` dời về gốc cửa sổ |
+| RO-2 | (thủ công MT-O18) xoay 90° / 270° với island media đang hiện; chạm / vuốt notch | viên nằm dọc theo cạnh có camera, icon đứng thẳng; vuốt ra xa camera = vuốt xuống |
+
+## 9. Ngoài phạm vi / giới hạn
+- ~~Không vẽ ở hướng ngang~~ (v1.9.3: vẽ ở mọi hướng, §8), trên màn hình khóa vẫn vẽ (overlay Trợ năng hiện trên keyguard).
 - Phát hiện "đã xem" dựa trên sự kiện cửa sổ của System UI: một số ROM không gửi → viền tắt khi thông báo bị gỡ.
 - `VOLUME_CHANGED_ACTION` không phải API công khai; máy không gửi → island âm lượng không hiện (chế độ âm vẫn chạy).
 - Không đọc nội dung thông báo (FR-O7): island thông báo chỉ có icon app.

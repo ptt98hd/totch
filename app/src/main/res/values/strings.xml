@@ -307,7 +307,7 @@
     <string name="setting_island_sound">Sound</string>
     <string name="setting_island_sound_summary">Sound mode and volume</string>
     <string name="setting_touch_effects">Touch effects</string>
-    <string name="setting_touch_effects_summary">Ripple and bounce on touch</string>
+    <string name="setting_touch_effects_summary">Glow and icons on touch</string>
     <string name="overlay_needs_accessibility">Needs Accessibility</string>
     <string name="overlay_needs_notification_access">Needs Media &amp; notifications</string>
     <string name="island_sound_ring">Ring</string>

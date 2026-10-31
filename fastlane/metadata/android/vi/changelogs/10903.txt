@@ -1,0 +1,4 @@
+* Nhận đúng hướng xoay màn hình, kể cả sau khi thoát video toàn màn hình.
+* Dynamic Island và hiệu ứng chạm luôn nằm đúng notch thật khi xoay màn hình; khi bật Nhận cử chỉ khi xoay ngang, nguồn chạm Trợ năng cũng chạy khi xoay, hướng vuốt tính theo notch.
+* Hiệu ứng chạm tối giản: vòng sáng, island giãn ra khi giữ hoặc vuốt, rồi hiện icon cử chỉ và hành động.
+* Dòng có switch cạnh phần mở hộp thoại có thêm vạch phân cách.
