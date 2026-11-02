@@ -1,6 +1,6 @@
 # 01 — Đặc tả yêu cầu nghiệp vụ (SRS)
 
-> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), v1.8.3 (§21), v1.9 (§22), v1.9.1–1.9.2 (§23), **v1.9.3** (§24) · Cập nhật: 2026-10-31
+> Trạng thái: **Đã chốt v1.0 (MVP)**, v1.1 (§8), v1.2 (§9), v1.3 (§10), v1.4 (§11), v1.5 (§12), v1.6.x (§13–16), v1.7 (§17), v1.8 (§18), v1.8.1 (§19), v1.8.2 (§20), v1.8.3 (§21), v1.9 (§22), v1.9.1–1.9.2 (§23), v1.9.3 (§24), **v1.9.4** (§25) · Cập nhật: 2026-11-03
 
 ## 1. Tầm nhìn
 
@@ -342,3 +342,12 @@ tham chiếu ID tương ứng.
 | FR-O15 | Island và hiệu ứng chạm **luôn ở đúng notch vật lý** ở mọi hướng xoay: khi xoay, viên nằm dọc theo cạnh có camera, icon vẫn đứng thẳng; media không mở rộng khi xoay. App toàn màn hình (status bar ẩn): island hoạt động (media, sạc…) ẩn, hiệu ứng chạm **vẫn hiện**. Sửa OV-3, OV-4 | [notch-overlay §1, §8](specs/notch-overlay.md) |
 | FR-R9 | **Cử chỉ khi xoay ngang theo notch vật lý** với cả nguồn Trợ năng (trước chỉ Shizuku): vùng chạm nằm ở notch thật, hướng vuốt tính theo notch — vuốt **xuống** = vuốt ra xa cạnh có camera (khi xoay ngang là vuốt ngang), trái / phải = dọc theo cạnh đó. Vẫn theo công tắc **Nhận cử chỉ khi xoay ngang**. Sửa DM-42 | [detection-modes §8](specs/detection-modes.md), [notch-overlay §8](specs/notch-overlay.md) |
 | FR-U64 | Dòng có **switch** mà chạm phần bên trái mở hộp thoại / bảng chọn (Dynamic Island, các dòng cử chỉ) có **vạch phân cách dọc** giữa phần bấm mở và switch | [ui §1](specs/ui.md) |
+
+## 25. Phiên bản 1.9.4
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-O16 | **Viền island gọn**, không lộ notch thật: viên đen phủ rộng hơn vùng notch một chút (2 dp hai bên và đáy) và luôn **đặc** khi đang hiện; vòng sáng chỉ vẽ **bên ngoài** viên (mép trong sắc, không quầng sáng lấn vào viên) | [notch-overlay §10](specs/notch-overlay.md) |
+| FR-O17 | **Ẩn island khi toàn màn hình** (sửa OV-4 không chạy: overlay Trợ năng nằm trên status bar nên insets của nó luôn báo status bar hiện): trạng thái status bar đọc từ `WindowMetrics` của service Trợ năng, đọc lại định kỳ khi island đang có nội dung và mỗi khi có tín hiệu đổi màn hình | [notch-overlay §10](specs/notch-overlay.md) |
+| FR-O18 | Island **âm lượng** hiện mức âm lượng bằng **vòng tròn** (cung tiến độ quanh icon loa) thay cho thanh ngang | [notch-overlay §10](specs/notch-overlay.md) |
+| FR-G17 | **Chặn chạm tại notch khi có cử chỉ**: khi Trợ năng bật và có **ít nhất một** cử chỉ đang bật (không chỉ vuốt xuống), overlay nuốt chạm ở vùng notch ở mọi hướng — chạm / vuốt tại notch không còn kích hoạt status bar, app bên dưới hay cử chỉ Back. Sửa §7 detection-modes (DM-15 chỉ còn quyết định cử chỉ vuốt xuống khả dụng) | [detection-modes §7](specs/detection-modes.md) |

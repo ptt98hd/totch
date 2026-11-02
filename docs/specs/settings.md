@@ -57,6 +57,7 @@ fun Settings.effectiveAction(g: Gesture, canBlockTouches: Boolean = false): Acti
 fun Settings.isGestureOn(g: Gesture, canBlockTouches: Boolean = false): Boolean
 fun Settings.toGestureConfig(density: Float, canBlockTouches: Boolean = false): GestureConfig
 fun Settings.needsTouchBlocking(): Boolean                // DM-15
+fun Settings.blocksNotchTouches(): Boolean                // v1.9.4, DM-57: có cử chỉ nào bật
 ```
 
 **v1.8.1 (FR-G15)** — switch và Not set tách bạch:

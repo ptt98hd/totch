@@ -1,0 +1,4 @@
+* Dynamic Island ẩn khi app toàn màn hình (video, game), kể cả media.
+* Viền island gọn hơn: phần đen phủ kín camera, vòng sáng chỉ ở bên ngoài.
+* Khi có cử chỉ bật, chạm tại notch không còn tới status bar, app bên dưới hay cử chỉ Back.
+* Âm lượng hiện bằng vòng tròn cạnh icon loa.

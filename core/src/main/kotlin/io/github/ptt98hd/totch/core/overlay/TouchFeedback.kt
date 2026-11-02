@@ -79,3 +79,6 @@ fun overlayVisible(settings: Settings, accessibility: Boolean): Boolean =
 /** OV-4: island activities stay off full-screen apps; touch feedback does not go through here. */
 fun islandShown(content: IslandContent, statusBarVisible: Boolean): IslandContent =
     if (statusBarVisible) content else IslandContent.Hidden
+
+/** VR-1: degrees of the volume ring for a volume [fraction] (FR-O18). */
+fun volumeSweep(fraction: Float): Float = 360f * fraction.coerceIn(0f, 1f)

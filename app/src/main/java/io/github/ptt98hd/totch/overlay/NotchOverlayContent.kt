@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
@@ -59,11 +60,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -104,6 +110,7 @@ import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.overlay.TouchFeedback
 import io.github.ptt98hd.totch.core.overlay.islandShown
 import io.github.ptt98hd.totch.core.overlay.pressStretch
+import io.github.ptt98hd.totch.core.overlay.volumeSweep
 import io.github.ptt98hd.totch.ui.common.icon
 import kotlin.math.roundToInt
 
@@ -248,25 +255,35 @@ private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
 
     Box(Modifier.fillMaxSize()) {
         Canvas(Modifier.fillMaxSize()) {
-            val origin = Offset(left.value, notch.top.toFloat())
-            val size = Size(right.value - left.value, bottom.value - notch.top)
-            val radius = corner.value
+            // FR-O16 (IG-7): the black reaches a little past the shape, so the real notch never shows at its edge.
+            val bleed = IslandLayout.bleed(m).toFloat()
+            val coverLeft = maxOf(left.value - bleed, 0f)
+            val coverRight = minOf(right.value + bleed, m.screenWidthPx.toFloat())
+            val origin = Offset(coverLeft, notch.top.toFloat())
+            val size = Size(coverRight - coverLeft, bottom.value + bleed - notch.top)
+            val radius = corner.value + bleed
 
-            val blobAlpha = maxOf(ring.value, if (touching) 1f else 0f)
-            if (blobAlpha > 0f) drawRoundRect(Color.Black.copy(alpha = blobAlpha), origin, size, CornerRadius(radius))
+            if (ring.value > 0f || touching) drawRoundRect(Color.Black, origin, size, CornerRadius(radius))
 
-            val ringWidth = m.dp(3).toFloat()
-            val ringOrigin = origin - Offset(ringWidth, ringWidth)
-            val ringSize = Size(size.width + 2 * ringWidth, size.height + 2 * ringWidth)
-            if (ring.value > 0f) {
-                if (touchRing) {
-                    haloRing(effectHalo, ring.value, ringOrigin, ringSize, radius + ringWidth)
-                    glowRing(effectCore, ring.value, ringOrigin, ringSize, radius + ringWidth)
-                } else {
-                    glowRing(ringColor, ring.value, ringOrigin, ringSize, radius + ringWidth)
-                }
+            // The ring sits just outside the black, and nothing of it is drawn over the black (sharp inner edge).
+            val ringGap = 1.25f * density
+            val ringOrigin = origin - Offset(ringGap, ringGap)
+            val ringSize = Size(size.width + 2 * ringGap, size.height + 2 * ringGap)
+            val ringRadius = radius + ringGap
+            val outside = Path().apply {
+                addRoundRect(RoundRect(origin.x, origin.y, origin.x + size.width, origin.y + size.height, CornerRadius(radius)))
             }
-            if (indicatorOn && !touching) glowRing(indicatorColor, breathing, ringOrigin, ringSize, radius + ringWidth)
+            clipPath(outside, ClipOp.Difference) {
+                if (ring.value > 0f) {
+                    if (touchRing) {
+                        haloRing(effectHalo, ring.value, ringOrigin, ringSize, ringRadius)
+                        glowRing(effectCore, ring.value, ringOrigin, ringSize, ringRadius)
+                    } else {
+                        glowRing(ringColor, ring.value, ringOrigin, ringSize, ringRadius)
+                    }
+                }
+                if (indicatorOn && !touching) glowRing(indicatorColor, breathing, ringOrigin, ringSize, ringRadius)
+            }
         }
 
         // FR-O9: fill the window so the island's layer bounds cover everything drawn in it.
@@ -382,7 +399,7 @@ private fun IslandBody(
             is IslandContent.Notification -> Box(Modifier.size(icon / 2.5f).background(dotColor, CircleShape))
             is IslandContent.Charging -> PillText("${content.level}%", ChargingGreen)
             is IslandContent.Sound -> PillText(stringResource(soundLabel(content.mode)), Color.White)
-            is IslandContent.Volume -> VolumeBar(content.fraction, (pill.right - notch.right - frame.metrics.dp(20)).pxDp())
+            is IslandContent.Volume -> VolumeRing(content.fraction, icon)
             IslandContent.Hidden -> Unit
         }
     }
@@ -484,15 +501,16 @@ private fun Equalizer(playing: Boolean, color: Color, size: Dp) {
     }
 }
 
+/** FR-O18 (VR-1): the volume as a ring filling clockwise from twelve o'clock. */
 @Composable
-private fun VolumeBar(fraction: Float, width: Dp) {
-    Box(
-        Modifier
-            .width(width.coerceAtLeast(16.dp))
-            .height(4.dp)
-            .background(Color.White.copy(alpha = 0.25f), CircleShape),
-    ) {
-        Box(Modifier.fillMaxHeight().fillMaxWidth(fraction.coerceIn(0f, 1f)).background(Color.White, CircleShape))
+private fun VolumeRing(fraction: Float, size: Dp) {
+    val sweep by animateFloatAsState(volumeSweep(fraction), tween(150), label = "volume")
+    Canvas(Modifier.size(size)) {
+        val stroke = 3.dp.toPx()
+        val inset = stroke / 2
+        val arcSize = Size(this.size.width - stroke, this.size.height - stroke)
+        drawCircle(Color.White.copy(alpha = 0.25f), radius = arcSize.minDimension / 2, style = Stroke(stroke))
+        drawArc(Color.White, -90f, sweep, false, Offset(inset, inset), arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
     }
 }
 

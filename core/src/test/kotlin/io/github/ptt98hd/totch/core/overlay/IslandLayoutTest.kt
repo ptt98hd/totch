@@ -37,6 +37,12 @@ class IslandLayoutTest {
         assertEquals(Rect(636, 232, 732, 328), controls[IslandControl.NEXT])
     }
 
+    @Test fun `IG-7 cover bleeds past the shape on the sides and bottom`() {
+        assertEquals(Rect(496, 0, 584, 84), IslandLayout.cover(notch, m))
+        assertEquals(Rect(0, 0, 84, 84), IslandLayout.cover(Rect(0, 0, 80, 80), m))
+        assertEquals(Rect(996, 0, 1080, 84), IslandLayout.cover(Rect(1000, 0, 1080, 80), m))
+    }
+
     @Test fun `IG-5 hit test`() {
         assertEquals(IslandHit.Control(IslandControl.NEXT), IslandLayout.hit(expanded, notch, m, 700f, 300f))
         assertEquals(IslandHit.Body, IslandLayout.hit(expanded, notch, m, 100f, 100f))
