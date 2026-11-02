@@ -351,3 +351,10 @@ tham chiếu ID tương ứng.
 | FR-O17 | **Ẩn island khi toàn màn hình** (sửa OV-4 không chạy: overlay Trợ năng nằm trên status bar nên insets của nó luôn báo status bar hiện): trạng thái status bar đọc từ `WindowMetrics` của service Trợ năng, đọc lại định kỳ khi island đang có nội dung và mỗi khi có tín hiệu đổi màn hình | [notch-overlay §10](specs/notch-overlay.md) |
 | FR-O18 | Island **âm lượng** hiện mức âm lượng bằng **vòng tròn** (cung tiến độ quanh icon loa) thay cho thanh ngang | [notch-overlay §10](specs/notch-overlay.md) |
 | FR-G17 | **Chặn chạm tại notch khi có cử chỉ**: khi Trợ năng bật và có **ít nhất một** cử chỉ đang bật (không chỉ vuốt xuống), overlay nuốt chạm ở vùng notch ở mọi hướng — chạm / vuốt tại notch không còn kích hoạt status bar, app bên dưới hay cử chỉ Back. Sửa §7 detection-modes (DM-15 chỉ còn quyết định cử chỉ vuốt xuống khả dụng) | [detection-modes §7](specs/detection-modes.md) |
+
+## 26. Phiên bản 1.9.5
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-O19 | **Island biến mất mượt**: sau khi thu về cỡ notch, viên đen cùng vòng sáng **thu nhỏ cả chiều ngang lẫn chiều dọc** và **mờ dần** rồi biến mất, thay cho tắt đột ngột | [notch-overlay §11](specs/notch-overlay.md) |
+| FR-O20 | Icon và chữ trong island **căn giữa theo chiều dọc** của phần đen thấy được | [notch-overlay §11](specs/notch-overlay.md) |

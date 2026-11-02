@@ -1,0 +1,2 @@
+* The Dynamic Island now vanishes smoothly: after shrinking back to the notch it gets smaller in both directions and fades out.
+* Icons and text in the island are centered vertically.

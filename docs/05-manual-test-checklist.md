@@ -403,6 +403,13 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-O24 | Bấm phím âm lượng lên / xuống liên tục | Bên phải icon loa là vòng tròn đầy / vơi theo âm lượng, đổi mượt (FR-O18) | [ ] |
 | MT-G17 | Như DM-58 | Chỉ hành động Totch chạy, không hành động hệ thống / app bên dưới (FR-G17) | [ ] |
 
+## 24. v1.9.5
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-O25 | Đổi âm lượng / cắm sạc, chờ island ẩn; cũng thử vuốt notch (kết quả cử chỉ) | Viên thu về notch, rồi thu nhỏ cả ngang lẫn dọc, mờ dần và biến mất mượt (FR-O19) | [ ] |
+| MT-O26 | Island sạc, âm thanh, âm lượng, thông báo, media thu gọn; kết quả cử chỉ | Icon và chữ nằm giữa viên đen theo chiều dọc (FR-O20) | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)

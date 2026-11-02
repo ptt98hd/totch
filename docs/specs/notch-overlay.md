@@ -1,4 +1,4 @@
-# Spec: Lớp hiển thị quanh notch (v1.9 — FR-O1…FR-O8; v1.9.1 — FR-O9…FR-O11, FR-U63; v1.9.3 — FR-O13…FR-O15, FR-R9; v1.9.4 — FR-O16…FR-O18)
+# Spec: Lớp hiển thị quanh notch (v1.9 — FR-O1…FR-O8; v1.9.1 — FR-O9…FR-O11, FR-U63; v1.9.3 — FR-O13…FR-O15, FR-R9; v1.9.4 — FR-O16…FR-O18; v1.9.5 — FR-O19, FR-O20)
 
 Yêu cầu: FR-O1…FR-O8 ([01 §22](../01-requirements.md)) · Module: `:core` (`io.github.ptt98hd.totch.core.overlay`: logic
 thuần) + `:app` (`overlay/`: overlay, nguồn dữ liệu Android)
@@ -144,7 +144,8 @@ Island (và nhịp **bung** của Báo thông báo) đi theo trình tự, **vòn
 quanh viên đen **suốt** từ đầu tới cuối:
 1. `RING_IN` — vòng sáng hiện dần quanh **vùng notch** (viên = notch), `RING_IN_MS` = 220 ms.
 2. `MORPH` — viên giãn ra hai bên tới hình đích (lò xo như §3); vòng sáng bám theo viên.
-3. Hết nội dung: `MORPH` về notch (thu lại), rồi `RING_OUT` — vòng sáng tắt dần, `RING_OUT_MS` = 280 ms.
+3. Hết nội dung: `MORPH` về notch (thu lại), rồi `RING_OUT` — vòng sáng tắt dần, `RING_OUT_MS` = 280 ms; v1.9.5: viên
+   đen cùng vòng sáng thu nhỏ cả ngang lẫn dọc và mờ dần rồi biến mất (§11.1).
 
 Đổi nội dung khi đang hiện → chỉ `MORPH` (vòng sáng giữ nguyên). Nội dung của viên (icon, chữ) hiện sau khi giãn và mờ
 đi trước khi thu. Màu vòng sáng: island thông báo → màu của thông báo (như §2); sạc → xanh lá; khác → màu
@@ -461,3 +462,36 @@ theo chiều kim đồng hồ, nét 3 dp, đầu tròn. Cung đổi mượt (twe
 | ID | Given | Then |
 |---|---|---|
 | VR-1 | `volumeSweep(fraction)` (`:core`) | `360 × fraction` kẹp `[0, 360]`; `0.5` → `180`, `-1` → `0`, `2` → `360` |
+
+## 11. v1.9.5 (FR-O19, FR-O20)
+
+### 11.1 Biến mất mượt (FR-O19, IM-6)
+Bản ≤ 1.9.4: hết nội dung → viên thu về notch, vòng sáng tắt dần, còn viên đen giữ nguyên cỡ notch rồi **biến mất đột
+ngột** khi vòng sáng về 0. Sửa: trong `RING_OUT`, cùng lúc với vòng sáng, giá trị `whole` chạy `1 → 0`
+(tween `RING_OUT_MS`); viên đen (`cover`) và vòng sáng vẽ **thu nhỏ quanh tâm** của `cover` theo
+`vanishScale(whole)` cả hai chiều (bo góc thu theo), viên đen có `alpha = whole`. `whole` về 1 khi island hiện lại
+(`RING_IN`: vòng sáng đang tắt hẳn → đặt ngay 1, đang tắt dở → chạy về 1 cùng vòng sáng) và khi chạm (phản hồi chạm luôn
+vẽ đủ cỡ, đặc). Chuyển động hiện ra giữ nguyên.
+
+```kotlin
+object IslandMotion {
+    const val VANISH_MIN_SCALE = 0.3f
+    fun vanishScale(whole: Float): Float   // whole: 1 = đủ cỡ … 0 = đã biến mất
+}
+```
+
+| ID | Given | Then |
+|---|---|---|
+| IM-6 | `vanishScale(whole)` | `VANISH_MIN_SCALE + (1 − VANISH_MIN_SCALE) × whole`, `whole` kẹp `[0, 1]`; `1` → `1`, `0` → `0.3`, `0.5` → `0.65`, `-1` → `0.3`, `2` → `1` |
+| IM-7 | (thủ công MT-O25) island đang hiện rồi hết nội dung | viên thu về notch, rồi thu nhỏ cả ngang lẫn dọc, mờ dần và biến mất — không tắt đột ngột |
+
+### 11.2 Nội dung căn giữa theo chiều dọc (FR-O20, IG-8)
+Bản 1.9.4: icon / chữ của island thu gọn và của kết quả cử chỉ căn giữa theo hình viên (`notch.top … notch.bottom`), nhưng
+phần đen thấy được là `cover` — dài hơn `BLEED` ở đáy (IG-7) → nội dung lệch lên `BLEED / 2`. Sửa: ô nội dung (hai cánh
+trái / phải) lấy chiều dọc theo `IslandLayout.band(shape, m)`, căn giữa theo phần đen thấy được; chữ (`PillText`) bỏ
+khoảng đệm font và cắt line height (`LineHeightStyle(Center, Trim.Both)`) để glyph nằm đúng tâm ô.
+
+| ID | Given | Then |
+|---|---|---|
+| IG-8 | `band(shape, m)` | `(shape.left, shape.top, shape.right, shape.bottom + dp(2))` — cùng chiều dọc với `cover(shape, m)`; ví dụ IG-6: `band(notch)` = `(500,0,580,84)` |
+| IG-9 | (thủ công MT-O26) island sạc, âm thanh, âm lượng, thông báo, media thu gọn; kết quả cử chỉ | icon và chữ nằm giữa viên đen theo chiều dọc |
