@@ -11,6 +11,7 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
 import android.view.accessibility.AccessibilityEvent
@@ -27,7 +28,7 @@ import io.github.ptt98hd.totch.core.overlay.islandShown
 import io.github.ptt98hd.totch.core.overlay.overlayVisible
 import io.github.ptt98hd.totch.core.model.TouchEvent
 import io.github.ptt98hd.totch.core.settings.activeIslandActivities
-import io.github.ptt98hd.totch.core.settings.needsTouchBlocking
+import io.github.ptt98hd.totch.core.settings.blocksNotchTouches
 import io.github.ptt98hd.totch.engine.DisplaySnapshot
 import io.github.ptt98hd.totch.engine.TouchSource
 import io.github.ptt98hd.totch.engine.fromNatural
@@ -36,6 +37,7 @@ import io.github.ptt98hd.totch.engine.pointToNatural
 import io.github.ptt98hd.totch.overlay.NotchOverlayWindow
 import io.github.ptt98hd.totch.overlay.OverlayFrame
 import io.github.ptt98hd.totch.service.DefaultAppContainer
+import io.github.ptt98hd.totch.service.StatusBarWatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -59,14 +61,22 @@ class NotchAccessibilityService : AccessibilityService() {
     private var scope: CoroutineScope? = null
     private var overlay: NotchView? = null
     private var visuals: NotchOverlayWindow? = null
+    private var statusBar: StatusBarWatcher? = null
 
     override fun onServiceConnected() {
         val platform = (application as TotchApp).platform.also { platform = it }
         platform.accessibility.attach(this)
         platform.setAccessibilityWanted(true) // DM-53
         val scope = MainScope().also { scope = it }
+        // §10.2 (FR-O17): the status bar as the display has it; the drawing window sits above it and is never told.
+        val statusBar = StatusBarWatcher(scope, ::statusBarShown).also { statusBar = it }
+        scope.launch { statusBar.visible.collect { platform.overlay.screenStatusBar.value = it } }
+        scope.launch { platform.display.state.collect { statusBar.refresh() } }
         // FR-O13: every insets change of the drawing window (rotation, full screen) is a hint to read the display again.
-        val visuals = NotchOverlayWindow(this, platform.overlay, platform.display::refresh).also { visuals = it }
+        val visuals = NotchOverlayWindow(this, platform.overlay) {
+            platform.display.refresh()
+            statusBar.refresh()
+        }.also { visuals = it }
         // notch-overlay §1, §8: the drawing window, while a feature is on (OV-1…OV-5), at the physical notch.
         val frames = combine(platform.settingsRepository.settings, platform.display.state) { s, d ->
             val natural = d.natural()
@@ -80,18 +90,24 @@ class NotchAccessibilityService : AccessibilityService() {
             }
         }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, null)
         scope.launch { frames.collect(visuals::update) }
+        // SB-2: only an island with something to show needs to know.
+        scope.launch {
+            combine(frames, platform.overlay.islandContent) { f, c -> f?.island == true && c != IslandContent.Hidden }
+                .distinctUntilChanged()
+                .collect { statusBar.active = it }
+        }
         scope.launch { platform.display.state.map { it.rotation == 0 }.distinctUntilChanged().collect(platform.overlay::setExpandable) } // IS-15
         // The island catches touches only while it shows something to tap (§3.4).
-        val islandTarget = combine(frames, platform.overlay.islandContent, platform.overlay.statusBarVisible) { frame, content, statusBar ->
-            val shown = islandShown(content, statusBar)
+        val islandTarget = combine(frames, platform.overlay.islandContent, platform.overlay.statusBarVisible) { frame, content, barShown ->
+            val shown = islandShown(content, barShown)
             frame?.takeIf { it.island && shown.isTappable() }?.let { IslandTarget(it, IslandLayout.pill(shown, it.notch, it.metrics)) }
         }.distinctUntilChanged()
         val gesture = combine(platform.engineStatus, platform.engineRegion, platform.touchSource, ::Triple)
         scope.launch {
             combine(platform.settingsRepository.settings, gesture, islandTarget, platform.display.state) { settings, (status, region, source), island, d ->
                 val forward = source == TouchSource.ACCESSIBILITY
-                // DM-15; rotated, swiping away from the notch does not pull the shade, so nothing to block (FR-R9).
-                val blocking = d.rotation == 0 && settings.needsTouchBlocking()
+                // DM-57 (FR-G17): any gesture on → touches at the notch reach only Totch, in every rotation.
+                val blocking = settings.blocksNotchTouches()
                 val rect = region?.takeIf { status == EngineStatus.Running && (forward || blocking || island != null) }
                 if (rect == null && island == null) null else OverlaySpec(rect, forward && rect != null, island, d)
             }.distinctUntilChanged().collect(::updateOverlay)
@@ -127,6 +143,11 @@ class NotchAccessibilityService : AccessibilityService() {
         tearDown()
         super.onDestroy()
     }
+
+    /** SB-*: the display's own insets state, unlike the overlay windows' (above the status bar); unknown → shown. */
+    private fun statusBarShown(): Boolean = runCatching {
+        getSystemService(WindowManager::class.java).currentWindowMetrics.windowInsets.isVisible(WindowInsets.Type.statusBars())
+    }.getOrDefault(true)
 
     private fun IslandContent.isTappable() = this is IslandContent.Media || this is IslandContent.Notification
 
@@ -226,6 +247,8 @@ class NotchAccessibilityService : AccessibilityService() {
     private fun tearDown() {
         scope?.cancel()
         scope = null
+        statusBar = null
+        platform?.overlay?.screenStatusBar?.value = true
         updateOverlay(null)
         visuals?.update(null)
         visuals = null

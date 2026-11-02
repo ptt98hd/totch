@@ -196,6 +196,16 @@ class SettingsTest {
         assertFalse(holdOnly.withGestureOn(Gesture.SWIPE_DOWN_HOLD, false).needsTouchBlocking())
     }
 
+    @Test fun `DM-57 notch touches are blocked while any gesture is on`() {
+        val s = Settings(enabled = true)
+        assertFalse(s.blocksNotchTouches())
+        val tap = s.withGestureOn(Gesture.TAP, true) // Not set still listens (FR-G15)
+        assertTrue(tap.blocksNotchTouches())
+        assertFalse(tap.copy(enabled = false).blocksNotchTouches())
+        assertTrue(s.withGestureOn(Gesture.SWIPE_DOWN, true).blocksNotchTouches())
+        assertFalse(tap.withGestureOn(Gesture.TAP, false).blocksNotchTouches())
+    }
+
     @Test fun `ST-31 the switch decides whether a gesture listens, Not set does nothing`() {
         val s = Settings(enabled = true)
         assertEquals(emptySet(), s.enabledGestures)

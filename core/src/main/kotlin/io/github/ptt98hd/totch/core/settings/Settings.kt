@@ -137,6 +137,9 @@ fun Settings.effectiveAction(g: Gesture, canBlockTouches: Boolean = false): Acti
 /** The accessibility overlay should block touches at the notch (DM-15, ST-26). */
 fun Settings.needsTouchBlocking(): Boolean = enabled && SwipeDownGestures.any { isGestureOn(it, canBlockTouches = true) }
 
+/** DM-57: with any gesture on, touches at the notch reach only Totch — not the status bar or the app below (FR-G17). */
+fun Settings.blocksNotchTouches(): Boolean = enabled && Gesture.entries.any { isGestureOn(it, canBlockTouches = true) }
+
 fun Settings.withGestureOn(g: Gesture, on: Boolean): Settings =
     copy(enabledGestures = if (on) enabledGestures + g else enabledGestures - g)
 

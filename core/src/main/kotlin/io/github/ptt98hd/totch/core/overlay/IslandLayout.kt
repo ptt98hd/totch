@@ -38,6 +38,15 @@ object IslandLayout {
         )
     }
 
+    /** IG-7: how far the black pill reaches past its shape, so the real notch never shows at the edge (FR-O16). */
+    fun bleed(m: IslandMetrics): Int = m.dp(2)
+
+    /** IG-7: the black that covers [shape]: [bleed] wider on the sides and the bottom, kept on the screen. */
+    fun cover(shape: Rect, m: IslandMetrics): Rect {
+        val b = bleed(m)
+        return Rect(maxOf(shape.left - b, 0), shape.top, minOf(shape.right + b, m.screenWidthPx), shape.bottom + b)
+    }
+
     /** IG-4: the media buttons along the bottom of an expanded [pill]. */
     fun controls(pill: Rect, m: IslandMetrics): Map<IslandControl, Rect> {
         val size = m.dp(48)

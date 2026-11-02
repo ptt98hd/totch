@@ -169,6 +169,16 @@ engine — engine vẫn nhận qua `getevent` nên không bị phát cử chỉ 
 | DM-15 | `needsTouchBlocking(s)` = `s.enabled` ∧ `isGestureOn(SWIPE_DOWN, true) ∨ isGestureOn(SWIPE_DOWN_HOLD, true)` (v1.8.1: `isGestureOn` không xét binding — vuốt xuống bật + Not set vẫn chặn, FR-G15) |
 | DM-16 | Overlay nuốt chạm (`onTouchEvent` trả true) và không gọi engine (kiểm thủ công MT-A1) |
 
+v1.9.4 (FR-G17): chặn chạm không chỉ cho vuốt xuống. Với nguồn Shizuku, chạm / vuốt tại notch vẫn tới status bar, app bên
+dưới (chạm status bar = cuộn lên đầu, vuốt trên ROM có Trung tâm điều khiển) hoặc cử chỉ Back khi xoay → hành động ngoài ý
+muốn cùng lúc với cử chỉ của Totch. Overlay hiện khi `blocksNotchTouches(settings)` ở **mọi hướng** (engine `Running`; khi
+xoay view loại trừ cử chỉ hệ thống như §8). `needsTouchBlocking` (DM-15) chỉ còn dùng để biết vuốt xuống cần Trợ năng.
+
+| ID | Tiêu chí |
+|---|---|
+| DM-57 | `blocksNotchTouches(s)` = `s.enabled` ∧ có ít nhất một cử chỉ `isGestureOn(g, canBlockTouches = true)` (kể cả Not set, FR-G15); không cử chỉ nào bật hoặc `!enabled` → `false` |
+| DM-58 | (thủ công MT-G17) chỉ Shizuku + Trợ năng, chỉ bật Chạm; chạm notch trong app có danh sách dài / vuốt ngang notch trên ROM có Trung tâm điều khiển; xoay ngang (Nhận cử chỉ khi xoay ngang) vuốt từ notch | chỉ hành động của Totch chạy: không cuộn lên đầu, không mở thanh thông báo / Trung tâm điều khiển, không Back |
+
 ## 8. Nguồn chạm: Shizuku hoặc Trợ năng (v1.7 — FR-D13)
 
 Totch chạy được với **một trong hai**: Shizuku (đọc `getevent`, §2) hoặc Trợ năng (overlay nhận chạm). Shizuku vẫn được

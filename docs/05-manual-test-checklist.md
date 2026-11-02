@@ -394,6 +394,15 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-O21 | Video toàn màn hình; chạm notch | Island hoạt động không hiện; hiệu ứng chạm vẫn hiện ở đúng notch (FR-O15) | [ ] |
 | MT-U64 | Notch › Hiệu ứng (island bật), Gestures | Vạch dọc giữa phần mở và switch ở dòng Dynamic Island và các dòng cử chỉ; dòng Hiệu ứng chạm không có (FR-U64) | [ ] |
 
+## 23. v1.9.4
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-O22 | Đang phát nhạc (island media hiện); mở video YouTube toàn màn hình, game; thoát ra | Island ẩn trong ≤ 0.5 s khi toàn màn hình, hiện lại khi thoát; chạm notch vẫn có hiệu ứng chạm (FR-O17) | [ ] |
+| MT-O23 | Island bật; cắm sạc, đổi âm lượng, phát nhạc — trên nền trắng và nền đen | Viên đen phủ kín camera, không thấy viền camera thật; vòng sáng chỉ ở ngoài, mép trong sắc (FR-O16) | [ ] |
+| MT-O24 | Bấm phím âm lượng lên / xuống liên tục | Bên phải icon loa là vòng tròn đầy / vơi theo âm lượng, đổi mượt (FR-O18) | [ ] |
+| MT-G17 | Như DM-58 | Chỉ hành động Totch chạy, không hành động hệ thống / app bên dưới (FR-G17) | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)

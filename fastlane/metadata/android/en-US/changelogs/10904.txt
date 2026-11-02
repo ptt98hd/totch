@@ -1,0 +1,4 @@
+* The Dynamic Island hides while an app is full screen (video, games), also media.
+* Cleaner island edge: the black covers the camera fully and the glow stays outside it.
+* With any gesture on, touches at the notch no longer reach the status bar, the app below or the Back gesture.
+* Volume is shown as a ring next to the speaker icon.

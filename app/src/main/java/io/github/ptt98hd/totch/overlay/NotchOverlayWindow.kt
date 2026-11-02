@@ -101,7 +101,7 @@ class NotchOverlayWindow(private val context: Context, private val hub: OverlayH
             setViewTreeSavedStateRegistryOwner(lifecycle)
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
             setOnApplyWindowInsetsListener { _, insets ->
-                hub.statusBarVisible.value = insets.isVisible(WindowInsets.Type.statusBars()) // OV-4
+                hub.windowStatusBar.value = insets.isVisible(WindowInsets.Type.statusBars()) // OV-4
                 onInsets()
                 insets
             }
@@ -120,7 +120,7 @@ class NotchOverlayWindow(private val context: Context, private val hub: OverlayH
         owner?.destroy()
         view = null
         owner = null
-        hub.statusBarVisible.value = true
+        hub.windowStatusBar.value = true
     }
 
     private fun params(f: OverlayFrame) = LayoutParams(

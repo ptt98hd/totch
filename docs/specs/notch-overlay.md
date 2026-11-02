@@ -1,4 +1,4 @@
-# Spec: Lớp hiển thị quanh notch (v1.9 — FR-O1…FR-O8; v1.9.1 — FR-O9…FR-O11, FR-U63; v1.9.3 — FR-O13…FR-O15, FR-R9)
+# Spec: Lớp hiển thị quanh notch (v1.9 — FR-O1…FR-O8; v1.9.1 — FR-O9…FR-O11, FR-U63; v1.9.3 — FR-O13…FR-O15, FR-R9; v1.9.4 — FR-O16…FR-O18)
 
 Yêu cầu: FR-O1…FR-O8 ([01 §22](../01-requirements.md)) · Module: `:core` (`io.github.ptt98hd.totch.core.overlay`: logic
 thuần) + `:app` (`overlay/`: overlay, nguồn dữ liệu Android)
@@ -21,7 +21,7 @@ Boolean` (`:core`) — không còn phụ thuộc hướng xoay (§8) và status 
 | OV-1 | `enabled = false` (công tắc Totch tắt) | `false` |
 | OV-2 | Trợ năng chưa kết nối | `false` |
 | OV-3 | ~~`rotation ≠ 0` → `false`~~ v1.9.3 (FR-O15): bỏ — vẽ ở mọi hướng, tại notch vật lý (§8) | |
-| OV-4 | status bar đang ẩn (app toàn màn hình: video, game). v1.9.3: `islandShown(content, statusBarVisible)` | ~~`false`~~ v1.9.3: island **hoạt động** (media, sạc, thông báo, âm thanh) và viền thông báo không vẽ — `islandShown` trả `Hidden`; hiệu ứng chạm (§4) **vẫn vẽ** vì do người dùng chạm. Status bar hiện → nội dung giữ nguyên |
+| OV-4 | status bar đang ẩn (app toàn màn hình: video, game; v1.9.4: đọc theo §10.2, SB-*). v1.9.3: `islandShown(content, statusBarVisible)` | ~~`false`~~ v1.9.3: island **hoạt động** (media, sạc, thông báo, âm thanh) và viền thông báo không vẽ — `islandShown` trả `Hidden`; hiệu ứng chạm (§4) **vẫn vẽ** vì do người dùng chạm. Status bar hiện → nội dung giữ nguyên |
 | OV-5 | `enabled`, Trợ năng, và **ít nhất một** trong `island`, `touchEffects` bật (v1.9.1: bỏ `notificationIndicator`, FR-O12) | `true`; cả hai tắt → `false` |
 
 Hình học dùng **vùng notch không padding** (`HighlightArea.notch`, notch-region §FR-R7) — vùng người dùng đã căn bằng
@@ -133,7 +133,7 @@ sealed interface IslandContent {
 | Media (FR-O2) | `MediaSessionManager` + `OnActiveSessionsChangedListener`, `MediaController.Callback` (phiên ưu tiên như MC-1…MC-3) | trái: ảnh bìa (bo tròn; không có → icon app), phải: sóng nhạc 3 vạch (đứng yên khi dừng) | mở rộng |
 | Thông báo (FR-O3) | `MediaListenerService.onNotificationPosted` (chỉ metadata) | trái: icon app, phải: chấm màu của thông báo | mở thanh thông báo, đánh dấu đã xem |
 | Sạc (FR-O4) | `ACTION_POWER_CONNECTED` + mức pin từ `BATTERY_CHANGED` (sticky) | trái: icon tia sét xanh lá, phải: `54%` | — |
-| Âm thanh (FR-O5) | `RINGER_MODE_CHANGED_ACTION`, `ACTION_INTERRUPTION_FILTER_CHANGED`, `android.media.VOLUME_CHANGED_ACTION` (luồng media / chuông) | trái: icon chế độ (chuông / rung / im lặng / trăng), phải: nhãn ngắn; âm lượng: icon loa + thanh tiến độ | — |
+| Âm thanh (FR-O5) | `RINGER_MODE_CHANGED_ACTION`, `ACTION_INTERRUPTION_FILTER_CHANGED`, `android.media.VOLUME_CHANGED_ACTION` (luồng media / chuông) | trái: icon chế độ (chuông / rung / im lặng / trăng), phải: nhãn ngắn; âm lượng: icon loa + ~~thanh tiến độ~~ v1.9.4: vòng tròn (§10.3) | — |
 
 Media mở rộng: island rộng gần hết màn hình, ảnh bìa 56 dp, tên bài + nghệ sĩ (một dòng, "…"), hàng nút
 **Trước · Phát/Dừng · Tiếp** (điều khiển `MediaController.transportControls` của phiên đang hiện).
@@ -409,5 +409,55 @@ cửa sổ mới đổi sang hướng hiện tại:
 ## 9. Ngoài phạm vi / giới hạn
 - ~~Không vẽ ở hướng ngang~~ (v1.9.3: vẽ ở mọi hướng, §8), trên màn hình khóa vẫn vẽ (overlay Trợ năng hiện trên keyguard).
 - Phát hiện "đã xem" dựa trên sự kiện cửa sổ của System UI: một số ROM không gửi → viền tắt khi thông báo bị gỡ.
+- v1.9.4: máy có trạng thái insets thô không phản ánh status bar ẩn → island vẫn hiện khi toàn màn hình (như 1.9.3).
 - `VOLUME_CHANGED_ACTION` không phải API công khai; máy không gửi → island âm lượng không hiện (chế độ âm vẫn chạy).
 - Không đọc nội dung thông báo (FR-O7): island thông báo chỉ có icon app.
+
+## 10. v1.9.4 (FR-O16…FR-O18)
+
+### 10.1 Viền gọn (FR-O16, IG-7)
+Bản ≤ 1.9.3: viên đen đúng bằng vùng notch và mờ dần cùng vòng sáng (`alpha = ring`), hai nét mềm của vòng sáng (10 dp,
+6 dp) nằm giữa đường viền nên lấn vào trong viên → mép trong nhòe, vùng notch hiệu chỉnh lệch một chút là thấy viền
+camera thật. Sửa:
+- Viên đen vẽ theo `IslandLayout.cover(shape, m)` — rộng hơn hình viên `BLEED = dp(2)` ở trái, phải, đáy (cạnh trên
+  giữ nguyên); hit test, vị trí icon vẫn theo hình viên.
+- Viên **đặc** (`alpha = 1`) mỗi khi vòng sáng > 0 hoặc đang có phản hồi chạm.
+- Vòng sáng (cả quầng tối của phản hồi chạm) chỉ vẽ **ngoài** viên: clip `Difference` theo hình bo góc của `cover`; nét sắc
+  2.5 dp đặt sát mép (`cover` nới ra 1.25 dp), mép trong của vòng sáng trùng mép viên.
+
+| ID | Given | Then |
+|---|---|---|
+| IG-7 | `cover(rect, m)` | `(rect.left − dp(2), rect.top, rect.right + dp(2), rect.bottom + dp(2))`, trái/phải kẹp trong `[0, screenWidthPx]`; ví dụ IG-6: `cover(notch)` = `(496,0,584,84)`, `cover((0,0,80,80))` = `(0,0,84,84)` |
+
+### 10.2 Nhận biết toàn màn hình (FR-O17, SB-*)
+Bản 1.9.3 đọc `WindowInsets.isVisible(statusBars())` của cửa sổ vẽ. Cửa sổ `TYPE_ACCESSIBILITY_OVERLAY` nằm **trên**
+status bar nên không nhận nguồn insets của nó; loại insets không có nguồn được coi là hiện → luôn `true`, island media
+vẫn hiện khi xem video toàn màn hình. Sửa: `NotchAccessibilityService` đọc
+`WindowManager.currentWindowMetrics.windowInsets.isVisible(statusBars())` (trạng thái insets thô của màn hình; lỗi →
+`true`) qua `StatusBarWatcher` (thuần, test được như `DisplayRefresher`):
+
+```kotlin
+class StatusBarWatcher(scope: CoroutineScope, read: () -> Boolean) {
+    val visible: StateFlow<Boolean>
+    var active: Boolean                 // island có nội dung (≠ Hidden) — chỉ lúc đó mới cần biết
+    fun refresh()                       // tín hiệu: insets cửa sổ vẽ đổi, đọc lại màn hình (§7)
+    companion object { const val POLL_MS = 500L }
+}
+```
+`statusBarVisible` của hub = cửa sổ vẽ báo hiện **và** `StatusBarWatcher.visible`.
+
+| ID | Given | Then |
+|---|---|---|
+| SB-1 | tạo watcher | `visible = true`, chưa đọc |
+| SB-2 | `active = true` | đọc ngay, rồi mỗi `POLL_MS`; giá trị đổi → `visible` cập nhật |
+| SB-3 | `active = false` | ngừng đọc, giữ giá trị cuối |
+| SB-4 | `refresh()` | đọc ngay (kể cả khi `active = false`) |
+| SB-5 | (thủ công MT-O22) YouTube toàn màn hình khi đang phát nhạc / video có media session | island media ẩn trong ≤ 0.5 s; thoát toàn màn hình → hiện lại |
+
+### 10.3 Âm lượng dạng vòng (FR-O18, VR-1)
+Island `Volume`: trái icon loa, phải **vòng tròn** đường kính = cỡ icon: vòng nền trắng alpha 0.25, cung trắng từ 12 giờ
+theo chiều kim đồng hồ, nét 3 dp, đầu tròn. Cung đổi mượt (tween 150 ms) khi âm lượng đổi liên tiếp (IS-14).
+
+| ID | Given | Then |
+|---|---|---|
+| VR-1 | `volumeSweep(fraction)` (`:core`) | `360 × fraction` kẹp `[0, 360]`; `0.5` → `180`, `-1` → `0`, `2` → `360` |

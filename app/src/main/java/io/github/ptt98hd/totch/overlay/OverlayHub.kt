@@ -24,10 +24,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
@@ -54,8 +57,15 @@ class OverlayHub(ownPackage: String, private val settings: StateFlow<Settings>) 
     private val _feedback = MutableStateFlow<TouchFeedback>(TouchFeedback.Idle)
     val feedback: StateFlow<TouchFeedback> = _feedback.asStateFlow()
 
-    /** The overlay window reports whether the status bar is shown (OV-4). */
-    val statusBarVisible = MutableStateFlow(true)
+    /** The overlay window's insets say the status bar is shown (OV-4); always true above it on most devices. */
+    val windowStatusBar = MutableStateFlow(true)
+
+    /** The display's insets say the status bar is shown (§10.2); set by the accessibility service. */
+    val screenStatusBar = MutableStateFlow(true)
+
+    /** OV-4: both say shown — a full-screen app hides the island's activities. */
+    val statusBarVisible: StateFlow<Boolean> =
+        combine(windowStatusBar, screenStatusBar) { w, s -> w && s }.stateIn(main, SharingStarted.Eagerly, true)
 
     /** Runs a media button of the expanded island; set by [MediaWatcher]. */
     @Volatile var mediaControl: (IslandControl) -> Unit = {}
