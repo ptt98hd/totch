@@ -9,6 +9,8 @@ enum class IslandStep { RING_IN, MORPH, RING_OUT }
 object IslandMotion {
     const val RING_IN_MS = 220
     const val RING_OUT_MS = 280
+    /** How small the island gets as it fades away (IM-6). */
+    const val VANISH_MIN_SCALE = 0.3f
 
     /** IM-1…IM-3: [ringLit] = the ring is fully lit; [shown] = there is something to show. */
     fun steps(ringLit: Boolean, shown: Boolean): List<IslandStep> = when {
@@ -20,4 +22,7 @@ object IslandMotion {
     /** IM-4, IM-5: the shape to grow to, or null when there is nothing to show (the island shrinks to the notch). */
     fun target(content: IslandContent, notch: Rect, m: IslandMetrics): Rect? =
         if (content == IslandContent.Hidden) null else IslandLayout.pill(content, notch, m)
+
+    /** IM-6: the size of the black pill and its ring while they vanish, [whole] = 1 (full) … 0 (gone). */
+    fun vanishScale(whole: Float): Float = VANISH_MIN_SCALE + (1 - VANISH_MIN_SCALE) * whole.coerceIn(0f, 1f)
 }

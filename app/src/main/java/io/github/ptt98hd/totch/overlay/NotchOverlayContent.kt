@@ -77,7 +77,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -185,12 +188,15 @@ private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
     val bottom = remember { Animatable(notch.bottom.toFloat()) }
     val corner = remember { Animatable(notch.height / 2f) }
     val ring = remember { Animatable(0f) }
+    // FR-O19 (IM-6): 1 = full size; goes to 0 with the ring as the island shrinks and fades away.
+    val whole = remember { Animatable(1f) }
     var grown by remember { mutableStateOf(false) }
     val currentFeedback by rememberUpdatedState(feedback)
     LaunchedEffect(shape, targetCorner, shown, pressing) {
         if (pressing) {
             // The ring comes in while the pill already follows the finger and the hold time (TF-6).
             grown = false
+            whole.snapTo(1f)
             if (ring.value < 1f) launch { ring.animateTo(1f, tween(IslandMotion.RING_IN_MS)) }
             while (true) {
                 withFrameMillis { }
@@ -208,7 +214,11 @@ private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
         if (!shown || IslandStep.RING_IN in steps || currentFeedback is TouchFeedback.Result) grown = false
         val shapeSpec = spring<Float>(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow)
         for (step in steps) when (step) {
-            IslandStep.RING_IN -> ring.animateTo(1f, tween(IslandMotion.RING_IN_MS))
+            IslandStep.RING_IN -> coroutineScope {
+                // Back from nothing: full size at once; caught while vanishing: grows back with the ring.
+                if (ring.value == 0f) whole.snapTo(1f) else launch { whole.animateTo(1f, tween(IslandMotion.RING_IN_MS)) }
+                ring.animateTo(1f, tween(IslandMotion.RING_IN_MS))
+            }
             IslandStep.MORPH -> coroutineScope {
                 launch { left.animateTo(shape.left.toFloat(), shapeSpec) }
                 launch { right.animateTo(shape.right.toFloat(), shapeSpec) }
@@ -216,7 +226,10 @@ private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
                 launch { corner.animateTo(targetCorner, shapeSpec) }
                 if (shown) launch { delay(BODY_DELAY_MS); grown = true }
             }
-            IslandStep.RING_OUT -> ring.animateTo(0f, tween(IslandMotion.RING_OUT_MS))
+            IslandStep.RING_OUT -> coroutineScope {
+                launch { whole.animateTo(0f, tween(IslandMotion.RING_OUT_MS)) }
+                ring.animateTo(0f, tween(IslandMotion.RING_OUT_MS))
+            }
         }
     }
     val islandRingColor = when {
@@ -259,11 +272,15 @@ private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
             val bleed = IslandLayout.bleed(m).toFloat()
             val coverLeft = maxOf(left.value - bleed, 0f)
             val coverRight = minOf(right.value + bleed, m.screenWidthPx.toFloat())
-            val origin = Offset(coverLeft, notch.top.toFloat())
-            val size = Size(coverRight - coverLeft, bottom.value + bleed - notch.top)
-            val radius = corner.value + bleed
+            val fullSize = Size(coverRight - coverLeft, bottom.value + bleed - notch.top)
+            // FR-O19 (IM-6): while vanishing, the black and its ring shrink both ways around their center and fade.
+            val vanish = if (touching) 1f else whole.value
+            val scale = IslandMotion.vanishScale(vanish)
+            val size = fullSize * scale
+            val origin = Offset(coverLeft, notch.top.toFloat()) + Offset((fullSize.width - size.width) / 2, (fullSize.height - size.height) / 2)
+            val radius = (corner.value + bleed) * scale
 
-            if (ring.value > 0f || touching) drawRoundRect(Color.Black, origin, size, CornerRadius(radius))
+            if (ring.value > 0f || touching) drawRoundRect(Color.Black, origin, size, CornerRadius(radius), alpha = vanish)
 
             // The ring sits just outside the black, and nothing of it is drawn over the black (sharp inner edge).
             val ringGap = 1.25f * density
@@ -345,10 +362,11 @@ private fun DrawScope.glowRing(color: Color, alpha: Float, origin: Offset, size:
 private fun ResultBody(result: TouchFeedback.Result, pill: Rect, frame: OverlayFrame) {
     val notch = frame.notch
     val icon = islandIconSize(pill, frame)
-    Slot(Rect(pill.left, pill.top, notch.left, pill.bottom)) {
+    val band = IslandLayout.band(pill, frame.metrics) // FR-O20 (IG-8)
+    Slot(Rect(band.left, band.top, notch.left, band.bottom)) {
         Icon(result.gesture.icon, null, Modifier.size(icon), tint = Color.White)
     }
-    Slot(Rect(notch.right, pill.top, pill.right, pill.bottom)) {
+    Slot(Rect(notch.right, band.top, band.right, band.bottom)) {
         val app = when (val a = result.action) {
             is Action.LaunchApp -> a.packageName
             is Action.LaunchShortcut -> a.packageName
@@ -383,7 +401,9 @@ private fun IslandBody(
     }
     val icon = islandIconSize(pill, frame)
     // Left wing: between the pill's left end and the notch; right wing: after the notch.
-    Slot(Rect(pill.left, pill.top, notch.left, pill.bottom)) {
+    // FR-O20 (IG-8): both centered on the visible black, which reaches past the pill at the bottom.
+    val band = IslandLayout.band(pill, frame.metrics)
+    Slot(Rect(band.left, band.top, notch.left, band.bottom)) {
         when (content) {
             is IslandContent.Media -> MediaArt(hub, content.info.packageName, icon, RoundedCornerShape(6.dp))
             is IslandContent.Notification -> rememberAppIcon(content.packageName)?.let { AppIconImage(it, icon) }
@@ -393,7 +413,7 @@ private fun IslandBody(
             IslandContent.Hidden -> Unit
         }
     }
-    Slot(Rect(notch.right, pill.top, pill.right, pill.bottom)) {
+    Slot(Rect(notch.right, band.top, band.right, band.bottom)) {
         when (content) {
             is IslandContent.Media -> Equalizer(content.info.playing, accent, icon)
             is IslandContent.Notification -> Box(Modifier.size(icon / 2.5f).background(dotColor, CircleShape))
@@ -523,6 +543,11 @@ private fun PillText(text: String, color: Color) {
         fontWeight = FontWeight.SemiBold,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
+        // FR-O20: no font padding and a trimmed line, so the glyphs sit in the middle of the slot.
+        style = TextStyle(
+            platformStyle = PlatformTextStyle(includeFontPadding = false),
+            lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),
+        ),
         modifier = Modifier.padding(horizontal = 4.dp),
     )
 }

@@ -43,6 +43,14 @@ class IslandLayoutTest {
         assertEquals(Rect(996, 0, 1080, 84), IslandLayout.cover(Rect(1000, 0, 1080, 80), m))
     }
 
+    @Test fun `IG-8 the content band spans the visible black vertically`() {
+        assertEquals(Rect(500, 0, 580, 84), IslandLayout.band(notch, m))
+        val cover = IslandLayout.cover(notch, m)
+        val band = IslandLayout.band(notch, m)
+        assertEquals(cover.top, band.top)
+        assertEquals(cover.bottom, band.bottom)
+    }
+
     @Test fun `IG-5 hit test`() {
         assertEquals(IslandHit.Control(IslandControl.NEXT), IslandLayout.hit(expanded, notch, m, 700f, 300f))
         assertEquals(IslandHit.Body, IslandLayout.hit(expanded, notch, m, 100f, 100f))

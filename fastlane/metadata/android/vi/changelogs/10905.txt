@@ -1,0 +1,2 @@
+* Dynamic Island biến mất mượt: sau khi thu về notch, island thu nhỏ cả chiều ngang lẫn chiều dọc và mờ dần.
+* Icon và chữ trong island được căn giữa theo chiều dọc.

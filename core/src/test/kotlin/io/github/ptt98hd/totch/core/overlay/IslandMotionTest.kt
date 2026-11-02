@@ -31,4 +31,12 @@ class IslandMotionTest {
     @Test fun `IM-5 nothing to show`() {
         assertNull(IslandMotion.target(IslandContent.Hidden, notch, m))
     }
+
+    @Test fun `IM-6 the island shrinks both ways as it vanishes`() {
+        assertEquals(1f, IslandMotion.vanishScale(1f))
+        assertEquals(0.3f, IslandMotion.vanishScale(0f))
+        assertEquals(0.65f, IslandMotion.vanishScale(0.5f), 1e-6f)
+        assertEquals(0.3f, IslandMotion.vanishScale(-1f))
+        assertEquals(1f, IslandMotion.vanishScale(2f))
+    }
 }

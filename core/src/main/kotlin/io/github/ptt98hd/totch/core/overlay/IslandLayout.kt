@@ -47,6 +47,9 @@ object IslandLayout {
         return Rect(maxOf(shape.left - b, 0), shape.top, minOf(shape.right + b, m.screenWidthPx), shape.bottom + b)
     }
 
+    /** IG-8: where the content of [shape] is laid out, vertically as tall as its [cover] so it sits in the visible black. */
+    fun band(shape: Rect, m: IslandMetrics): Rect = Rect(shape.left, shape.top, shape.right, shape.bottom + bleed(m))
+
     /** IG-4: the media buttons along the bottom of an expanded [pill]. */
     fun controls(pill: Rect, m: IslandMetrics): Map<IslandControl, Rect> {
         val size = m.dp(48)
