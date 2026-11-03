@@ -40,7 +40,7 @@ class NotchRegionResolverTest {
     }
 
     @Test fun `NR-6 manual region overrides cutout`() {
-        val m = ManualRegion(centerXFraction = 0.5f, widthPx = 200, heightPx = 60)
+        val m = ManualRegion(centerXPx = 500, widthPx = 200, heightPx = 60)
         assertEquals(Rect(400, 0, 600, 60), resolve(cutout = single, manual = m, width = 1000))
     }
 
@@ -50,23 +50,28 @@ class NotchRegionResolverTest {
     }
 
     @Test fun `NR-8 empty result is null`() {
-        assertNull(resolve(manual = ManualRegion(0.5f, 0, 60)))
-        assertNull(resolve(manual = ManualRegion(0.5f, 100, 0)))
+        assertNull(resolve(manual = ManualRegion(540, 0, 60)))
+        assertNull(resolve(manual = ManualRegion(540, 100, 0)))
         assertNull(resolve(cutout = null, statusBar = 0))
-        assertNull(resolve(manual = ManualRegion(2f, 100, 60), width = 0))
+        assertNull(resolve(manual = ManualRegion(2000, 100, 60), width = 0))
     }
 
-    @Test fun `NR-9 manual fraction is clamped`() {
-        assertEquals(Rect(0, 0, 100, 60), resolve(manual = ManualRegion(-1f, 200, 60), width = 1000))
-        assertEquals(Rect(900, 0, 1000, 60), resolve(manual = ManualRegion(3f, 200, 60), width = 1000))
+    @Test fun `NR-21 manual center is clamped to the screen`() {
+        assertEquals(Rect(0, 0, 100, 60), resolve(manual = ManualRegion(-20, 200, 60), width = 1000))
+        assertEquals(Rect(950, 0, 1000, 60), resolve(manual = ManualRegion(5000, 100, 60), width = 1000))
+    }
+
+    @Test fun `NR-20 manual region in px, odd widths keep their size`() {
+        assertEquals(Rect(400, 0, 600, 60), resolve(manual = ManualRegion(500, 200, 60), width = 1000))
+        assertEquals(Rect(480, 0, 521, 60), resolve(manual = ManualRegion(500, 41, 60), width = 1000))
     }
 
     @Test fun `NR-10 manual vertical position offsets the region`() {
-        assertEquals(Rect(400, 40, 600, 100), resolve(manual = ManualRegion(0.5f, 200, 60, topPx = 40), width = 1000))
+        assertEquals(Rect(400, 40, 600, 100), resolve(manual = ManualRegion(500, 200, 60, topPx = 40), width = 1000))
     }
 
     @Test fun `NR-11 padding also grows the top of an offset region, clamped to 0`() {
-        val manual = ManualRegion(0.5f, 200, 60, topPx = 40)
+        val manual = ManualRegion(500, 200, 60, topPx = 40)
         assertEquals(Rect(390, 30, 610, 110), resolve(manual = manual, padding = 10, width = 1000))
         assertEquals(Rect(350, 0, 650, 150), resolve(manual = manual, padding = 50, width = 1000))
     }

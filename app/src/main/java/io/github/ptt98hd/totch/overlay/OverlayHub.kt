@@ -15,6 +15,7 @@ import io.github.ptt98hd.totch.core.overlay.NotificationIndicator
 import io.github.ptt98hd.totch.core.overlay.NotificationMeta
 import io.github.ptt98hd.totch.core.overlay.TouchFeedback
 import io.github.ptt98hd.totch.core.overlay.TouchFeedbackController
+import io.github.ptt98hd.totch.core.settings.DOUBLE_TAP_MS
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.settings.activeIslandActivities
 import io.github.ptt98hd.totch.engine.EngineObserver
@@ -156,7 +157,7 @@ class OverlayHub(ownPackage: String, private val settings: StateFlow<Settings>) 
     override fun onMove(x: Float, y: Float) = onTouch { touch.onMove(x, y) }
 
     override fun onRelease() = onTouch {
-        touch.onRelease(now(), settings.value.doubleTapMs + TouchFeedbackController.WAIT_MARGIN_MS)
+        touch.onRelease(now(), DOUBLE_TAP_MS + TouchFeedbackController.WAIT_MARGIN_MS)
     }
 
     override fun onGesture(g: Gesture, action: Action) = onTouch { touch.onGesture(g, action, now()) }

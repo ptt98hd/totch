@@ -4,6 +4,8 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.edit
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
+import io.github.ptt98hd.totch.core.settings.LegacyDisplay
+import io.github.ptt98hd.totch.core.settings.NotchRegionPx
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,11 +37,10 @@ class DataStoreSettingsRepositoryTest {
 
     @Test
     fun `FR-S4 update always stores sanitized settings`() = runBlocking {
-        repo.update { it.copy(enabled = true, doubleTapMs = 10, paddingDp = 1000) }
+        repo.update { it.copy(enabled = true, paddingPx = 1000) }
         val stored = repo.settings.first()
         assertEquals(true, stored.enabled)
-        assertEquals(100, stored.doubleTapMs)
-        assertEquals(10, stored.paddingDp)
+        assertEquals(60, stored.paddingPx)
         assertEquals(stored, stored.sanitized())
     }
 
@@ -53,5 +54,18 @@ class DataStoreSettingsRepositoryTest {
     fun `ST-5 corrupt json falls back to defaults`() = runBlocking {
         store.edit { it[DataStoreSettingsRepository.KEY] = "{not json" }
         assertEquals(Settings(), repo.settings.first())
+    }
+
+    @Test
+    fun `ST-43 dp values of 1_9_5 are read in px and written with the new keys`() = runBlocking {
+        store.edit { it[DataStoreSettingsRepository.KEY] = """{"paddingDp":8,"manualRegion":{"centerXFraction":0.5,"widthDp":30,"heightDp":12,"topDp":4}}""" }
+        val legacyRepo = DataStoreSettingsRepository(store) { LegacyDisplay(2.75f, 1080) }
+        val read = legacyRepo.settings.first()
+        assertEquals(22, read.paddingPx)
+        assertEquals(NotchRegionPx(540, 83, 33, 11), read.notchRegion)
+        legacyRepo.update { it.copy(enabled = true) }
+        // once written, a different display no longer changes anything
+        val later = DataStoreSettingsRepository(store) { LegacyDisplay(4f, 1440) }.settings.first()
+        assertEquals(read.copy(enabled = true), later)
     }
 }

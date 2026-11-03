@@ -2,7 +2,7 @@ package io.github.ptt98hd.totch
 
 import io.github.ptt98hd.totch.core.model.IntentTarget
 import io.github.ptt98hd.totch.core.model.Rect
-import io.github.ptt98hd.totch.core.settings.ManualRegionDp
+import io.github.ptt98hd.totch.core.settings.NotchRegionPx
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.core.update.Release
 import io.github.ptt98hd.totch.update.UpdateController
@@ -178,6 +178,8 @@ interface TouchArea {
     val area: StateFlow<HighlightArea?>
     /** Area the given (possibly unsaved draft) settings would produce on the current display. */
     fun areaFor(settings: Settings): HighlightArea?
-    /** The automatically detected region in dp, shown while no manual region is set (FR-R5); null when rotated. */
-    val detectedRegion: StateFlow<ManualRegionDp?>
+    /** The automatically detected region in px, shown while no manual region is set (FR-R5); null when rotated. */
+    val detectedRegion: StateFlow<NotchRegionPx?>
+    /** Width of the display in its natural orientation: the scale of the horizontal position slider (UI-86). */
+    val screenWidthPx: StateFlow<Int>
 }

@@ -75,6 +75,21 @@ development" / "Ủng hộ phát triển Totch", chevron (›).
   liền; `touch` = vùng có padding, vẽ nền `primary` 12% + **viền nét đứt** quanh notch. Engine vẫn nhận chạm trong cả
   `touch`.
 - Bỏ nút / dialog "Preview touch area" và overlay preview qua accessibility.
+- v1.9.6 (FR-U65): viền **ôm khít bên ngoài** notch. Nét vẽ của `drawRoundRect(style = Stroke)` nằm giữa đường viền nên
+  một nửa nét lấn vào notch và bị lỗ camera che khi căn vừa khít. Sửa: viền liền vẽ trên `outlineOutside(notch, stroke)`
+  (notch nới ra `stroke / 2` mỗi phía, bo góc nới theo) → **mép trong của nét = mép notch**; viền nét đứt vẽ trên
+  `outlineInside(touch, stroke)` (thu vào `stroke / 2`) → mép ngoài của nét = mép vùng chạm. Phần trong viền liền là
+  notch (rộng × cao), phần ngoài viền liền tới mép vùng chạm là padding. Nét 1.5 dp.
+
+```kotlin
+data class Outline(val left: Float, val top: Float, val right: Float, val bottom: Float, val corner: Float)
+fun outlineOutside(r: Rect, stroke: Float): Outline   // ui/common/NotchHighlight.kt
+fun outlineInside(r: Rect, stroke: Float): Outline
+```
+
+| ID | Tiêu chí |
+|---|---|
+| UI-84 | `outlineOutside((100,0,140,40), 4f)` = `(98,-2,142,42)`, `corner = 22` (= nửa cạnh ngắn của notch + 2); `outlineInside((90,0,150,50), 4f)` = `(92,2,148,48)`, `corner = 23`; cạnh trong âm kẹp về 0 (`outlineInside((0,0,2,2), 8f)` → rộng 0, `corner` 0) |
 
 ## 3. Màn hình
 
@@ -299,6 +314,26 @@ chuyển sang Settings, bỏ section Phản hồi):
 1. **Độ nhạy**: Double tap, Long press, Swipe.
 2. **Vị trí**: Horizontal (%), Vertical (dp, tính từ cạnh trên).
 3. **Kích thước**: Width (dp), Height (dp), Padding (dp).
+
+v1.9.6 (FR-G18, FR-R10): **bỏ section Độ nhạy**; mọi slider vùng notch đổi sang **px**:
+1. **Vị trí**: Horizontal (px, tâm notch tính từ cạnh trái), Vertical (px, cạnh trên).
+2. **Kích thước**: Width (px), Height (px), Padding (px).
+
+| Slider | Thang | Nấc (kéo) | − / + |
+|---|---|---|---|
+| Horizontal | 0 – `screenWidthPx` px | 5 | 1 |
+| Vertical | 0–300 px | 5 | 1 |
+| Width | 4–600 px | 5 | 1 |
+| Height | 4–300 px | 5 | 1 |
+| Padding | 0–60 px | 5 | 1 |
+
+Đơn vị hiển thị `%d px` (`unit_px`). `NotchSettingsUiState.area = notchRegion ?: detectedRegion ?: NotchRegionPx(screenWidthPx / 2, 80, 80, 0)`.
+Thay bảng bên dưới và UI-30, UI-33, UI-34 phần độ nhạy / dp:
+
+| ID | Tiêu chí |
+|---|---|
+| UI-85 | `NotchSetting` = AREA_X, AREA_Y, AREA_WIDTH, AREA_HEIGHT, PADDING (bỏ DOUBLE_TAP, LONG_PRESS, SWIPE_DISTANCE); reset / `isDefault` như UI-30, UI-31 với `notchRegion` và `paddingPx` (mặc định 24) |
+| UI-86 | `setArea(region)` lưu `notchRegion` (bằng vùng tự phát hiện → `null`); `setPaddingPx(v)` lưu `paddingPx`; `state.screenWidthPx` theo `TouchArea.screenWidthPx` |
 
 v1.6 (FR-U28): các slider trong một section ngăn bằng `RowDivider` (thụt lề hai bên như Settings).
 

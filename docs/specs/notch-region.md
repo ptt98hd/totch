@@ -70,3 +70,24 @@ Cutout tự nhiên = các bounding rect của cutout (mọi cạnh) sau quy đ�
 | NR-17 | `engineRegion`: rotation 1, `landscapeGestures=false` → `null`; `true` → bằng `notchRegion` của snapshot dọc tương ứng |
 
 v1.9.3 (FR-R9, FR-O15): chiều ngược lại — `fromNatural` (rect) và `pointToNatural` (điểm) — xem [notch-overlay §8](notch-overlay.md) (NR-18, NR-19).
+
+## Đơn vị px (v1.9.6 — FR-R10)
+Notch là vật thể cố định trên tấm nền, nên vùng thủ công và padding lưu bằng **px của màn hình** (hướng dọc tự nhiên),
+không qua `density` — đổi *Kích thước hiển thị* không làm lệch vùng (settings §4). `ManualRegion` của resolver đổi tâm
+ngang từ tỉ lệ sang px:
+
+`ManualRegion(centerXPx, widthPx, heightPx, topPx = 0)` → `left = centerXPx − widthPx / 2` (chia nguyên), `right = left + widthPx`.
+`centerXPx` được kẹp vào `[0, screenWidthPx]`. Thay ghi chú "manual" ở trên, NR-6, NR-9, NR-10, NR-11.
+
+`notchRegion(settings, display)` dùng thẳng `settings.notchRegion` và `settings.paddingPx`; `highlightArea` lấy notch bằng
+`paddingPx = 0`. `detectedRegionPx(display): NotchRegionPx?` thay `detectedRegionDp`: `centerXPx = (left + right) / 2`
+(chia nguyên), `widthPx = width`, `heightPx = height`, `topPx = top` — dựng lại đúng rect phát hiện (kể cả độ rộng lẻ).
+`TouchArea.detectedRegion: StateFlow<NotchRegionPx?>`; thêm `TouchArea.screenWidthPx: StateFlow<Int>` = chiều rộng hướng
+tự nhiên (thang của slider vị trí ngang).
+
+| ID | Given | Then |
+|---|---|---|
+| NR-20 | manual `(centerXPx = 500, width = 200, height = 60)`, màn 1000, padding 0 | `(400,0,600,60)`; width 41 → `(480,0,521,60)`; `topPx = 40` → `(400,40,600,100)`; padding 10 → `(390,30,610,110)` |
+| NR-21 | manual `centerXPx = 5000`, màn 1000, width 100 | tâm kẹp về 1000: `(950,0,1000,…)` (phải kẹp vào màn); `centerXPx = −20` → tâm 0 |
+| NR-22 | `notchRegion(Settings(paddingPx = 8, notchRegion = null))`, cutout `(500,0,580,80)` | `(492,0,588,88)` — padding px, không nhân `density` |
+| NR-23 | `detectedRegionPx`: cutout `(500,0,580,80)`, màn 1080 | `NotchRegionPx(540, 80, 80, 0)`; cutout `(500,0,581,80)` → `NotchRegionPx(540, 81, 80, 0)` và `resolve` của nó trả lại đúng `(500,0,581,80)`; không cutout, màn 1080, status bar 90 → `NotchRegionPx(540, 216, 90, 0)`; xoay → `null`. Thay NR-12…NR-14 |

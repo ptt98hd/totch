@@ -11,44 +11,35 @@ class IslandLayoutTest {
     private val compact = IslandContent.Media(media, expanded = false)
     private val expanded = IslandContent.Media(media, expanded = true)
 
-    @Test fun `IG-1 hidden is the notch`() {
-        assertEquals(notch, IslandLayout.pill(IslandContent.Hidden, notch, m))
+    @Test fun `IG-10 rest is the notch in a black rim`() {
+        assertEquals(Rect(492, 0, 588, 88), IslandLayout.rest(notch, m))
+        assertEquals(Rect(512, 22, 568, 78), IslandLayout.rest(Rect(520, 30, 560, 70), m))
+        assertEquals(Rect(512, 0, 568, 53), IslandLayout.rest(Rect(525, 10, 555, 40), m))
+        assertEquals(Rect(0, 0, 48, 48), IslandLayout.rest(Rect(0, 0, 40, 40), m))
     }
 
-    @Test fun `IG-2 compact contents grow by a wing on each side`() {
+    @Test fun `IG-11 hidden is the rest shape`() {
+        assertEquals(Rect(492, 0, 588, 88), IslandLayout.pill(IslandContent.Hidden, notch, m))
+    }
+
+    @Test fun `IG-12 compact contents grow the rest shape by a wing on each side`() {
         listOf(compact, IslandContent.Charging(5), IslandContent.Notification("p"), IslandContent.Volume(1f))
-            .forEach { assertEquals(Rect(388, 0, 692, 80), IslandLayout.pill(it, notch, m)) }
-        assertEquals(Rect(340, 0, 740, 80), IslandLayout.pill(IslandContent.Sound(SoundMode.RING), notch, m))
+            .forEach { assertEquals(Rect(372, 0, 708, 88), IslandLayout.pill(it, notch, m)) }
+        assertEquals(Rect(324, 0, 756, 88), IslandLayout.pill(IslandContent.Sound(SoundMode.RING), notch, m))
     }
 
-    @Test fun `IG-2 compact is clamped to the screen margins`() {
-        assertEquals(Rect(16, 0, 212, 80), IslandLayout.pill(compact, Rect(20, 0, 100, 80), m))
-        assertEquals(Rect(868, 0, 1064, 80), IslandLayout.pill(compact, Rect(980, 0, 1060, 80), m))
+    @Test fun `IG-12 compact is clamped to the screen margins`() {
+        assertEquals(Rect(16, 0, 228, 88), IslandLayout.pill(compact, Rect(20, 0, 100, 80), m))
+        assertEquals(Rect(852, 0, 1064, 88), IslandLayout.pill(compact, Rect(980, 0, 1060, 80), m))
     }
 
-    @Test fun `IG-3 expanded media`() {
-        assertEquals(Rect(24, 0, 1056, 352), IslandLayout.pill(expanded, notch, m))
-    }
-
-    @Test fun `IG-4 and IG-6 controls`() {
-        val controls = IslandLayout.controls(IslandLayout.pill(expanded, notch, m), m)
-        assertEquals(Rect(492, 232, 588, 328), controls[IslandControl.PLAY_PAUSE])
-        assertEquals(Rect(348, 232, 444, 328), controls[IslandControl.PREVIOUS])
-        assertEquals(Rect(636, 232, 732, 328), controls[IslandControl.NEXT])
-    }
-
-    @Test fun `IG-7 cover bleeds past the shape on the sides and bottom`() {
-        assertEquals(Rect(496, 0, 584, 84), IslandLayout.cover(notch, m))
-        assertEquals(Rect(0, 0, 84, 84), IslandLayout.cover(Rect(0, 0, 80, 80), m))
-        assertEquals(Rect(996, 0, 1080, 84), IslandLayout.cover(Rect(1000, 0, 1080, 80), m))
-    }
-
-    @Test fun `IG-8 the content band spans the visible black vertically`() {
-        assertEquals(Rect(500, 0, 580, 84), IslandLayout.band(notch, m))
-        val cover = IslandLayout.cover(notch, m)
-        val band = IslandLayout.band(notch, m)
-        assertEquals(cover.top, band.top)
-        assertEquals(cover.bottom, band.bottom)
+    @Test fun `IG-13 expanded media and its controls`() {
+        val pill = IslandLayout.pill(expanded, notch, m)
+        assertEquals(Rect(24, 0, 1056, 360), pill)
+        val controls = IslandLayout.controls(pill, m)
+        assertEquals(Rect(492, 240, 588, 336), controls[IslandControl.PLAY_PAUSE])
+        assertEquals(Rect(348, 240, 444, 336), controls[IslandControl.PREVIOUS])
+        assertEquals(Rect(636, 240, 732, 336), controls[IslandControl.NEXT])
     }
 
     @Test fun `IG-5 hit test`() {

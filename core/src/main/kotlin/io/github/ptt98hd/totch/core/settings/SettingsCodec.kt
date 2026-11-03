@@ -9,7 +9,9 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.jsonObject
+import kotlin.math.roundToInt
 
 /** JSON persistence for [Settings]. Decoding never throws: any error yields defaults. */
 object SettingsCodec {
@@ -20,10 +22,11 @@ object SettingsCodec {
 
     fun encode(s: Settings): String = json.encodeToString(Settings.serializer(), s)
 
-    fun decode(json: String): Settings =
+    /** [legacy]: the display used to convert values saved in dp by 1.9.5 and older (ST-43). */
+    fun decode(json: String, legacy: LegacyDisplay? = null): Settings =
         runCatching {
             val tree = this.json.parseToJsonElement(json).withoutVibrate()
-            this.json.decodeFromJsonElement(Settings.serializer(), tree).migrated(tree).withIndicator(tree)
+            this.json.decodeFromJsonElement(Settings.serializer(), tree).migrated(tree).withIndicator(tree).inPixels(tree, legacy)
         }
             .getOrDefault(Settings())
             .sanitized()
@@ -48,6 +51,28 @@ object SettingsCodec {
             island -> copy(islandActivities = islandActivities + IslandActivity.NOTIFICATIONS)
             else -> copy(island = true, islandActivities = setOf(IslandActivity.NOTIFICATIONS))
         }
+    }
+
+    /** ST-43: up to 1.9.5 the padding and manual region were stored in dp and the center as a fraction of the width. */
+    private fun Settings.inPixels(tree: JsonElement, legacy: LegacyDisplay?): Settings {
+        val obj = tree.jsonObject
+        if (legacy == null) return this
+        fun px(dp: Float) = (dp * legacy.density).roundToInt()
+        val padding = (obj["paddingDp"] as? JsonPrimitive)?.floatOrNull
+            ?.takeIf { "paddingPx" !in obj }
+            ?.let(::px)
+        val region = (obj["manualRegion"] as? JsonObject)
+            ?.takeIf { "notchRegion" !in obj && legacy.naturalWidthPx > 0 }
+            ?.let { r ->
+                fun field(name: String, default: Float) = (r[name] as? JsonPrimitive)?.floatOrNull ?: default
+                NotchRegionPx(
+                    centerXPx = (field("centerXFraction", 0.5f).coerceIn(0f, 1f) * legacy.naturalWidthPx).roundToInt(),
+                    widthPx = px(field("widthDp", 80f)),
+                    heightPx = px(field("heightDp", 32f)),
+                    topPx = px(field("topDp", 0f)),
+                )
+            }
+        return copy(paddingPx = padding ?: paddingPx, notchRegion = region ?: notchRegion)
     }
 
     /**

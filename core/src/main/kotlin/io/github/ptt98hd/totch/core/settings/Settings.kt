@@ -32,14 +32,20 @@ enum class UpdateInterval(val days: Int) {
     @SerialName("monthly") MONTHLY(30),
 }
 
-/** Manual notch region override in dp (converted to px by the app); [topDp] is the vertical position (FR-R6). */
+/**
+ * Manual physical notch region in pixels of the natural (portrait) display (FR-R10): [centerXPx] is its horizontal
+ * center, [topPx] the distance of its top edge from the top of the screen.
+ */
 @Serializable
-data class ManualRegionDp(
-    val centerXFraction: Float = 0.5f,
-    val widthDp: Int = 80,
-    val heightDp: Int = 32,
-    val topDp: Int = 0,
+data class NotchRegionPx(
+    val centerXPx: Int,
+    val widthPx: Int,
+    val heightPx: Int,
+    val topPx: Int = 0,
 )
+
+/** The display when settings saved in dp (≤ 1.9.5) are read, to convert them to pixels (ST-43). */
+data class LegacyDisplay(val density: Float, val naturalWidthPx: Int)
 
 /** Default bindings per FR-S2 (v1.8): every gesture starts not set, so all are off on first launch. */
 val DefaultBindings: Map<Gesture, Action> = Gesture.entries.associateWith { Action.None }
@@ -61,15 +67,21 @@ fun Gesture.isAvailable(canBlockTouches: Boolean): Boolean = canBlockTouches || 
 /** Touch slop used by [toGestureConfig], in dp. */
 const val TOUCH_SLOP_DP: Int = 12
 
+/** Fixed gesture timings and swipe distance since the sensitivity settings were removed (FR-G18). */
+const val DOUBLE_TAP_MS: Long = 300
+const val LONG_PRESS_MS: Long = 300
+const val SWIPE_MIN_DISTANCE_DP: Int = 40
+
+const val DEFAULT_PADDING_PX: Int = 24
+
 @Serializable
 data class Settings(
     val enabled: Boolean = false,
     val bindings: Map<Gesture, Action> = DefaultBindings,
-    val doubleTapMs: Long = 300,
-    val longPressMs: Long = 300,
-    val swipeMinDistanceDp: Int = 40,
-    val paddingDp: Int = 8,
-    val manualRegion: ManualRegionDp? = null,
+    /** Touch margin around the notch, in pixels (FR-R7, FR-R10). */
+    val paddingPx: Int = DEFAULT_PADDING_PX,
+    /** Manual notch region; `null` = detected (FR-R5). */
+    val notchRegion: NotchRegionPx? = null,
     val haptics: Boolean = true,
     val theme: ThemeMode = ThemeMode.SYSTEM,
     val amoledBlack: Boolean = false,
@@ -103,19 +115,16 @@ data class Settings(
     /** Ripple, glow and squish when the notch is touched (FR-O6). */
     val touchEffects: Boolean = false,
 ) {
-    /** Clamps values to FR-S4 limits and ensures every [Gesture] has a binding. */
+    /** Clamps values to FR-S4 limits (ST-41) and ensures every [Gesture] has a binding. */
     fun sanitized(): Settings = copy(
         bindings = Gesture.entries.associateWith { bindings[it] ?: Action.None },
-        doubleTapMs = doubleTapMs.coerceIn(100, 1000),
-        longPressMs = longPressMs.coerceIn(100, 1000),
-        swipeMinDistanceDp = swipeMinDistanceDp.coerceIn(16, 200),
-        paddingDp = paddingDp.coerceIn(1, 10),
-        manualRegion = manualRegion?.run {
-            ManualRegionDp(
-                centerXFraction = if (centerXFraction.isNaN()) 0.5f else centerXFraction.coerceIn(0f, 1f),
-                widthDp = widthDp.coerceIn(8, 400),
-                heightDp = heightDp.coerceIn(8, 100),
-                topDp = topDp.coerceIn(0, 100),
+        paddingPx = paddingPx.coerceIn(0, 60),
+        notchRegion = notchRegion?.run {
+            NotchRegionPx(
+                centerXPx = centerXPx.coerceIn(0, 10000),
+                widthPx = widthPx.coerceIn(4, 600),
+                heightPx = heightPx.coerceIn(4, 300),
+                topPx = topPx.coerceIn(0, 300),
             )
         },
     )
@@ -123,6 +132,10 @@ data class Settings(
 
 /** ST-38: what the island may show; nothing while it is switched off. */
 fun Settings.activeIslandActivities(): Set<IslandActivity> = if (island) islandActivities else emptySet()
+
+/** FR-A24 (AD-14): the island shows the volume, so changing it needs no system volume panel. */
+fun Settings.islandShowsVolume(accessibility: Boolean, statusBarVisible: Boolean): Boolean =
+    enabled && accessibility && statusBarVisible && IslandActivity.SOUND in activeIslandActivities()
 
 fun Settings.actionFor(g: Gesture): Action = bindings[g] ?: Action.None
 
@@ -150,10 +163,10 @@ fun Settings.withBinding(g: Gesture, action: Action): Settings =
 fun Settings.toGestureConfig(density: Float, canBlockTouches: Boolean = false): GestureConfig {
     val bound = Gesture.entries.filterTo(mutableSetOf()) { isGestureOn(it, canBlockTouches) }
     return GestureConfig(
-        doubleTapMs = doubleTapMs,
-        longPressMs = longPressMs,
+        doubleTapMs = DOUBLE_TAP_MS,
+        longPressMs = LONG_PRESS_MS,
         touchSlopPx = TOUCH_SLOP_DP * density,
-        swipeMinDistancePx = swipeMinDistanceDp * density,
+        swipeMinDistancePx = SWIPE_MIN_DISTANCE_DP * density,
         doubleTapEnabled = Gesture.DOUBLE_TAP in bound,
         holdSwipes = SwipeHoldGestures intersect bound,
     )

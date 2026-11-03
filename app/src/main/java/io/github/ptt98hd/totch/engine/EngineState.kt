@@ -6,7 +6,7 @@ import io.github.ptt98hd.totch.core.model.Rect
 import io.github.ptt98hd.totch.core.region.Cutout
 import io.github.ptt98hd.totch.core.region.ManualRegion
 import io.github.ptt98hd.totch.core.region.NotchRegionResolver
-import io.github.ptt98hd.totch.core.settings.ManualRegionDp
+import io.github.ptt98hd.totch.core.settings.NotchRegionPx
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlin.math.roundToInt
 
@@ -84,13 +84,12 @@ fun pointToNatural(x: Float, y: Float, rotation: Int, widthPx: Int, heightPx: In
 
 /** Notch touch region for [settings] on [display], or `null` when inactive (FR-R4). */
 fun notchRegion(settings: Settings, display: DisplaySnapshot): Rect? {
-    fun px(dp: Int) = (dp * display.density).roundToInt()
     return NotchRegionResolver.resolve(
         screenWidthPx = display.widthPx,
         statusBarHeightPx = display.statusBarPx,
         cutout = Cutout(display.cutoutTop),
-        manual = settings.manualRegion?.let { ManualRegion(it.centerXFraction, px(it.widthDp), px(it.heightDp), px(it.topDp)) },
-        paddingPx = px(settings.paddingDp),
+        manual = settings.notchRegion?.let { ManualRegion(it.centerXPx, it.widthPx, it.heightPx, it.topPx) }, // FR-R10
+        paddingPx = settings.paddingPx,
         rotation = display.rotation,
     )
 }
@@ -102,8 +101,8 @@ fun engineRegion(settings: Settings, display: DisplaySnapshot): Rect? = when {
     else -> null
 }
 
-/** The automatically detected region (cutout or default, no padding) in dp, or `null` when rotated (NR-12). */
-fun detectedRegionDp(display: DisplaySnapshot): ManualRegionDp? {
+/** The automatically detected region (cutout or default, no padding) in px, or `null` when rotated (NR-23). */
+fun detectedRegionPx(display: DisplaySnapshot): NotchRegionPx? {
     val rect = NotchRegionResolver.resolve(
         screenWidthPx = display.widthPx,
         statusBarHeightPx = display.statusBarPx,
@@ -112,11 +111,7 @@ fun detectedRegionDp(display: DisplaySnapshot): ManualRegionDp? {
         paddingPx = 0,
         rotation = display.rotation,
     ) ?: return null
-    return ManualRegionDp(
-        centerXFraction = (rect.left + rect.right) / 2f / display.widthPx,
-        widthDp = (rect.width / display.density).roundToInt(),
-        heightDp = (rect.height / display.density).roundToInt(),
-    )
+    return NotchRegionPx(centerXPx = (rect.left + rect.right) / 2, widthPx = rect.width, heightPx = rect.height, topPx = rect.top)
 }
 
 /** Where touches at the notch come from (FR-D13, detection-modes §8). */
@@ -160,6 +155,6 @@ fun resolveEngineStatus(
 /** [notchRegion] and the same region without padding, for the highlight (ui spec §2); null when inactive. */
 fun highlightArea(settings: Settings, display: DisplaySnapshot): HighlightArea? {
     val touch = notchRegion(settings, display) ?: return null
-    val notch = notchRegion(settings.copy(paddingDp = 0), display) ?: touch
+    val notch = notchRegion(settings.copy(paddingPx = 0), display) ?: touch
     return HighlightArea(touch, notch)
 }

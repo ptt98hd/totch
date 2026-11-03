@@ -120,3 +120,37 @@ Gesture mới thêm ở v1.1 có binding mặc định `None`.
 ## 3. `SettingsRepository` (`:app`)
 - DataStore Preferences, key `settings_json`.
 - `settings: Flow<Settings>`; `suspend fun update(transform: (Settings) -> Settings)` — luôn lưu bản `sanitized()`.
+
+## 4. v1.9.6 — vùng notch bằng px, bỏ độ nhạy (FR-R10, FR-G18)
+
+```kotlin
+/** Vùng notch vật lý thủ công, px của màn hình ở hướng dọc tự nhiên (FR-R10). */
+@Serializable data class NotchRegionPx(val centerXPx: Int, val widthPx: Int, val heightPx: Int, val topPx: Int = 0)
+
+@Serializable data class Settings(
+    // bỏ: doubleTapMs, longPressMs, swipeMinDistanceDp (FR-G18), paddingDp, manualRegion (FR-R10)
+    val paddingPx: Int = DEFAULT_PADDING_PX,          // 24
+    val notchRegion: NotchRegionPx? = null,           // null = tự phát hiện
+    …
+)
+const val DOUBLE_TAP_MS = 300L; const val LONG_PRESS_MS = 300L; const val SWIPE_MIN_DISTANCE_DP = 40
+
+/** Màn hình lúc đọc cấu hình cũ (dp / % chiều rộng), để quy đổi sang px. */
+data class LegacyDisplay(val density: Float, val naturalWidthPx: Int)
+SettingsCodec.decode(json: String, legacy: LegacyDisplay? = null): Settings
+```
+
+Key JSON mới: `paddingPx`, `notchRegion` (khác tên key cũ nên JSON cũ không làm hỏng decode). Key cũ `paddingDp`,
+`manualRegion`, `doubleTapMs`, `longPressMs`, `swipeMinDistanceDp` được bỏ qua sau khi quy đổi (ST-6).
+
+| ID | Tiêu chí |
+|---|---|
+| ST-40 | `Settings()`: `paddingPx = 24`, `notchRegion = null`; `toGestureConfig(density = 2f)` = `doubleTapMs 300`, `longPressMs 300`, `swipeMinDistancePx 80f`, `touchSlopPx 24f` (hằng số, FR-G18). Thay ST-7, ST-30 phần `longPressMs` |
+| ST-41 | `sanitized()` kẹp: `paddingPx` 0–60; `notchRegion`: `centerXPx` 0–10000, `widthPx` 4–600, `heightPx` 4–300, `topPx` 0–300. Thay ST-2, ST-17, ST-23 phần vùng / padding |
+| ST-42 | JSON có `"doubleTapMs":200,"longPressMs":900,"swipeMinDistanceDp":100` → decode được, bị bỏ qua (giá trị cố định ST-40) |
+| ST-43 | Quy đổi (`legacy = LegacyDisplay(density = 2.75f, naturalWidthPx = 1080)`): JSON không có `paddingPx` mà có `"paddingDp":8` → `paddingPx = round(8 × 2.75) = 22`; không có `notchRegion` mà có `"manualRegion":{"centerXFraction":0.5,"widthDp":30,"heightDp":12,"topDp":4}` → `NotchRegionPx(centerXPx = round(0.5 × 1080) = 540, widthPx = 83, heightPx = 33, topPx = 11)`, rồi `sanitized()`. `manualRegion: null` → `null`. Có key mới → dùng key mới, bỏ key cũ. `legacy = null` → bỏ key cũ (mặc định) |
+| ST-44 | `decode(encode(s)) == s` với `paddingPx = 0`, `notchRegion = NotchRegionPx(540, 41, 41, 30)` |
+
+`SettingsRepository` (`:app`): `DataStoreSettingsRepository(store, legacy: () -> LegacyDisplay?)` truyền `legacy()` cho
+mỗi lần decode — `density` và chiều rộng hướng tự nhiên của màn hình hiện tại (`DisplaySnapshot.natural().widthPx`). Lần
+`update` đầu tiên ghi key mới, từ đó không quy đổi nữa.

@@ -15,40 +15,46 @@ sealed interface IslandHit {
     data class Control(val control: IslandControl) : IslandHit
 }
 
-/** Island geometry in screen pixels around the [notch] (no padding), shared by drawing and hit testing (IG-1…IG-6). */
+/**
+ * Island geometry in screen pixels around the physical [notch] (no padding), shared by drawing and hit testing
+ * (IG-4, IG-5, IG-10…IG-15). Every shape is built from [rest]: the notch in a black rim.
+ */
 object IslandLayout {
-    fun pill(content: IslandContent, notch: Rect, m: IslandMetrics): Rect = when {
-        content == IslandContent.Hidden -> notch // IG-1
-        content is IslandContent.Media && content.expanded -> // IG-3
-            Rect(m.dp(12), notch.top, m.screenWidthPx - m.dp(12), notch.bottom + m.dp(136))
-        else -> stretched(notch, m, notch.height + m.dp(if (content is IslandContent.Sound) 40 else 16)) // IG-2
+    const val RIM_DP = 4
+    const val MIN_HEIGHT_DP = 28
+
+    /** IG-10 (FR-O21): the notch with a black rim, at least [MIN_HEIGHT_DP] tall and as wide as tall, same center. */
+    fun rest(notch: Rect, m: IslandMetrics): Rect {
+        val h = maxOf(notch.height + 2 * m.dp(RIM_DP), m.dp(MIN_HEIGHT_DP))
+        val w = maxOf(notch.width + 2 * m.dp(RIM_DP), h)
+        val left = notch.left - (w - notch.width) / 2
+        val top = notch.top - (h - notch.height) / 2
+        return Rect(maxOf(left, 0), maxOf(top, 0), minOf(left + w, m.screenWidthPx), top + h)
     }
 
-    /** TF-7: the wing of the touch-feedback result, as of a compact island. */
-    fun feedbackWing(notch: Rect, m: IslandMetrics): Int = notch.height + m.dp(16)
+    fun pill(content: IslandContent, notch: Rect, m: IslandMetrics): Rect {
+        val rest = rest(notch, m)
+        return when {
+            content == IslandContent.Hidden -> rest // IG-11
+            content is IslandContent.Media && content.expanded -> // IG-13
+                Rect(m.dp(12), rest.top, m.screenWidthPx - m.dp(12), rest.bottom + m.dp(136))
+            else -> stretched(rest, m, rest.height + m.dp(if (content is IslandContent.Sound) 40 else 16)) // IG-12
+        }
+    }
 
-    /** TF-7: [notch] grown by [stretchPx] on each side, kept off the screen edges. */
-    fun stretched(notch: Rect, m: IslandMetrics, stretchPx: Int): Rect {
-        if (stretchPx <= 0) return notch
+    /** IG-14: the wing of the touch-feedback result, as of a compact island. */
+    fun feedbackWing(notch: Rect, m: IslandMetrics): Int = rest(notch, m).height + m.dp(16)
+
+    /** TF-7: [shape] grown by [stretchPx] on each side, kept off the screen edges. */
+    fun stretched(shape: Rect, m: IslandMetrics, stretchPx: Int): Rect {
+        if (stretchPx <= 0) return shape
         return Rect(
-            maxOf(notch.left - stretchPx, m.dp(8)),
-            notch.top,
-            minOf(notch.right + stretchPx, m.screenWidthPx - m.dp(8)),
-            notch.bottom,
+            maxOf(shape.left - stretchPx, m.dp(8)),
+            shape.top,
+            minOf(shape.right + stretchPx, m.screenWidthPx - m.dp(8)),
+            shape.bottom,
         )
     }
-
-    /** IG-7: how far the black pill reaches past its shape, so the real notch never shows at the edge (FR-O16). */
-    fun bleed(m: IslandMetrics): Int = m.dp(2)
-
-    /** IG-7: the black that covers [shape]: [bleed] wider on the sides and the bottom, kept on the screen. */
-    fun cover(shape: Rect, m: IslandMetrics): Rect {
-        val b = bleed(m)
-        return Rect(maxOf(shape.left - b, 0), shape.top, minOf(shape.right + b, m.screenWidthPx), shape.bottom + b)
-    }
-
-    /** IG-8: where the content of [shape] is laid out, vertically as tall as its [cover] so it sits in the visible black. */
-    fun band(shape: Rect, m: IslandMetrics): Rect = Rect(shape.left, shape.top, shape.right, shape.bottom + bleed(m))
 
     /** IG-4: the media buttons along the bottom of an expanded [pill]. */
     fun controls(pill: Rect, m: IslandMetrics): Map<IslandControl, Rect> {

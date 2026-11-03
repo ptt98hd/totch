@@ -23,7 +23,7 @@ import io.github.ptt98hd.totch.AppUpdater
 import io.github.ptt98hd.totch.core.update.Release
 import kotlinx.coroutines.CompletableDeferred
 import io.github.ptt98hd.totch.TouchArea
-import io.github.ptt98hd.totch.core.settings.ManualRegionDp
+import io.github.ptt98hd.totch.core.settings.NotchRegionPx
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
 import io.github.ptt98hd.totch.core.settings.DefaultBindings
@@ -89,11 +89,13 @@ class FakeSystemStatus(initial: Requirements = Requirements()) : SystemStatus {
 
 class FakeTouchArea(
     initial: HighlightArea? = null,
-    detected: ManualRegionDp? = null,
+    detected: NotchRegionPx? = null,
+    screenWidth: Int = 1080,
     private val areaOf: (Settings) -> HighlightArea? = { initial },
 ) : TouchArea {
     override val area: StateFlow<HighlightArea?> = MutableStateFlow(initial)
     override val detectedRegion = MutableStateFlow(detected)
+    override val screenWidthPx = MutableStateFlow(screenWidth)
     override fun areaFor(settings: Settings): HighlightArea? = areaOf(settings)
 }
 

@@ -22,6 +22,7 @@ import io.github.ptt98hd.totch.core.action.ActionExecutor
 import io.github.ptt98hd.totch.core.action.Capability
 import io.github.ptt98hd.totch.core.action.RingerMode
 import io.github.ptt98hd.totch.core.action.SoundModes
+import io.github.ptt98hd.totch.core.action.volumeFlags
 import io.github.ptt98hd.totch.core.model.IntentTarget
 import io.github.ptt98hd.totch.core.model.Action
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +30,11 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
 /** Torch, media keys and volume: no special permission needed (FR-A5..A7); sound modes need Do Not Disturb access (FR-A18). */
-class LocalExecutor(private val context: Context, private val accessibility: AccessibilityBridge) : ActionExecutor {
+class LocalExecutor(
+    private val context: Context,
+    private val accessibility: AccessibilityBridge,
+    private val islandShowsVolume: () -> Boolean = { false },
+) : ActionExecutor {
     private val cameraManager = context.getSystemService(CameraManager::class.java)
     private val audioManager = context.getSystemService(AudioManager::class.java)
     private val sessionManager = context.getSystemService(MediaSessionManager::class.java)
@@ -95,7 +100,7 @@ class LocalExecutor(private val context: Context, private val accessibility: Acc
             Action.MediaPlayPause, Action.MediaNext, Action.MediaPrevious -> media(action)
             Action.VolumeUp -> volume(AudioManager.ADJUST_RAISE)
             Action.VolumeDown -> volume(AudioManager.ADJUST_LOWER)
-            Action.VolumePanel -> volume(AudioManager.ADJUST_SAME) // only shows the panel (FR-A13)
+            Action.VolumePanel -> adjustVolume(AudioManager.ADJUST_SAME, AudioManager.FLAG_SHOW_UI) // only shows the panel (FR-A13)
             Action.RingerNormal -> audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
             Action.RingerSilent -> audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
             Action.CycleRingerMode -> cycleRingerMode()
@@ -176,8 +181,11 @@ class LocalExecutor(private val context: Context, private val accessibility: Acc
         )
     }
 
-    private fun volume(direction: Int) =
-        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI)
+    /** FR-A24: the island shows the new level by itself (VOLUME_CHANGED_ACTION is sent either way). */
+    private fun volume(direction: Int) = adjustVolume(direction, volumeFlags(islandShowsVolume()))
+
+    private fun adjustVolume(direction: Int, flags: Int) =
+        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, flags)
 
     private companion object {
         const val TAG = "Totch/LocalExecutor"

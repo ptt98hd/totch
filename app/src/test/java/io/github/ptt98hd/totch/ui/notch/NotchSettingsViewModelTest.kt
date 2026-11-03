@@ -3,7 +3,7 @@ package io.github.ptt98hd.totch.ui.notch
 import app.cash.turbine.test
 import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.core.overlay.IslandActivity
-import io.github.ptt98hd.totch.core.settings.ManualRegionDp
+import io.github.ptt98hd.totch.core.settings.NotchRegionPx
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.FakeSettingsRepository
 import io.github.ptt98hd.totch.ui.FakeTouchArea
@@ -20,19 +20,16 @@ import kotlin.test.assertTrue
 class NotchSettingsViewModelTest {
     @get:Rule val main = MainDispatcherRule()
 
-    private val auto = ManualRegionDp(0.5f, widthDp = 40, heightDp = 40, topDp = 0)
-    private val area = ManualRegionDp(0.2f, widthDp = 50, heightDp = 20, topDp = 10)
-    private val custom = Settings(
-        doubleTapMs = 200, longPressMs = 900, swipeMinDistanceDp = 100,
-        paddingDp = 3, manualRegion = area, haptics = false,
-    )
+    private val auto = NotchRegionPx(540, widthPx = 80, heightPx = 80, topPx = 0)
+    private val area = NotchRegionPx(216, widthPx = 41, heightPx = 39, topPx = 30)
+    private val custom = Settings(paddingPx = 3, notchRegion = area, haptics = false)
 
     private fun NotchSetting.isArea() = name.startsWith("AREA_")
 
     @Test
-    fun `UI-30 notch page has exactly the sliders`() {
+    fun `UI-85 notch page has exactly the px sliders`() {
         assertEquals(
-            listOf("DOUBLE_TAP", "LONG_PRESS", "SWIPE_DISTANCE", "AREA_X", "AREA_Y", "AREA_WIDTH", "AREA_HEIGHT", "PADDING"),
+            listOf("AREA_X", "AREA_Y", "AREA_WIDTH", "AREA_HEIGHT", "PADDING"),
             NotchSetting.entries.map { it.name },
         )
     }
@@ -47,35 +44,38 @@ class NotchSettingsViewModelTest {
                 .forEach { other -> assertFalse(other.isDefault(reset, auto), "$item reset $other") }
             assertTrue(item.isDefault(Settings(), auto), "$item")
         }
-        assertEquals(area.copy(centerXFraction = 0.5f), NotchSetting.AREA_X.reset(custom, auto).manualRegion)
-        assertEquals(area.copy(topDp = 0), NotchSetting.AREA_Y.reset(custom, auto).manualRegion)
-        assertEquals(area.copy(widthDp = 40), NotchSetting.AREA_WIDTH.reset(custom, auto).manualRegion)
-        assertEquals(area.copy(heightDp = 40), NotchSetting.AREA_HEIGHT.reset(custom, auto).manualRegion)
+        assertEquals(area.copy(centerXPx = 540), NotchSetting.AREA_X.reset(custom, auto).notchRegion)
+        assertEquals(area.copy(topPx = 0), NotchSetting.AREA_Y.reset(custom, auto).notchRegion)
+        assertEquals(area.copy(widthPx = 80), NotchSetting.AREA_WIDTH.reset(custom, auto).notchRegion)
+        assertEquals(area.copy(heightPx = 80), NotchSetting.AREA_HEIGHT.reset(custom, auto).notchRegion)
+        assertEquals(24, NotchSetting.PADDING.reset(custom, auto).paddingPx)
     }
 
     @Test
     fun `UI-31 resetting the last custom area field returns to the detected region`() {
-        val s = Settings(manualRegion = auto.copy(widthDp = 120))
-        assertNull(NotchSetting.AREA_WIDTH.reset(s, auto).manualRegion)
+        val s = Settings(notchRegion = auto.copy(widthPx = 120))
+        assertNull(NotchSetting.AREA_WIDTH.reset(s, auto).notchRegion)
         NotchSetting.entries.filter { it.isArea() }.forEach { assertTrue(it.isDefault(Settings(), auto), "$it") }
     }
 
     @Test
-    fun `UI-33 area falls back to the detected region, then to the default`() = runTest {
+    fun `UI-86 area falls back to the detected region, then to the default, in px`() = runTest {
         val repo = FakeSettingsRepository()
-        val touchArea = FakeTouchArea(detected = auto)
+        val touchArea = FakeTouchArea(detected = auto, screenWidth = 1440)
         val vm = NotchSettingsViewModel(repo, touchArea)
         vm.state.test {
             assertEquals(auto, expectMostRecentItem().area)
             touchArea.detectedRegion.value = null
-            assertEquals(ManualRegionDp(), expectMostRecentItem().area)
+            val fallback = expectMostRecentItem()
+            assertEquals(NotchRegionPx(720, 80, 80, 0), fallback.area)
+            assertEquals(1440, fallback.screenWidthPx)
             touchArea.detectedRegion.value = auto
-            vm.setArea(auto.copy(topDp = 24))
-            assertEquals(auto.copy(topDp = 24), expectMostRecentItem().area)
+            vm.setArea(auto.copy(topPx = 31))
+            assertEquals(auto.copy(topPx = 31), expectMostRecentItem().area)
         }
-        assertEquals(auto.copy(topDp = 24), repo.current.manualRegion)
+        assertEquals(auto.copy(topPx = 31), repo.current.notchRegion)
         vm.setArea(auto)
-        assertNull(repo.current.manualRegion)
+        assertNull(repo.current.notchRegion)
     }
 
     @Test
@@ -87,23 +87,17 @@ class NotchSettingsViewModelTest {
             vm.reset(NotchSetting.AREA_Y)
             cancelAndIgnoreRemainingEvents()
         }
-        assertEquals(custom.copy(manualRegion = area.copy(topDp = 0)), repo.current)
+        assertEquals(custom.copy(notchRegion = area.copy(topPx = 0)), repo.current)
     }
 
     @Test
-    fun `UI-34 sensitivity and padding are persisted and clamped`() = runTest {
+    fun `UI-86 padding is persisted in px and clamped`() = runTest {
         val repo = FakeSettingsRepository()
         val vm = NotchSettingsViewModel(repo, FakeTouchArea())
-        vm.setDoubleTapMs(9999)
-        vm.setLongPressMs(800)
-        vm.setSwipeDistanceDp(60)
-        vm.setPaddingDp(12)
-        with(repo.current) {
-            assertEquals(1000, doubleTapMs)
-            assertEquals(800, longPressMs)
-            assertEquals(60, swipeMinDistanceDp)
-            assertEquals(10, paddingDp)
-        }
+        vm.setPaddingPx(0)
+        assertEquals(0, repo.current.paddingPx)
+        vm.setPaddingPx(999)
+        assertEquals(60, repo.current.paddingPx)
     }
 
     @Test

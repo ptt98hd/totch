@@ -39,8 +39,8 @@ val LocalNotchHighlight = staticCompositionLocalOf { NotchHighlightState() }
 
 /**
  * Draws the touch area (screen pixels) directly over the activity at the notch (FR-U8): the notch itself
- * (width × height) filled, and its padding as a dashed outline around it (FR-R7). Draws nothing for `null`
- * (landscape) and never consumes touches.
+ * (width × height) filled with an outline just outside it, and its padding up to a dashed outline (FR-R7, FR-U65).
+ * Draws nothing for `null` (landscape) and never consumes touches.
  */
 @Composable
 fun NotchHighlightOverlay(area: HighlightArea?, state: NotchHighlightState, modifier: Modifier = Modifier) {
@@ -61,24 +61,48 @@ fun NotchHighlightOverlay(area: HighlightArea?, state: NotchHighlightState, modi
         },
     ) {
         if (shown == null) return@Canvas
-        fun Rect.box() = Offset(left - origin.x, top - origin.y) to Size(width.toFloat(), height.toFloat())
         val stroke = 1.5.dp.toPx()
+        // FR-U65: the solid outline sits just outside the notch, the dashed one just inside the touch area.
         if (shown.touch != shown.notch && shown.touch.width > 0 && shown.touch.height > 0) {
-            val (topLeft, size) = shown.touch.box()
-            drawPill(color.copy(alpha = 0.12f), topLeft, size)
+            val inside = outlineInside(shown.touch, stroke)
+            drawPill(color.copy(alpha = 0.12f), shown.touch.toOutline(), origin)
             val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
-            drawPill(color.copy(alpha = 0.8f), topLeft, size, Stroke(width = stroke, pathEffect = dash))
+            drawPill(color.copy(alpha = 0.8f), inside, origin, Stroke(width = stroke, pathEffect = dash))
         }
         if (shown.notch.width > 0 && shown.notch.height > 0) {
-            val (topLeft, size) = shown.notch.box()
-            drawPill(color.copy(alpha = 0.35f), topLeft, size)
-            drawPill(color, topLeft, size, Stroke(width = stroke))
+            drawPill(color.copy(alpha = 0.35f), shown.notch.toOutline(), origin)
+            drawPill(color, outlineOutside(shown.notch, stroke), origin, Stroke(width = stroke))
         }
     }
 }
 
-private fun DrawScope.drawPill(color: Color, topLeft: Offset, size: Size, style: Stroke? = null) {
-    val corner = CornerRadius(minOf(size.width, size.height) / 2)
+/** A rounded rect in screen pixels, as drawn by the highlight (UI-84). */
+data class Outline(val left: Float, val top: Float, val right: Float, val bottom: Float, val corner: Float)
+
+private fun Rect.toOutline() = Outline(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat(), minOf(width, height) / 2f)
+
+/** UI-84: the path of a [stroke] wide line whose inner edge is the edge of [r]. */
+fun outlineOutside(r: Rect, stroke: Float): Outline {
+    val half = stroke / 2
+    val o = r.toOutline()
+    return Outline(o.left - half, o.top - half, o.right + half, o.bottom + half, o.corner + half)
+}
+
+/** UI-84: the path of a [stroke] wide line whose outer edge is the edge of [r]; an empty rect when it does not fit. */
+fun outlineInside(r: Rect, stroke: Float): Outline {
+    val half = stroke / 2
+    val o = r.toOutline()
+    val w = (o.right - o.left - stroke).coerceAtLeast(0f)
+    val h = (o.bottom - o.top - stroke).coerceAtLeast(0f)
+    val left = o.left + half
+    val top = o.top + half
+    return Outline(left, top, left + w, top + h, (o.corner - half).coerceIn(0f, minOf(w, h) / 2))
+}
+
+private fun DrawScope.drawPill(color: Color, o: Outline, origin: Offset, style: Stroke? = null) {
+    val topLeft = Offset(o.left - origin.x, o.top - origin.y)
+    val size = Size(o.right - o.left, o.bottom - o.top)
+    val corner = CornerRadius(o.corner)
     if (style == null) {
         drawRoundRect(color = color, topLeft = topLeft, size = size, cornerRadius = corner)
     } else {

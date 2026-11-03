@@ -35,7 +35,8 @@ import io.github.ptt98hd.totch.QuickSettingsTiles
 import io.github.ptt98hd.totch.AppUpdater
 import io.github.ptt98hd.totch.core.action.ActionDispatcher
 import io.github.ptt98hd.totch.core.model.Rect
-import io.github.ptt98hd.totch.core.settings.ManualRegionDp
+import io.github.ptt98hd.totch.core.settings.LegacyDisplay
+import io.github.ptt98hd.totch.core.settings.NotchRegionPx
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.data.DataStoreSettingsRepository
 import io.github.ptt98hd.totch.data.settingsDataStore
@@ -43,7 +44,7 @@ import io.github.ptt98hd.totch.engine.GestureEngine
 import io.github.ptt98hd.totch.engine.PipelineError
 import io.github.ptt98hd.totch.engine.TouchSource
 import io.github.ptt98hd.totch.engine.touchSource
-import io.github.ptt98hd.totch.engine.detectedRegionDp
+import io.github.ptt98hd.totch.engine.detectedRegionPx
 import io.github.ptt98hd.totch.engine.engineRegion
 import io.github.ptt98hd.totch.engine.highlightArea
 import io.github.ptt98hd.totch.engine.resolveEngineStatus
@@ -51,6 +52,7 @@ import io.github.ptt98hd.totch.locale.AppLocales
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.overlay.IslandActivity
 import io.github.ptt98hd.totch.core.settings.activeIslandActivities
+import io.github.ptt98hd.totch.core.settings.islandShowsVolume
 import io.github.ptt98hd.totch.overlay.MediaWatcher
 import io.github.ptt98hd.totch.overlay.OverlayHub
 import io.github.ptt98hd.totch.overlay.SystemEventsReceiver
@@ -74,7 +76,11 @@ import kotlinx.coroutines.launch
 class DefaultAppContainer(private val app: Application) : AppContainer {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    override val settingsRepository = DataStoreSettingsRepository(app.settingsDataStore)
+    val display = DisplayMonitor(app, scope)
+
+    override val settingsRepository = DataStoreSettingsRepository(app.settingsDataStore) {
+        display.state.value.let { LegacyDisplay(it.density, it.natural().widthPx) } // ST-43
+    }
     private val settings: StateFlow<Settings> =
         settingsRepository.settings.stateIn(scope, SharingStarted.Eagerly, Settings())
 
@@ -83,8 +89,6 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
 
     /** Haptic feedback is on (FR-A10), as last read; also used for island taps (notch-overlay §3.4). */
     val hapticsEnabled: Boolean get() = settings.value.haptics
-
-    val display = DisplayMonitor(app, scope)
 
     /**
      * Region the engine listens to, in natural coordinates; also set while rotated with landscape gestures (FR-R8). The
@@ -97,7 +101,10 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
     val accessibility = AccessibilityBridge()
     override val installedApps = PackageManagerInstalledApps(app.packageManager)
 
-    private val localExecutor = LocalExecutor(app, accessibility)
+    // FR-A24: the island shows the volume, so no system panel is needed.
+    private val localExecutor = LocalExecutor(app, accessibility) {
+        settings.value.islandShowsVolume(accessibility.service.value != null, overlay.statusBarVisible.value)
+    }
 
     val pipeline: ShizukuTouchPipeline = ShizukuTouchPipeline(app, shizuku, display.state, onTouch = { engine.onTouch(it) }, onReset = { engine.reset() })
 
@@ -157,8 +164,10 @@ class DefaultAppContainer(private val app: Application) : AppContainer {
         override val area: StateFlow<HighlightArea?> = combine(settings, display.state, ::highlightArea)
             .stateIn(scope, SharingStarted.Eagerly, null)
         override fun areaFor(settings: Settings): HighlightArea? = highlightArea(settings, display.state.value)
-        override val detectedRegion: StateFlow<ManualRegionDp?> = display.state.map(::detectedRegionDp)
-            .stateIn(scope, SharingStarted.Eagerly, detectedRegionDp(display.state.value))
+        override val detectedRegion: StateFlow<NotchRegionPx?> = display.state.map(::detectedRegionPx)
+            .stateIn(scope, SharingStarted.Eagerly, detectedRegionPx(display.state.value))
+        override val screenWidthPx: StateFlow<Int> = display.state.map { it.natural().widthPx }
+            .stateIn(scope, SharingStarted.Eagerly, display.state.value.natural().widthPx)
     }
 
     override val appShortcuts: AppShortcuts = PackageManagerAppShortcuts(app.packageManager)

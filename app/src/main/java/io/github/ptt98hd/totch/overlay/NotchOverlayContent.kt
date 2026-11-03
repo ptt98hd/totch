@@ -114,6 +114,7 @@ import io.github.ptt98hd.totch.core.overlay.TouchFeedback
 import io.github.ptt98hd.totch.core.overlay.islandShown
 import io.github.ptt98hd.totch.core.overlay.pressStretch
 import io.github.ptt98hd.totch.core.overlay.volumeSweep
+import io.github.ptt98hd.totch.core.settings.LONG_PRESS_MS
 import io.github.ptt98hd.totch.ui.common.icon
 import kotlin.math.roundToInt
 
@@ -163,6 +164,7 @@ private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
     val effectCore = colorResource(android.R.color.system_accent1_100)
     val effectHalo = colorResource(android.R.color.system_accent1_900).copy(alpha = HALO_ALPHA)
     val notch = frame.notch
+    val rest = frame.rest // FR-O21: every shape grows from the notch in its black rim
     val m = frame.metrics
     val content = if (frame.island) islandShown(islandState, statusBar) else IslandContent.Hidden // OV-4
     val indicatorOn = frame.indicator && statusBar && indicatorState != null
@@ -175,18 +177,18 @@ private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
 
     // Shape: ring around the notch → grow (spring, dampingRatio 0.7) → shrink → ring out (IM-1…IM-3).
     val target = when (feedback) {
-        is TouchFeedback.Result -> IslandLayout.stretched(notch, m, wing)
-        is TouchFeedback.Pressing, TouchFeedback.Waiting -> notch
+        is TouchFeedback.Result -> IslandLayout.stretched(rest, m, wing)
+        is TouchFeedback.Pressing, TouchFeedback.Waiting -> rest
         TouchFeedback.Idle -> IslandMotion.target(content, notch, m)
     }
     val shown = target != null
-    val shape = target ?: notch
+    val shape = target ?: rest
     val expanded = !touching && content is IslandContent.Media && content.expanded
-    val targetCorner = if (expanded) m.dp(28).toFloat() else notch.height / 2f
-    val left = remember { Animatable(notch.left.toFloat()) }
-    val right = remember { Animatable(notch.right.toFloat()) }
-    val bottom = remember { Animatable(notch.bottom.toFloat()) }
-    val corner = remember { Animatable(notch.height / 2f) }
+    val targetCorner = if (expanded) m.dp(28).toFloat() else rest.height / 2f
+    val left = remember { Animatable(rest.left.toFloat()) }
+    val right = remember { Animatable(rest.right.toFloat()) }
+    val bottom = remember { Animatable(rest.bottom.toFloat()) }
+    val corner = remember { Animatable(rest.height / 2f) }
     val ring = remember { Animatable(0f) }
     // FR-O19 (IM-6): 1 = full size; goes to 0 with the ring as the island shrinks and fades away.
     val whole = remember { Animatable(1f) }
@@ -201,12 +203,12 @@ private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
             while (true) {
                 withFrameMillis { }
                 val p = currentFeedback as? TouchFeedback.Pressing ?: break
-                val stretch = pressStretch(p, SystemClock.uptimeMillis(), frame.longPressMs, wing.toFloat())
-                val goal = IslandLayout.stretched(notch, m, stretch.roundToInt())
+                val stretch = pressStretch(p, SystemClock.uptimeMillis(), LONG_PRESS_MS, wing.toFloat())
+                val goal = IslandLayout.stretched(rest, m, stretch.roundToInt())
                 left.snapTo(lerp(left.value, goal.left.toFloat(), FOLLOW))
                 right.snapTo(lerp(right.value, goal.right.toFloat(), FOLLOW))
                 bottom.snapTo(lerp(bottom.value, goal.bottom.toFloat(), FOLLOW))
-                corner.snapTo(lerp(corner.value, notch.height / 2f, FOLLOW))
+                corner.snapTo(lerp(corner.value, rest.height / 2f, FOLLOW))
             }
             return@LaunchedEffect
         }
@@ -268,17 +270,14 @@ private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
 
     Box(Modifier.fillMaxSize()) {
         Canvas(Modifier.fillMaxSize()) {
-            // FR-O16 (IG-7): the black reaches a little past the shape, so the real notch never shows at its edge.
-            val bleed = IslandLayout.bleed(m).toFloat()
-            val coverLeft = maxOf(left.value - bleed, 0f)
-            val coverRight = minOf(right.value + bleed, m.screenWidthPx.toFloat())
-            val fullSize = Size(coverRight - coverLeft, bottom.value + bleed - notch.top)
+            // FR-O21 (IG-15): the black rim of the rest shape keeps the real notch from showing at its edge.
+            val fullSize = Size(right.value - left.value, bottom.value - rest.top)
             // FR-O19 (IM-6): while vanishing, the black and its ring shrink both ways around their center and fade.
             val vanish = if (touching) 1f else whole.value
             val scale = IslandMotion.vanishScale(vanish)
             val size = fullSize * scale
-            val origin = Offset(coverLeft, notch.top.toFloat()) + Offset((fullSize.width - size.width) / 2, (fullSize.height - size.height) / 2)
-            val radius = (corner.value + bleed) * scale
+            val origin = Offset(left.value, rest.top.toFloat()) + Offset((fullSize.width - size.width) / 2, (fullSize.height - size.height) / 2)
+            val radius = corner.value * scale
 
             if (ring.value > 0f || touching) drawRoundRect(Color.Black, origin, size, CornerRadius(radius), alpha = vanish)
 
@@ -319,7 +318,7 @@ private fun NaturalContent(hub: OverlayHub, frame: OverlayFrame) {
         ) { shownBody ->
             Box(Modifier.fillMaxSize()) {
                 when (shownBody) {
-                    is TouchFeedback.Result -> ResultBody(shownBody, IslandLayout.stretched(notch, m, wing), frame)
+                    is TouchFeedback.Result -> ResultBody(shownBody, IslandLayout.stretched(rest, m, wing), frame)
                     is IslandContent -> if (shownBody != IslandContent.Hidden) {
                         val pill = IslandLayout.pill(shownBody, notch, m)
                         IslandBody(hub, shownBody, pill, frame, indicatorColor, accent)
@@ -360,13 +359,12 @@ private fun DrawScope.glowRing(color: Color, alpha: Float, origin: Offset, size:
 /** FR-O14: the gesture that ran on the left, its action on the right. */
 @Composable
 private fun ResultBody(result: TouchFeedback.Result, pill: Rect, frame: OverlayFrame) {
-    val notch = frame.notch
+    val rest = frame.rest
     val icon = islandIconSize(pill, frame)
-    val band = IslandLayout.band(pill, frame.metrics) // FR-O20 (IG-8)
-    Slot(Rect(band.left, band.top, notch.left, band.bottom)) {
+    Slot(Rect(pill.left, pill.top, rest.left, pill.bottom)) {
         Icon(result.gesture.icon, null, Modifier.size(icon), tint = Color.White)
     }
-    Slot(Rect(notch.right, band.top, band.right, band.bottom)) {
+    Slot(Rect(rest.right, pill.top, pill.right, pill.bottom)) {
         val app = when (val a = result.action) {
             is Action.LaunchApp -> a.packageName
             is Action.LaunchShortcut -> a.packageName
@@ -394,16 +392,14 @@ private fun IslandBody(
     dotColor: Color,
     accent: Color,
 ) {
-    val notch = frame.notch
+    val rest = frame.rest
     if (content is IslandContent.Media && content.expanded) {
         ExpandedMedia(hub, content, pill, frame)
         return
     }
     val icon = islandIconSize(pill, frame)
-    // Left wing: between the pill's left end and the notch; right wing: after the notch.
-    // FR-O20 (IG-8): both centered on the visible black, which reaches past the pill at the bottom.
-    val band = IslandLayout.band(pill, frame.metrics)
-    Slot(Rect(band.left, band.top, notch.left, band.bottom)) {
+    // Left wing: between the pill's left end and the rest shape; right wing: after it (FR-O21).
+    Slot(Rect(pill.left, pill.top, rest.left, pill.bottom)) {
         when (content) {
             is IslandContent.Media -> MediaArt(hub, content.info.packageName, icon, RoundedCornerShape(6.dp))
             is IslandContent.Notification -> rememberAppIcon(content.packageName)?.let { AppIconImage(it, icon) }
@@ -413,7 +409,7 @@ private fun IslandBody(
             IslandContent.Hidden -> Unit
         }
     }
-    Slot(Rect(notch.right, band.top, band.right, band.bottom)) {
+    Slot(Rect(rest.right, pill.top, pill.right, pill.bottom)) {
         when (content) {
             is IslandContent.Media -> Equalizer(content.info.playing, accent, icon)
             is IslandContent.Notification -> Box(Modifier.size(icon / 2.5f).background(dotColor, CircleShape))
@@ -448,7 +444,7 @@ private fun ExpandedMedia(
 ) {
     val m = frame.metrics
     val controls = IslandLayout.controls(pill, m)
-    val bodyTop = frame.notch.bottom + m.dp(8)
+    val bodyTop = frame.rest.bottom + m.dp(8)
     val bodyBottom = controls.getValue(IslandControl.PLAY_PAUSE).top
     Slot(Rect(pill.left + m.dp(16), bodyTop, pill.right - m.dp(16), bodyBottom)) {
         Row(

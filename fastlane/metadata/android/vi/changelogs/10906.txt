@@ -1,0 +1,4 @@
+* Vị trí, kích thước và padding của notch giờ tính bằng px (mỗi nấc 1 px); viền ôm khít camera từ bên ngoài nên luôn thấy đủ. Vùng đã chỉnh trước đó được quy đổi.
+* Dynamic Island có viền đen đều quanh camera, icon to hơn.
+* Bỏ phần độ nhạy cử chỉ; cử chỉ dùng thời gian chuẩn.
+* Tăng / giảm âm lượng không còn hiện bảng âm lượng hệ thống khi island đang hiện âm lượng.
