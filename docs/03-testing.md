@@ -67,7 +67,6 @@ Mục tiêu độ phủ: `:core` ≥ 90% dòng (NFR-6).
 | notch-overlay v1.9.4 (SB-1…SB-4) | `app/.../service/StatusBarWatcherTest` |
 | notch-overlay v1.9.5 (IM-6, IG-8) | `core/.../overlay/IslandMotionTest`, `IslandLayoutTest` |
 | v1.9.6: settings (ST-40…ST-44), notch-region (NR-20…NR-23), notch-overlay (IG-10…IG-15), actions (AD-14, AD-15), ui (UI-84…UI-86) | `core/.../settings/SettingsTest`, `SettingsCodecTest`, `core/.../region/NotchRegionResolverTest`, `core/.../overlay/IslandLayoutTest`, `core/.../action/VolumeTest`, `app/.../engine/RegionTest`, `app/.../ui/common/NotchOutlineTest`, `app/.../ui/notch/NotchSettingsViewModelTest` |
-| v1.9.7: notch-overlay (IG-16…IG-20, IS-16…IS-18, IM-8, IM-9) | `core/.../overlay/IslandLayoutTest`, `IslandControllerTest`, `IslandMotionTest` |
 | notch-overlay v1.9.3 (EN-18, EN-19, DR-\*, NR-18, NR-19, RO-1), detection-modes (DM-42) | `app/.../engine/GestureEngineTest`, `app/.../service/DisplayRefresherTest`, `app/.../engine/RegionTest`, `app/.../overlay/NaturalLayerTest`, `app/.../engine/EngineStatusTest` |
 
 ## 4. Checklist thủ công trước release

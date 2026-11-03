@@ -16,8 +16,6 @@ data class MediaInfo(val packageName: String, val title: String?, val artist: St
 
 enum class SoundMode { RING, VIBRATE, SILENT, DND_ON, DND_OFF }
 
-enum class VolumeStream { MEDIA, RING }
-
 /** Short-lived events shown for a while, then the island goes back to media or hides (IS-5). */
 sealed interface IslandEvent {
     /** Just plugged in; [level] 0–100. */
@@ -26,18 +24,16 @@ sealed interface IslandEvent {
     data class Notification(val packageName: String) : IslandEvent
     data class Sound(val mode: SoundMode) : IslandEvent
     /** Media or ring volume changed; [fraction] 0–1. */
-    data class Volume(val fraction: Float, val stream: VolumeStream = VolumeStream.MEDIA) : IslandEvent
+    data class Volume(val fraction: Float) : IslandEvent
 }
 
 sealed interface IslandContent {
     data object Hidden : IslandContent
     data class Media(val info: MediaInfo, val expanded: Boolean) : IslandContent
     data class Charging(val level: Int) : IslandContent
-    /** [count] notifications of [packageName] in a row (IS-18). */
-    data class Notification(val packageName: String, val count: Int = 1) : IslandContent
-    /** [fraction]: the ring volume, when it changed with the mode (IS-16, IS-17). */
-    data class Sound(val mode: SoundMode, val fraction: Float? = null) : IslandContent
-    data class Volume(val fraction: Float, val stream: VolumeStream = VolumeStream.MEDIA) : IslandContent
+    data class Notification(val packageName: String) : IslandContent
+    data class Sound(val mode: SoundMode) : IslandContent
+    data class Volume(val fraction: Float) : IslandContent
 }
 
 enum class IslandTap { NONE, EXPANDED, COLLAPSED, OPEN_NOTIFICATIONS }
@@ -90,36 +86,15 @@ class IslandController(activities: Set<IslandActivity>) {
     }
 
     fun onEvent(event: IslandEvent, nowMs: Long) {
-        val current = transient?.takeIf { it.activity() in activities }
-        var joined = false
         val shown = when (event) {
             is IslandEvent.Charging -> IslandContent.Charging(event.level)
-            is IslandEvent.Notification ->
-                if (current is IslandContent.Notification && current.packageName == event.packageName) {
-                    current.copy(count = current.count + 1) // IS-18
-                } else {
-                    IslandContent.Notification(event.packageName)
-                }
-            is IslandEvent.Sound -> IslandContent.Sound( // IS-17
-                event.mode,
-                when (current) {
-                    is IslandContent.Sound -> current.fraction
-                    is IslandContent.Volume -> current.fraction.takeIf { current.stream == VolumeStream.RING }
-                    else -> null
-                },
-            )
-            is IslandEvent.Volume ->
-                if (current is IslandContent.Sound && event.stream == VolumeStream.RING) {
-                    joined = true // IS-16
-                    current.copy(fraction = event.fraction)
-                } else {
-                    IslandContent.Volume(event.fraction, event.stream)
-                }
+            is IslandEvent.Notification -> IslandContent.Notification(event.packageName)
+            is IslandEvent.Sound -> IslandContent.Sound(event.mode)
+            is IslandEvent.Volume -> IslandContent.Volume(event.fraction)
         }
         if (shown.activity() !in activities) return // IS-12
-        val until = nowMs + durationOf(if (joined) IslandContent.Volume(0f) else shown)
-        transientUntil = if (joined) maxOf(transientUntil ?: until, until) else until
         transient = shown
+        transientUntil = nowMs + durationOf(shown)
         collapse() // IS-7
     }
 

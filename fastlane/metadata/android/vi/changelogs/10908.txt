@@ -1,0 +1,1 @@
+* Hoàn tác các thay đổi Dynamic Island của 1.9.7: island, nội dung và chuyển động trở lại như bản 1.9.6.

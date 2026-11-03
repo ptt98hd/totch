@@ -174,43 +174,4 @@ class IslandControllerTest {
         island.expandable = true
         assertEquals(IslandTap.EXPANDED, island.onTap(300))
     }
-
-    @Test fun `IS-16 the ring volume joins the sound pill`() {
-        island.onEvent(IslandEvent.Sound(SoundMode.VIBRATE), 0)
-        island.onEvent(IslandEvent.Volume(0f, VolumeStream.RING), 100)
-        assertEquals(IslandContent.Sound(SoundMode.VIBRATE, 0f), island.content)
-        assertEquals(SOUND_MS, island.nextDeadlineMs())
-        island.onEvent(IslandEvent.Volume(0.4f, VolumeStream.RING), 1_000)
-        assertEquals(IslandContent.Sound(SoundMode.VIBRATE, 0.4f), island.content)
-        assertEquals(1_000 + VOLUME_MS, island.nextDeadlineMs())
-    }
-
-    @Test fun `IS-16 a media volume still replaces the sound pill`() {
-        island.onEvent(IslandEvent.Sound(SoundMode.RING), 0)
-        island.onEvent(IslandEvent.Volume(0.4f), 100)
-        assertEquals(IslandContent.Volume(0.4f), island.content)
-    }
-
-    @Test fun `IS-17 a sound mode keeps the ring volume shown just before`() {
-        island.onEvent(IslandEvent.Volume(0f, VolumeStream.RING), 0)
-        island.onEvent(IslandEvent.Sound(SoundMode.SILENT), 100)
-        assertEquals(IslandContent.Sound(SoundMode.SILENT, 0f), island.content)
-        assertEquals(100 + SOUND_MS, island.nextDeadlineMs())
-        island.onEvent(IslandEvent.Sound(SoundMode.DND_ON), 200)
-        assertEquals(IslandContent.Sound(SoundMode.DND_ON, 0f), island.content)
-        val c = IslandController(IslandActivity.entries.toSet())
-        c.onEvent(IslandEvent.Volume(0.5f), 0)
-        c.onEvent(IslandEvent.Sound(SoundMode.RING), 100)
-        assertEquals(IslandContent.Sound(SoundMode.RING), c.content)
-    }
-
-    @Test fun `IS-18 notifications of one app are counted in one pill`() {
-        island.onEvent(IslandEvent.Notification("com.chat"), 0)
-        island.onEvent(IslandEvent.Notification("com.chat"), 500)
-        island.onEvent(IslandEvent.Notification("com.chat"), 1_000)
-        assertEquals(IslandContent.Notification("com.chat", 3), island.content)
-        assertEquals(1_000 + NOTIFICATION_MS, island.nextDeadlineMs())
-        island.onEvent(IslandEvent.Notification("com.mail"), 1_500)
-        assertEquals(IslandContent.Notification("com.mail", 1), island.content)
-    }
 }
