@@ -368,3 +368,12 @@ tham chiếu ID tương ứng.
 | FR-O21 | Island tính lại theo notch vật lý (khít camera): viên **nghỉ** = notch nới thêm **viền đen 4 dp** mỗi phía, cao tối thiểu 28 dp, rộng ≥ cao, cùng tâm với notch, không vượt cạnh trên màn hình. Mọi hình của island (ẩn, thu gọn, mở rộng, phản hồi chạm, vòng sáng) dựng từ viên nghỉ; bỏ phần phủ lấn 2 dp của FR-O16 / FR-O20 (viền đen 4 dp đã che notch thật) | [notch-overlay §12](specs/notch-overlay.md) |
 | FR-G18 | **Bỏ phần Độ nhạy** của màn Notch (Double tap, Long press, Swipe): cử chỉ dùng giá trị cố định — chạm đúp 300 ms, nhấn giữ 300 ms, vuốt tối thiểu 40 dp. Giá trị tùy chỉnh cũ bị bỏ qua. Thay FR-S9 phần độ nhạy, FR-U18 phần Double tap / Long press / Swipe | [settings §4](specs/settings.md), [ui §3](specs/ui.md) |
 | FR-A24 | **Tăng / Giảm âm lượng không hiện bảng âm lượng hệ thống** khi Dynamic Island đang hiện được mức âm lượng (island bật hoạt động Âm thanh, Trợ năng đang kết nối, status bar đang hiện); ngược lại vẫn hiện bảng hệ thống như FR-A7 để có phản hồi. *Mở bảng âm lượng* (FR-A13) không đổi | [actions §18](specs/actions.md) |
+
+## 28. Phiên bản 1.9.7
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-O22 | Island lúc nghỉ **đúng bằng vùng notch** người dùng đặt (cao = cao notch, rộng = max(rộng, cao), cùng tâm); bỏ viền đen 4 dp và chiều cao tối thiểu 28 dp của FR-O21; vòng sáng mảnh và sát mép hơn | [notch-overlay §13](specs/notch-overlay.md) |
+| FR-O23 | Cỡ nội dung island thu gọn (icon, lề, chữ, độ giãn từng mục) **tỉ lệ theo chiều cao notch**; icon đồng tâm với đầu viên; ô trái căn đầu, ô phải căn cuối | [notch-overlay §13](specs/notch-overlay.md) |
+| FR-O24 | **Mỗi mục chỉ hiện một lần, đủ thông tin**: đổi chế độ chuông và âm lượng chuông gộp vào một viên (nhãn chế độ + vòng âm lượng quanh icon); thông báo liên tiếp cùng app gộp thành số đếm; hiển thị riêng cho từng mục (media, thông báo, sạc, âm thanh, âm lượng media / chuông) | [notch-overlay §13](specs/notch-overlay.md) |
+| FR-O25 | Hiện / ẩn island **một nhịp**: hiện = giãn + hiện dần cùng lúc (lò xo gần như không nảy); ẩn = co + mờ dần cùng lúc; bỏ vòng sáng đi trước và thu nhỏ khi biến mất (FR-O11 trình tự, FR-O19) | [notch-overlay §13](specs/notch-overlay.md) |

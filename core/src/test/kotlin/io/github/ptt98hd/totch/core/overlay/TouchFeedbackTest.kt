@@ -91,7 +91,7 @@ class TouchFeedbackTest {
     @Test fun `TF-7 stretched pill`() {
         val notch = Rect(500, 0, 580, 80)
         val m = IslandMetrics(screenWidthPx = 1080, density = 2f)
-        assertEquals(120, IslandLayout.feedbackWing(notch, m)) // IG-14
+        assertEquals(80, IslandLayout.feedbackWing(notch, m)) // IG-20
         assertEquals(Rect(388, 0, 692, 80), IslandLayout.stretched(notch, m, 112))
         assertEquals(notch, IslandLayout.stretched(notch, m, 0))
         assertEquals(notch, IslandLayout.stretched(notch, m, -5))

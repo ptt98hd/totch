@@ -1,0 +1,4 @@
+* The Dynamic Island is now exactly the size of the notch you set, with a slimmer glow.
+* Icons and text in the island scale with the notch height and sit evenly in the pill.
+* Each item shows once with all its info: a ringer mode change shows its volume around the icon, and several notifications from one app show a count.
+* Simpler show / hide motion: one smooth beat each way.

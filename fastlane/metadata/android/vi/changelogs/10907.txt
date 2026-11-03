@@ -1,0 +1,4 @@
+* Dynamic Island giờ đúng bằng vùng notch bạn đặt, vòng sáng mảnh hơn.
+* Icon và chữ trong island tỉ lệ theo chiều cao notch, nằm cân đối trong viên.
+* Mỗi mục chỉ hiện một lần, đủ thông tin: đổi chế độ chuông kèm vòng âm lượng quanh icon; nhiều thông báo của cùng app hiện số đếm.
+* Hiện / ẩn gọn hơn: mỗi chiều một nhịp mượt.
