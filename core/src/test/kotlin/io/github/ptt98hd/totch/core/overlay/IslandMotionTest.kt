@@ -9,17 +9,14 @@ class IslandMotionTest {
     private val notch = Rect(500, 0, 580, 80)
     private val m = IslandMetrics(screenWidthPx = 1080, density = 2f)
 
-    @Test fun `IM-1 the ring lights up before the island grows`() {
-        assertEquals(listOf(IslandStep.RING_IN, IslandStep.MORPH), IslandMotion.steps(ringLit = false, shown = true))
+    @Test fun `IM-8 the island appears in one beat`() {
+        assertEquals(listOf(IslandStep.APPEAR), IslandMotion.steps(visible = false, shown = true))
     }
 
-    @Test fun `IM-2 a lit ring only morphs`() {
-        assertEquals(listOf(IslandStep.MORPH), IslandMotion.steps(ringLit = true, shown = true))
-    }
-
-    @Test fun `IM-3 the island shrinks before the ring goes out`() {
+    @Test fun `IM-9 a visible island only morphs, and disappears in one beat`() {
+        assertEquals(listOf(IslandStep.MORPH), IslandMotion.steps(visible = true, shown = true))
         listOf(true, false).forEach {
-            assertEquals(listOf(IslandStep.MORPH, IslandStep.RING_OUT), IslandMotion.steps(ringLit = it, shown = false))
+            assertEquals(listOf(IslandStep.DISAPPEAR), IslandMotion.steps(visible = it, shown = false))
         }
     }
 
@@ -30,13 +27,5 @@ class IslandMotionTest {
 
     @Test fun `IM-5 nothing to show`() {
         assertNull(IslandMotion.target(IslandContent.Hidden, notch, m))
-    }
-
-    @Test fun `IM-6 the island shrinks both ways as it vanishes`() {
-        assertEquals(1f, IslandMotion.vanishScale(1f))
-        assertEquals(0.3f, IslandMotion.vanishScale(0f))
-        assertEquals(0.65f, IslandMotion.vanishScale(0.5f), 1e-6f)
-        assertEquals(0.3f, IslandMotion.vanishScale(-1f))
-        assertEquals(1f, IslandMotion.vanishScale(2f))
     }
 }

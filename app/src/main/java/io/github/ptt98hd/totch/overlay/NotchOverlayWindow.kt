@@ -41,7 +41,7 @@ data class OverlayFrame(
     val displayWidthPx: Int = metrics.screenWidthPx,
     val displayHeightPx: Int = 0,
 ) {
-    /** The island at rest: the notch in its black rim (FR-O21, IG-10). */
+    /** The island at rest: the notch as set (FR-O22, IG-16). */
     val rest: Rect get() = IslandLayout.rest(notch, metrics)
 
     /** Room for the expanded island and its glow (§12). */
