@@ -9,7 +9,7 @@ import io.github.ptt98hd.totch.Requirements
 import io.github.ptt98hd.totch.SettingsRepository
 import io.github.ptt98hd.totch.TouchArea
 import io.github.ptt98hd.totch.core.overlay.IslandActivity
-import io.github.ptt98hd.totch.core.settings.ManualRegionDp
+import io.github.ptt98hd.totch.core.settings.NotchRegionPx
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,33 +19,27 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** A slider of the Preferences screen; only sliders have a reset button (UI-30, FR-S9). */
-enum class NotchSetting {
-    DOUBLE_TAP, LONG_PRESS, SWIPE_DISTANCE,
-    AREA_X, AREA_Y, AREA_WIDTH, AREA_HEIGHT, PADDING,
-}
+/** A slider of the Notch screen; only sliders have a reset button (UI-85, FR-S9). */
+enum class NotchSetting { AREA_X, AREA_Y, AREA_WIDTH, AREA_HEIGHT, PADDING }
 
 private val defaults = Settings()
 
 /** Applies [transform] to the manual region; matching the detected region [auto] means "automatic" again (UI-31). */
-private fun Settings.area(auto: ManualRegionDp, transform: (ManualRegionDp) -> ManualRegionDp): Settings {
-    val region = manualRegion ?: return this
-    return copy(manualRegion = transform(region).takeUnless { it == auto })
+private fun Settings.area(auto: NotchRegionPx, transform: (NotchRegionPx) -> NotchRegionPx): Settings {
+    val region = notchRegion ?: return this
+    return copy(notchRegion = transform(region).takeUnless { it == auto })
 }
 
 /** UI-30: [this] slider back to its default (`Settings()`, or [auto] for the touch area); other fields untouched. */
-fun NotchSetting.reset(s: Settings, auto: ManualRegionDp): Settings = when (this) {
-    NotchSetting.DOUBLE_TAP -> s.copy(doubleTapMs = defaults.doubleTapMs)
-    NotchSetting.LONG_PRESS -> s.copy(longPressMs = defaults.longPressMs)
-    NotchSetting.SWIPE_DISTANCE -> s.copy(swipeMinDistanceDp = defaults.swipeMinDistanceDp)
-    NotchSetting.AREA_X -> s.area(auto) { it.copy(centerXFraction = auto.centerXFraction) }
-    NotchSetting.AREA_Y -> s.area(auto) { it.copy(topDp = auto.topDp) }
-    NotchSetting.AREA_WIDTH -> s.area(auto) { it.copy(widthDp = auto.widthDp) }
-    NotchSetting.AREA_HEIGHT -> s.area(auto) { it.copy(heightDp = auto.heightDp) }
-    NotchSetting.PADDING -> s.copy(paddingDp = defaults.paddingDp)
+fun NotchSetting.reset(s: Settings, auto: NotchRegionPx): Settings = when (this) {
+    NotchSetting.AREA_X -> s.area(auto) { it.copy(centerXPx = auto.centerXPx) }
+    NotchSetting.AREA_Y -> s.area(auto) { it.copy(topPx = auto.topPx) }
+    NotchSetting.AREA_WIDTH -> s.area(auto) { it.copy(widthPx = auto.widthPx) }
+    NotchSetting.AREA_HEIGHT -> s.area(auto) { it.copy(heightPx = auto.heightPx) }
+    NotchSetting.PADDING -> s.copy(paddingPx = defaults.paddingPx)
 }
 
-fun NotchSetting.isDefault(s: Settings, auto: ManualRegionDp): Boolean = reset(s, auto) == s
+fun NotchSetting.isDefault(s: Settings, auto: NotchRegionPx): Boolean = reset(s, auto) == s
 
 /** A switch of the Effects section (notch-overlay §6). */
 enum class OverlayFeature { ISLAND, ISLAND_MEDIA, ISLAND_NOTIFICATIONS, ISLAND_CHARGING, ISLAND_SOUND, TOUCH_EFFECTS }
@@ -60,7 +54,9 @@ data class NotchSettingsUiState(
     val loading: Boolean = true,
     val settings: Settings = Settings(),
     /** The detected region, or the default one when there is none (landscape). */
-    val auto: ManualRegionDp = ManualRegionDp(),
+    val auto: NotchRegionPx = defaultRegion(DEFAULT_SCREEN_WIDTH_PX),
+    /** Width of the natural display: the scale of the horizontal position (UI-86). */
+    val screenWidthPx: Int = DEFAULT_SCREEN_WIDTH_PX,
     val requirements: Requirements = Requirements(),
 ) {
     /** UI-80: accessibility first, then notification access for the features that read notifications or media. */
@@ -71,37 +67,41 @@ data class NotchSettingsUiState(
     }
 
     /** UI-33: the region the touch-area sliders show. */
-    val area: ManualRegionDp get() = settings.manualRegion ?: auto
+    val area: NotchRegionPx get() = settings.notchRegion ?: auto
 
     fun isDefault(item: NotchSetting): Boolean = item.isDefault(settings, auto)
 }
 
-/** Preferences (notch settings): feedback, sensitivity, position and size (FR-U12, FR-U17). */
+private const val DEFAULT_SCREEN_WIDTH_PX = 1080
+
+/** Shown when nothing is detected (landscape): centered, 80 px square. */
+private fun defaultRegion(screenWidthPx: Int) = NotchRegionPx(screenWidthPx / 2, 80, 80)
+
+/** Notch settings: effects, position and size in px (FR-U12, FR-R10). */
 class NotchSettingsViewModel(
     private val settingsRepository: SettingsRepository,
     private val touchArea: TouchArea,
     requirements: Flow<Requirements> = flowOf(Requirements()),
 ) : ViewModel() {
     val state: StateFlow<NotchSettingsUiState> =
-        combine(settingsRepository.settings, touchArea.detectedRegion, requirements) { settings, detected, r ->
-            NotchSettingsUiState(loading = false, settings = settings, auto = detected ?: ManualRegionDp(), requirements = r)
+        combine(settingsRepository.settings, touchArea.detectedRegion, touchArea.screenWidthPx, requirements) { settings, detected, width, r ->
+            NotchSettingsUiState(
+                loading = false, settings = settings, auto = detected ?: defaultRegion(width), screenWidthPx = width, requirements = r,
+            )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NotchSettingsUiState())
 
-    private val auto: ManualRegionDp get() = touchArea.detectedRegion.value ?: ManualRegionDp()
+    private val auto: NotchRegionPx get() = touchArea.detectedRegion.value ?: defaultRegion(touchArea.screenWidthPx.value)
 
     private fun save(transform: (Settings) -> Settings) {
         viewModelScope.launch { settingsRepository.update(transform) }
     }
 
-    fun setDoubleTapMs(value: Long) = save { it.copy(doubleTapMs = value) }
-    fun setLongPressMs(value: Long) = save { it.copy(longPressMs = value) }
-    fun setSwipeDistanceDp(value: Int) = save { it.copy(swipeMinDistanceDp = value) }
-    fun setPaddingDp(value: Int) = save { it.copy(paddingDp = value) }
+    fun setPaddingPx(value: Int) = save { it.copy(paddingPx = value) }
 
-    /** UI-33: any touch-area slider; the detected region itself is stored as "automatic". */
-    fun setArea(region: ManualRegionDp) {
+    /** UI-86: any touch-area slider; the detected region itself is stored as "automatic". */
+    fun setArea(region: NotchRegionPx) {
         val auto = auto
-        save { it.copy(manualRegion = region.takeUnless { r -> r == auto }) }
+        save { it.copy(notchRegion = region.takeUnless { r -> r == auto }) }
     }
 
     fun setTouchEffects(on: Boolean) = save { it.copy(touchEffects = on) }

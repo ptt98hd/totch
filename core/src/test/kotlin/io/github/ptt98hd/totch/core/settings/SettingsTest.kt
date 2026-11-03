@@ -3,6 +3,7 @@ package io.github.ptt98hd.totch.core.settings
 import io.github.ptt98hd.totch.core.gesture.GestureConfig
 import io.github.ptt98hd.totch.core.model.Action
 import io.github.ptt98hd.totch.core.model.Gesture
+import io.github.ptt98hd.totch.core.overlay.IslandActivity
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -23,49 +24,31 @@ class SettingsTest {
         val s = Settings()
         assertEquals(Gesture.entries.associateWith { Action.None }, s.bindings)
         assertFalse(s.enabled)
-        assertEquals(300, s.doubleTapMs)
-        assertEquals(300, s.longPressMs)
-        assertEquals(40, s.swipeMinDistanceDp)
-        assertEquals(8, s.paddingDp)
-        assertEquals(null, s.manualRegion)
+        assertEquals(24, s.paddingPx)
+        assertEquals(null, s.notchRegion)
         assertTrue(s.haptics)
         assertEquals(s, s.sanitized())
     }
 
-    @Test fun `ST-30 every gesture starts not set and off, long press 300 ms, saved values kept`() {
+    @Test fun `ST-30 every gesture starts not set and off, saved bindings kept`() {
         val s = Settings()
         Gesture.entries.forEach {
             assertEquals(Action.None, s.actionFor(it))
             assertFalse(s.isGestureOn(it, canBlockTouches = true))
         }
-        assertEquals(300, s.longPressMs)
         val saved = SettingsCodec.decode("""{"bindings":{"DOUBLE_TAP":{"type":"lock"}},"longPressMs":500}""")
         assertEquals(Action.LockScreen, saved.actionFor(Gesture.DOUBLE_TAP))
-        assertEquals(500, saved.longPressMs)
     }
 
-    @Test fun `ST-2 sanitized clamps numeric values`() {
-        val low = Settings(
-            doubleTapMs = 1, longPressMs = 1, swipeMinDistanceDp = 1, paddingDp = -5,
-            manualRegion = ManualRegionDp(centerXFraction = -0.5f, widthDp = 1, heightDp = 1),
-        ).sanitized()
-        assertEquals(100, low.doubleTapMs)
-        assertEquals(100, low.longPressMs)
-        assertEquals(16, low.swipeMinDistanceDp)
-        assertEquals(1, low.paddingDp)
-        assertEquals(ManualRegionDp(0f, 8, 8), low.manualRegion)
-
-        val high = Settings(
-            doubleTapMs = 9999, longPressMs = 9999, swipeMinDistanceDp = 9999, paddingDp = 9999,
-            manualRegion = ManualRegionDp(centerXFraction = 7f, widthDp = 9999, heightDp = 9999),
-        ).sanitized()
-        assertEquals(1000, high.doubleTapMs)
-        assertEquals(1000, high.longPressMs)
-        assertEquals(200, high.swipeMinDistanceDp)
-        assertEquals(10, high.paddingDp)
-        assertEquals(ManualRegionDp(1f, 400, 100), high.manualRegion)
-
-        assertEquals(0.5f, Settings(manualRegion = ManualRegionDp(centerXFraction = Float.NaN)).sanitized().manualRegion?.centerXFraction)
+    @Test fun `ST-41 sanitized clamps padding and notch region in px`() {
+        val low = Settings(paddingPx = -5, notchRegion = NotchRegionPx(-10, 1, 1, -5)).sanitized()
+        assertEquals(0, low.paddingPx)
+        assertEquals(NotchRegionPx(0, 4, 4, 0), low.notchRegion)
+        val high = Settings(paddingPx = 9999, notchRegion = NotchRegionPx(99999, 9999, 9999, 9999)).sanitized()
+        assertEquals(60, high.paddingPx)
+        assertEquals(NotchRegionPx(10000, 600, 300, 300), high.notchRegion)
+        val ok = Settings(paddingPx = 0, notchRegion = NotchRegionPx(540, 41, 41, 30))
+        assertEquals(ok, ok.sanitized())
     }
 
     @Test fun `ST-3 sanitized fills missing gestures with None`() {
@@ -76,10 +59,10 @@ class SettingsTest {
         assertEquals(Action.None, Settings(bindings = emptyMap()).actionFor(Gesture.TAP))
     }
 
-    @Test fun `ST-7 toGestureConfig converts dp and derives doubleTapEnabled`() {
-        val s = Settings(bindings = bound, doubleTapMs = 250, longPressMs = 700).boundOn()
+    @Test fun `ST-40 toGestureConfig uses the fixed timings and converts dp`() {
+        val s = Settings(bindings = bound).boundOn()
         assertEquals(
-            GestureConfig(doubleTapMs = 250, longPressMs = 700, touchSlopPx = 24f, swipeMinDistancePx = 80f, doubleTapEnabled = true),
+            GestureConfig(doubleTapMs = 300, longPressMs = 300, touchSlopPx = 24f, swipeMinDistancePx = 80f, doubleTapEnabled = true),
             s.toGestureConfig(density = 2f),
         )
         val noDouble = s.withGestureOn(Gesture.DOUBLE_TAP, false)
@@ -164,10 +147,14 @@ class SettingsTest {
         assertTrue(bound.isGestureOn(Gesture.DOUBLE_TAP))
     }
 
-    @Test fun `ST-17 manual region top is clamped`() {
-        assertEquals(0, Settings(manualRegion = ManualRegionDp(topDp = -5)).sanitized().manualRegion?.topDp)
-        assertEquals(100, Settings(manualRegion = ManualRegionDp(topDp = 500)).sanitized().manualRegion?.topDp)
-        assertEquals(24, Settings(manualRegion = ManualRegionDp(topDp = 24)).sanitized().manualRegion?.topDp)
+    @Test fun `AD-14 island shows the volume only when it can`() {
+        val on = Settings(enabled = true, island = true)
+        assertTrue(on.islandShowsVolume(accessibility = true, statusBarVisible = true))
+        assertFalse(on.islandShowsVolume(accessibility = false, statusBarVisible = true))
+        assertFalse(on.islandShowsVolume(accessibility = true, statusBarVisible = false))
+        assertFalse(on.copy(enabled = false).islandShowsVolume(true, true))
+        assertFalse(on.copy(island = false).islandShowsVolume(true, true))
+        assertFalse(on.copy(islandActivities = setOf(IslandActivity.MEDIA)).islandShowsVolume(true, true))
     }
 
     @Test fun `ST-24 swipe down gestures are available when touches can be blocked`() {

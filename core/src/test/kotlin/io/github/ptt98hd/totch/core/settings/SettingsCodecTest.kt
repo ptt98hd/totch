@@ -28,8 +28,8 @@ class SettingsCodecTest {
                     Gesture.SWIPE_LEFT to Action.VolumeDown,
                     Gesture.SWIPE_RIGHT to Action.MediaPlayPause,
                 ),
-                doubleTapMs = 200, longPressMs = 800, swipeMinDistanceDp = 50, paddingDp = 1,
-                manualRegion = ManualRegionDp(0.3f, 100, 40),
+                paddingPx = 1,
+                notchRegion = NotchRegionPx(300, 100, 40),
                 haptics = false,
             ),
         )
@@ -50,7 +50,6 @@ class SettingsCodecTest {
             """{"enabled":true,"futureField":{"a":1},"longPressMs":5,"bindings":{"TAP":{"type":"home","extra":1}}}""",
         )
         assertEquals(true, s.enabled)
-        assertEquals(100, s.longPressMs)
         assertEquals(Action.Home, s.bindings[Gesture.TAP])
         assertEquals(Action.None, s.bindings[Gesture.LONG_PRESS])
         assertEquals(Gesture.entries.toSet(), s.bindings.keys)
@@ -82,7 +81,7 @@ class SettingsCodecTest {
     @Test fun `ST-23 json with the removed mode key still decodes`() {
         listOf("SHIZUKU", "ACCESSIBILITY").forEach { mode ->
             val s = SettingsCodec.decode("""{"enabled":true,"mode":"$mode","paddingDp":48}""")
-            assertEquals(Settings(enabled = true, paddingDp = 10), s)
+            assertEquals(Settings(enabled = true), s)
         }
     }
 
@@ -99,7 +98,6 @@ class SettingsCodecTest {
         assertEquals(
             Settings().copy(
                 enabled = true,
-                longPressMs = 500,
                 bindings = DefaultBindings + mapOf(
                     Gesture.TAP to Action.Home, Gesture.DOUBLE_TAP to Action.LockScreen, Gesture.LONG_PRESS to Action.ToggleTorch,
                     Gesture.SWIPE_DOWN to Action.Notifications, Gesture.SWIPE_LEFT to Action.MediaPrevious,
@@ -134,11 +132,33 @@ class SettingsCodecTest {
         assertEquals("en", Json.parseToJsonElement(SettingsCodec.encode(Settings(language = AppLanguage.ENGLISH))).jsonObject.getValue("language").jsonPrimitive.content)
     }
 
-    @Test fun `ST-17 v1_1 manual region without topDp decodes with topDp 0`() {
-        val s = SettingsCodec.decode("""{"manualRegion":{"centerXFraction":0.3,"widthDp":100,"heightDp":40}}""")
-        assertEquals(ManualRegionDp(0.3f, 100, 40, topDp = 0), s.manualRegion)
-        val offset = Settings(manualRegion = ManualRegionDp(0.3f, 100, 40, topDp = 12))
-        assertEquals(offset, SettingsCodec.decode(SettingsCodec.encode(offset)))
+    @Test fun `ST-42 removed sensitivity keys are ignored`() {
+        val s = SettingsCodec.decode("""{"enabled":true,"doubleTapMs":200,"longPressMs":900,"swipeMinDistanceDp":100}""")
+        assertEquals(Settings(enabled = true), s)
+    }
+
+    @Test fun `ST-43 dp values of 1_9_5 are converted to px once`() {
+        val legacy = LegacyDisplay(density = 2.75f, naturalWidthPx = 1080)
+        val old = """{"paddingDp":8,"manualRegion":{"centerXFraction":0.5,"widthDp":30,"heightDp":12,"topDp":4}}"""
+        val s = SettingsCodec.decode(old, legacy)
+        assertEquals(22, s.paddingPx)
+        assertEquals(NotchRegionPx(540, 83, 33, 11), s.notchRegion)
+        // v1.1 region without topDp
+        assertEquals(NotchRegionPx(324, 275, 110, 0), SettingsCodec.decode("""{"manualRegion":{"centerXFraction":0.3,"widthDp":100,"heightDp":40}}""", legacy).notchRegion)
+        assertEquals(null, SettingsCodec.decode("""{"paddingDp":8,"manualRegion":null}""", legacy).notchRegion)
+        // the new keys win once written
+        val written = """{"paddingDp":8,"paddingPx":5,"manualRegion":{"centerXFraction":0.5,"widthDp":30,"heightDp":12},"notchRegion":null}"""
+        assertEquals(Settings(paddingPx = 5), SettingsCodec.decode(written, legacy))
+        // nothing to convert with
+        assertEquals(Settings(), SettingsCodec.decode(old))
+        // the padding is clamped after converting (old 10 dp at density 7 = 70 px)
+        assertEquals(60, SettingsCodec.decode("""{"paddingDp":10}""", LegacyDisplay(7f, 1440)).paddingPx)
+    }
+
+    @Test fun `ST-44 px region and padding round trip`() {
+        val s = Settings(paddingPx = 0, notchRegion = NotchRegionPx(540, 41, 41, 30))
+        assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s)))
+        assertEquals(s, SettingsCodec.decode(SettingsCodec.encode(s), LegacyDisplay(3f, 1080)))
     }
 
     @Test fun `ST-18 v1_2 JSON with repeat fields still decodes`() {
@@ -228,7 +248,6 @@ class SettingsCodecTest {
         assertEquals(Action.RingerSilent, s.bindings[Gesture.TAP])
         assertEquals(Action.Home, s.bindings[Gesture.DOUBLE_TAP])
         assertEquals(setOf(Gesture.TAP, Gesture.DOUBLE_TAP), s.enabledGestures)
-        assertEquals(450, s.longPressMs)
     }
 
     @Test fun `ST-36 v1_8_3 actions round trip with stable type names`() {

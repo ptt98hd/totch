@@ -36,7 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptt98hd.totch.AppContainer
 import io.github.ptt98hd.totch.R
 import io.github.ptt98hd.totch.core.overlay.IslandActivity
-import io.github.ptt98hd.totch.core.settings.ManualRegionDp
+import io.github.ptt98hd.totch.core.settings.NotchRegionPx
 import io.github.ptt98hd.totch.core.settings.Settings
 import io.github.ptt98hd.totch.ui.common.LocalNotchHighlight
 import io.github.ptt98hd.totch.ui.common.ResetButton
@@ -51,11 +51,8 @@ import kotlin.math.roundToInt
 
 /** Callbacks of the notch screen, grouped to keep the stateless signature readable. */
 data class NotchSettingsActions(
-    val onDoubleTapMs: (Long) -> Unit = {},
-    val onLongPressMs: (Long) -> Unit = {},
-    val onSwipeDistanceDp: (Int) -> Unit = {},
-    val onPaddingDp: (Int) -> Unit = {},
-    val onArea: (ManualRegionDp) -> Unit = {},
+    val onPaddingPx: (Int) -> Unit = {},
+    val onArea: (NotchRegionPx) -> Unit = {},
     val onReset: (NotchSetting) -> Unit = {},
     /** Unsaved settings while a touch-area slider is dragged (for the live highlight); null when done. */
     val onDraft: (Settings?) -> Unit = {},
@@ -86,10 +83,7 @@ fun NotchSettingsRoute(container: AppContainer) {
 
     val actions = remember(vm) {
         NotchSettingsActions(
-            onDoubleTapMs = vm::setDoubleTapMs,
-            onLongPressMs = vm::setLongPressMs,
-            onSwipeDistanceDp = vm::setSwipeDistanceDp,
-            onPaddingDp = vm::setPaddingDp,
+            onPaddingPx = vm::setPaddingPx,
             onArea = vm::setArea,
             onReset = vm::reset,
             onDraft = { draft = it },
@@ -101,20 +95,16 @@ fun NotchSettingsRoute(container: AppContainer) {
     NotchSettingsScreen(state, actions)
 }
 
-/** FR-U18: both time sliders share this scale (step 50, ± 10). */
-private val MS_RANGE = 100f..1000f
-
 @Composable
 fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActions, modifier: Modifier = Modifier) {
     val s = state.settings
     val area = state.area
-    val ms = stringResource(R.string.unit_ms)
-    val dp = stringResource(R.string.unit_dp)
-    val percent = stringResource(R.string.unit_percent)
+    val px = stringResource(R.string.unit_px) // FR-R10: physical pixels, ± 1 px per step
     fun reset(item: NotchSetting): @Composable () -> Unit = {
         ResetButton(enabled = !state.isDefault(item), onClick = { actions.onReset(item) })
     }
-    fun draftArea(r: ManualRegionDp) = actions.onDraft(s.copy(manualRegion = r))
+    fun draftArea(r: NotchRegionPx) = actions.onDraft(s.copy(notchRegion = r))
+    fun label(v: Float) = px.format(v.roundToInt())
 
     Scaffold(
         modifier = modifier,
@@ -122,62 +112,27 @@ fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActio
     ) { padding ->
         LazyColumn(contentPadding = padding.withGutters(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item(key = "effects") { EffectsSection(state, actions) }
-            item(key = "sensitivity") {
-                SettingsSection(stringResource(R.string.section_sensitivity)) {
-                    SliderSetting(
-                        title = stringResource(R.string.setting_double_tap),
-                        value = s.doubleTapMs.toFloat(),
-                        valueRange = MS_RANGE,
-                        step = 50f,
-                        increment = 10f,
-                        valueLabel = { ms.format(it.roundToInt()) },
-                        onValueChangeFinished = { actions.onDoubleTapMs(it.roundToInt().toLong()) },
-                        trailing = reset(NotchSetting.DOUBLE_TAP),
-                    )
-                    RowDivider()
-                    SliderSetting(
-                        title = stringResource(R.string.setting_long_press),
-                        value = s.longPressMs.toFloat(),
-                        valueRange = MS_RANGE,
-                        step = 50f,
-                        increment = 10f,
-                        valueLabel = { ms.format(it.roundToInt()) },
-                        onValueChangeFinished = { actions.onLongPressMs(it.roundToInt().toLong()) },
-                        trailing = reset(NotchSetting.LONG_PRESS),
-                    )
-                    RowDivider()
-                    SliderSetting(
-                        title = stringResource(R.string.setting_swipe),
-                        value = s.swipeMinDistanceDp.toFloat(),
-                        valueRange = 20f..200f,
-                        step = 5f,
-                        valueLabel = { dp.format(it.roundToInt()) },
-                        onValueChangeFinished = { actions.onSwipeDistanceDp(it.roundToInt()) },
-                        trailing = reset(NotchSetting.SWIPE_DISTANCE),
-                    )
-                }
-            }
             item(key = "position") {
                 SettingsSection(stringResource(R.string.section_position)) {
                     SliderSetting(
                         title = stringResource(R.string.setting_area_x),
-                        value = area.centerXFraction * 100f,
-                        valueRange = 0f..100f,
+                        value = area.centerXPx.toFloat(),
+                        valueRange = 0f..state.screenWidthPx.toFloat(),
                         step = 5f,
-                        valueLabel = { percent.format(it.roundToInt()) },
-                        onValueChange = { draftArea(area.copy(centerXFraction = it / 100f)) },
-                        onValueChangeFinished = { actions.onArea(area.copy(centerXFraction = it / 100f)) },
+                        valueLabel = ::label,
+                        onValueChange = { draftArea(area.copy(centerXPx = it.roundToInt())) },
+                        onValueChangeFinished = { actions.onArea(area.copy(centerXPx = it.roundToInt())) },
                         trailing = reset(NotchSetting.AREA_X),
                     )
                     RowDivider()
                     SliderSetting(
                         title = stringResource(R.string.setting_area_y),
-                        value = area.topDp.toFloat(),
-                        valueRange = 0f..100f,
+                        value = area.topPx.toFloat(),
+                        valueRange = 0f..300f,
                         step = 5f,
-                        valueLabel = { dp.format(it.roundToInt()) },
-                        onValueChange = { draftArea(area.copy(topDp = it.roundToInt())) },
-                        onValueChangeFinished = { actions.onArea(area.copy(topDp = it.roundToInt())) },
+                        valueLabel = ::label,
+                        onValueChange = { draftArea(area.copy(topPx = it.roundToInt())) },
+                        onValueChangeFinished = { actions.onArea(area.copy(topPx = it.roundToInt())) },
                         trailing = reset(NotchSetting.AREA_Y),
                     )
                 }
@@ -186,34 +141,34 @@ fun NotchSettingsScreen(state: NotchSettingsUiState, actions: NotchSettingsActio
                 SettingsSection(stringResource(R.string.section_size)) {
                     SliderSetting(
                         title = stringResource(R.string.setting_area_width),
-                        value = area.widthDp.toFloat(),
-                        valueRange = 10f..400f,
+                        value = area.widthPx.toFloat(),
+                        valueRange = 4f..600f,
                         step = 5f,
-                        valueLabel = { dp.format(it.roundToInt()) },
-                        onValueChange = { draftArea(area.copy(widthDp = it.roundToInt())) },
-                        onValueChangeFinished = { actions.onArea(area.copy(widthDp = it.roundToInt())) },
+                        valueLabel = ::label,
+                        onValueChange = { draftArea(area.copy(widthPx = it.roundToInt())) },
+                        onValueChangeFinished = { actions.onArea(area.copy(widthPx = it.roundToInt())) },
                         trailing = reset(NotchSetting.AREA_WIDTH),
                     )
                     RowDivider()
                     SliderSetting(
                         title = stringResource(R.string.setting_area_height),
-                        value = area.heightDp.toFloat(),
-                        valueRange = 10f..100f,
+                        value = area.heightPx.toFloat(),
+                        valueRange = 4f..300f,
                         step = 5f,
-                        valueLabel = { dp.format(it.roundToInt()) },
-                        onValueChange = { draftArea(area.copy(heightDp = it.roundToInt())) },
-                        onValueChangeFinished = { actions.onArea(area.copy(heightDp = it.roundToInt())) },
+                        valueLabel = ::label,
+                        onValueChange = { draftArea(area.copy(heightPx = it.roundToInt())) },
+                        onValueChangeFinished = { actions.onArea(area.copy(heightPx = it.roundToInt())) },
                         trailing = reset(NotchSetting.AREA_HEIGHT),
                     )
                     RowDivider()
                     SliderSetting(
                         title = stringResource(R.string.setting_padding),
-                        value = s.paddingDp.toFloat(),
-                        valueRange = 1f..10f,
+                        value = s.paddingPx.toFloat(),
+                        valueRange = 0f..60f,
                         step = 5f,
-                        valueLabel = { dp.format(it.roundToInt()) },
-                        onValueChange = { actions.onDraft(s.copy(paddingDp = it.roundToInt())) },
-                        onValueChangeFinished = { actions.onPaddingDp(it.roundToInt()) },
+                        valueLabel = ::label,
+                        onValueChange = { actions.onDraft(s.copy(paddingPx = it.roundToInt())) },
+                        onValueChangeFinished = { actions.onPaddingPx(it.roundToInt()) },
                         trailing = reset(NotchSetting.PADDING),
                     )
                 }
@@ -301,7 +256,7 @@ private fun EffectsSection(state: NotchSettingsUiState, actions: NotchSettingsAc
 private fun NotchSettingsScreenPreview() {
     TotchTheme {
         NotchSettingsScreen(
-            state = NotchSettingsUiState(loading = false, settings = Settings(doubleTapMs = 250)),
+            state = NotchSettingsUiState(loading = false, settings = Settings(paddingPx = 12)),
             actions = NotchSettingsActions(),
         )
     }

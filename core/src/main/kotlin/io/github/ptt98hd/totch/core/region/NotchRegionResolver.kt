@@ -7,10 +7,10 @@ import kotlin.math.roundToInt
 data class Cutout(val boundingRectsTop: List<Rect>)
 
 /**
- * User-defined region in pixels; [centerXFraction] is the horizontal center as a fraction of screen width,
- * [topPx] the distance of its top edge from the top of the screen.
+ * User-defined region in pixels; [centerXPx] is its horizontal center, [topPx] the distance of its top edge from the
+ * top of the screen (FR-R10).
  */
-data class ManualRegion(val centerXFraction: Float, val widthPx: Int, val heightPx: Int, val topPx: Int = 0)
+data class ManualRegion(val centerXPx: Int, val widthPx: Int, val heightPx: Int, val topPx: Int = 0)
 
 object NotchRegionResolver {
     private const val DEFAULT_WIDTH_FRACTION = 0.2f
@@ -31,8 +31,7 @@ object NotchRegionResolver {
         val cutoutRects = cutout?.boundingRectsTop.orEmpty()
         val base = when {
             manual != null -> {
-                val fraction = manual.centerXFraction.takeUnless { it.isNaN() }?.coerceIn(0f, 1f) ?: 0.5f
-                val left = (fraction * screenWidthPx - manual.widthPx / 2f).roundToInt()
+                val left = manual.centerXPx.coerceIn(0, screenWidthPx) - manual.widthPx / 2
                 Rect(left, manual.topPx, left + manual.widthPx, manual.topPx + manual.heightPx)
             }
             cutoutRects.isNotEmpty() -> cutoutRects.reduce { a, b ->

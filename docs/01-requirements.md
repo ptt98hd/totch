@@ -210,7 +210,7 @@ tham chiếu ID tương ứng.
 | ID | Yêu cầu | Spec |
 |---|---|---|
 | FR-U26 | Settings: mỗi dòng của section **System** có mô tả ngắn **một dòng** (không xuống dòng) | [ui §3](specs/ui.md) |
-| FR-A15 | Hành động **Bấm ô Cài đặt nhanh**: chạm một ô (tile) Quick Settings của app (`TileService`) qua Shizuku (`cmd statusbar click-tile`); tab **Tiles** trong picker liệt kê các ô. Chỉ ô đã được thêm vào bảng Cài đặt nhanh mới phản hồi; ô hệ thống dựng sẵn (Wi-Fi, Bluetooth…) không phải `TileService` nên không có | [actions §9](specs/actions.md), [ui §3](specs/ui.md) |
+| FR-A15 | Hành động **Bấm ô Cài đặt nhanh**: chạm một ô (tile) Quick Settings của app (`TileService`) qua Shizuku (`cmd statusbar click-tile`); tab **Tiles** trong picker liệt kê các ô. Chỉ ô đã được thêm vào bảng Cài đặt nhanh mới phản hồi; ô hệ thống dựng sẵn (Wi-Fi, Bluetooth…) không phải `TileService` nên không có | [actions §18](specs/actions.md), [ui §3](specs/ui.md) |
 | FR-U27 | **Tự cập nhật** không cần backend: Settings › About có dòng **Check for updates** → đọc GitHub Release mới nhất, có bản mới → hộp thoại ghi chú phát hành → tải APK đã ký, kiểm SHA-256, cài bằng `PackageInstaller` (hệ thống hỏi xác nhận). Không tự kiểm tra ngầm | [update](specs/update.md), [ui §3](specs/ui.md) |
 | FR-A16 | Hành động **Chế độ một tay** (bật/tắt One-handed mode của Android) qua Shizuku. Android chỉ nhận lệnh khi người dùng đã gán **phím tắt Chế độ một tay** (nút Trợ năng hoặc giữ phím âm lượng); chưa gán → hành động báo lỗi | [actions §10](specs/actions.md) |
 | FR-U28 | Màn **Notch**: các slider trong mỗi section ngăn cách bằng đường kẻ ngang (như Settings, FR-U23) | [ui §3](specs/ui.md) |
@@ -219,7 +219,7 @@ tham chiếu ID tương ứng.
 
 | ID | Yêu cầu | Spec |
 |---|---|---|
-| FR-A15 (sửa) | Bấm ô Cài đặt nhanh **không cần** thêm ô vào bảng: ô chưa có thì tạm thêm, bấm, rồi gỡ (`cmd statusbar add-tile` / `click-tile` / `remove-tile` qua Shizuku); ô đã có bấm như cũ | [actions §9](specs/actions.md) |
+| FR-A15 (sửa) | Bấm ô Cài đặt nhanh **không cần** thêm ô vào bảng: ô chưa có thì tạm thêm, bấm, rồi gỡ (`cmd statusbar add-tile` / `click-tile` / `remove-tile` qua Shizuku); ô đã có bấm như cũ | [actions §18](specs/actions.md) |
 | FR-A16 (sửa) | Chế độ một tay chạy được **không cần** người dùng gán phím tắt: cách native (`one_handed_mode_activated`, tự gán tạm phím tắt rồi trả lại, kiểm tra trạng thái thật qua dump WMShell) và cách fallback (giả lập cử chỉ vuốt xuống ở mép dưới). Cách nào chạy được thì lưu làm cách chính; cả hai lỗi mới báo lỗi | [actions §10](specs/actions.md) |
 | FR-U29 | Settings có section **Update**: switch *Kiểm tra khi mở app*, chọn *Kiểm tra định kỳ* (Tắt / Hằng ngày / Hằng tuần / Hằng tháng — chạy nền bằng JobScheduler, có bản mới thì gửi thông báo, mỗi bản một lần), dòng *Kiểm tra cập nhật* thủ công (chuyển từ About). Có bản mới khi mở app → hộp thoại cập nhật ở bất kỳ màn hình nào | [update §5–6](specs/update.md), [ui §3](specs/ui.md) |
 | FR-U31 | Splash screen: giữ splash của hệ thống (icon app) đến khi đọc xong cài đặt rồi mờ dần, không còn khung trống | [ui — Splash](specs/ui.md) |
@@ -358,3 +358,13 @@ tham chiếu ID tương ứng.
 |---|---|---|
 | FR-O19 | **Island biến mất mượt**: sau khi thu về cỡ notch, viên đen cùng vòng sáng **thu nhỏ cả chiều ngang lẫn chiều dọc** và **mờ dần** rồi biến mất, thay cho tắt đột ngột | [notch-overlay §11](specs/notch-overlay.md) |
 | FR-O20 | Icon và chữ trong island **căn giữa theo chiều dọc** của phần đen thấy được | [notch-overlay §11](specs/notch-overlay.md) |
+
+## 27. Phiên bản 1.9.6
+
+| ID | Yêu cầu | Spec |
+|---|---|---|
+| FR-R10 | **Vùng notch vật lý tính bằng px** (điểm ảnh thật của màn hình, hướng dọc): vị trí ngang (tâm), vị trí dọc (cạnh trên), rộng, cao và padding đều là số px nguyên, nút − / + đổi đúng 1 px. Không phụ thuộc mật độ (đổi *Kích thước hiển thị* không làm lệch vùng). Cấu hình cũ (dp, % chiều rộng) được quy đổi sang px một lần theo màn hình hiện tại. Thay đơn vị của FR-R3, FR-R5…FR-R7, FR-S4 | [notch-region](specs/notch-region.md), [settings §4](specs/settings.md) |
+| FR-U65 | Highlight trong màn Notch: **viền liền nằm hoàn toàn bên ngoài notch** — mép trong của viền trùng mép notch, nên căn cho viền ôm khít camera mà viền vẫn hiện đủ (không bị lỗ camera che); phần padding là phần **bên ngoài** viền, viền nét đứt nằm bên trong mép vùng chạm | [ui §2](specs/ui.md) |
+| FR-O21 | Island tính lại theo notch vật lý (khít camera): viên **nghỉ** = notch nới thêm **viền đen 4 dp** mỗi phía, cao tối thiểu 28 dp, rộng ≥ cao, cùng tâm với notch, không vượt cạnh trên màn hình. Mọi hình của island (ẩn, thu gọn, mở rộng, phản hồi chạm, vòng sáng) dựng từ viên nghỉ; bỏ phần phủ lấn 2 dp của FR-O16 / FR-O20 (viền đen 4 dp đã che notch thật) | [notch-overlay §12](specs/notch-overlay.md) |
+| FR-G18 | **Bỏ phần Độ nhạy** của màn Notch (Double tap, Long press, Swipe): cử chỉ dùng giá trị cố định — chạm đúp 300 ms, nhấn giữ 300 ms, vuốt tối thiểu 40 dp. Giá trị tùy chỉnh cũ bị bỏ qua. Thay FR-S9 phần độ nhạy, FR-U18 phần Double tap / Long press / Swipe | [settings §4](specs/settings.md), [ui §3](specs/ui.md) |
+| FR-A24 | **Tăng / Giảm âm lượng không hiện bảng âm lượng hệ thống** khi Dynamic Island đang hiện được mức âm lượng (island bật hoạt động Âm thanh, Trợ năng đang kết nối, status bar đang hiện); ngược lại vẫn hiện bảng hệ thống như FR-A7 để có phản hồi. *Mở bảng âm lượng* (FR-A13) không đổi | [actions §18](specs/actions.md) |

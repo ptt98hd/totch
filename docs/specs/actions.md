@@ -468,3 +468,25 @@ Thực thi (không cần quyền Danh bạ, app Danh bạ tự đọc): `Accessi
 |---|---|
 | CT-1 | Sắp theo tên đã chuẩn hóa như tìm kiếm (chữ thường, bỏ dấu: "Ân" trước "Anh") rồi `lookupUri`; query khớp tên sau khi chuẩn hóa như `filterCatalog` (bỏ dấu tiếng Việt: `"an"` khớp "Ân") |
 | SC-15 | `openContact("content://com.android.contacts/contacts/lookup/0r1-ABC/1")` = `am start -a android.intent.action.VIEW -d 'content://com.android.contacts/contacts/lookup/0r1-ABC/1' -f 0x10000000`; URI không bắt đầu bằng `content://com.android.contacts/contacts/lookup/` hoặc chứa ký tự điều khiển → `null`; `'` escape thành `'\''`; `of(OpenContact(…)) == null` |
+
+## 18. Âm lượng không hiện bảng hệ thống (v1.9.6 — FR-A24)
+
+`LocalExecutor` đổi âm lượng bằng `AudioManager.adjustStreamVolume(STREAM_MUSIC, direction, flags)`. `FLAG_SHOW_UI` là
+thứ làm hiện bảng âm lượng của System UI; bỏ cờ này thì âm lượng vẫn đổi, Android vẫn phát `VOLUME_CHANGED_ACTION` nên
+island âm lượng (FR-O18) vẫn hiện mức mới. Chỉ bỏ khi island hiện được mức âm lượng, nếu không người dùng không có phản
+hồi nào:
+
+```kotlin
+/** FR-A24: island đang hiện được mức âm lượng thay cho bảng hệ thống. */
+fun Settings.islandShowsVolume(accessibility: Boolean, statusBarVisible: Boolean): Boolean =
+    enabled && accessibility && statusBarVisible && IslandActivity.SOUND in activeIslandActivities()
+fun volumeFlags(islandShowsVolume: Boolean): Int   // `:core` action/Volume.kt: 0 hoặc FLAG_SHOW_UI (= 1)
+```
+
+`LocalExecutor(context, accessibility, islandShowsVolume: () -> Boolean)`; `VolumePanel` luôn dùng `FLAG_SHOW_UI`
+(`ADJUST_SAME`, FR-A13).
+
+| ID | Tiêu chí |
+|---|---|
+| AD-14 | `islandShowsVolume`: đúng khi `enabled`, island bật với `SOUND`, Trợ năng kết nối, status bar hiện; sai khi thiếu bất kỳ điều kiện nào (island tắt, không có `SOUND`, `enabled = false`, không Trợ năng, toàn màn hình) |
+| AD-15 | `volumeFlags(true) = 0`; `volumeFlags(false) = FLAG_SHOW_UI (1)` |

@@ -410,6 +410,18 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-O25 | Đổi âm lượng / cắm sạc, chờ island ẩn; cũng thử vuốt notch (kết quả cử chỉ) | Viên thu về notch, rồi thu nhỏ cả ngang lẫn dọc, mờ dần và biến mất mượt (FR-O19) | [ ] |
 | MT-O26 | Island sạc, âm thanh, âm lượng, thông báo, media thu gọn; kết quả cử chỉ | Icon và chữ nằm giữa viên đen theo chiều dọc (FR-O20) | [ ] |
 
+## 25. v1.9.6
+
+| ID | Kịch bản | Kỳ vọng | KQ |
+|---|---|---|---|
+| MT-R10 | Tab Notch: chỉnh Horizontal / Vertical / Width / Height bằng − / + | Mỗi lần đổi 1 px; giá trị hiển thị "px"; viền liền ôm khít lỗ camera mà vẫn thấy đủ nét viền (FR-R10, FR-U65) | [ ] |
+| MT-R11 | Kéo Padding 0 → 60 px | Vùng nét đứt to ra **bên ngoài** viền liền; padding 0 → nét đứt trùng sát viền liền | [ ] |
+| MT-R12 | Đã căn vùng ở 1.9.5 (dp), cập nhật lên 1.9.6 | Vùng notch và padding giữ nguyên vị trí / kích thước trên màn hình (quy đổi sang px) | [ ] |
+| MT-R13 | Đổi Cài đặt › Màn hình › Kích thước hiển thị | Vùng notch không lệch khỏi camera | [ ] |
+| MT-O27 | Vùng căn khít camera; bật island, đổi âm lượng / cắm sạc / phát nhạc | Viên đen bao camera với viền đen đều mỗi phía, không lộ mép camera; icon đủ lớn, nằm giữa; media mở rộng bình thường (FR-O21) | [ ] |
+| MT-G18 | Tab Notch | Không còn section Độ nhạy; chạm đúp / nhấn giữ / vuốt vẫn nhận như mặc định cũ (FR-G18) | [ ] |
+| MT-A24 | Gán vuốt trái / phải = Giảm / Tăng âm lượng; island bật Âm thanh | Âm lượng đổi, chỉ island hiện vòng âm lượng, **không** hiện bảng âm lượng hệ thống. Tắt hoạt động Âm thanh (hoặc tắt island) → bảng hệ thống hiện lại (FR-A24) | [ ] |
+
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)

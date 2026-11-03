@@ -1,7 +1,7 @@
 package io.github.ptt98hd.totch.engine
 
 import io.github.ptt98hd.totch.core.model.Rect
-import io.github.ptt98hd.totch.core.settings.ManualRegionDp
+import io.github.ptt98hd.totch.core.settings.NotchRegionPx
 import io.github.ptt98hd.totch.core.settings.Settings
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,36 +14,34 @@ class RegionTest {
     )
 
     @Test
-    fun `cutout region is expanded by padding in px`() {
-        assertEquals(Rect(484, 0, 596, 96), notchRegion(Settings(paddingDp = 8), display))
+    fun `NR-22 cutout region is expanded by padding in px, not dp`() {
+        assertEquals(Rect(492, 0, 588, 88), notchRegion(Settings(paddingPx = 8), display))
     }
 
     @Test
-    fun `manual region is converted from dp`() {
-        val s = Settings(paddingDp = 0, manualRegion = ManualRegionDp(0.5f, widthDp = 100, heightDp = 30))
-        assertEquals(Rect(440, 0, 640, 60), notchRegion(s, display))
-        val offset = s.copy(manualRegion = ManualRegionDp(0.5f, widthDp = 100, heightDp = 30, topDp = 10))
-        assertEquals(Rect(440, 20, 640, 80), notchRegion(offset, display))
+    fun `NR-20 manual region is used in px whatever the density`() {
+        val s = Settings(paddingPx = 0, notchRegion = NotchRegionPx(540, widthPx = 41, heightPx = 41, topPx = 30))
+        assertEquals(Rect(520, 30, 561, 71), notchRegion(s, display))
+        assertEquals(Rect(520, 30, 561, 71), notchRegion(s, display.copy(density = 3.5f)))
+        val area = highlightArea(s.copy(paddingPx = 10), display)
+        assertEquals(Rect(520, 30, 561, 71), area?.notch)
+        assertEquals(Rect(510, 20, 571, 81), area?.touch)
     }
 
     @Test
-    fun `NR-12 detected cutout region in dp`() {
-        assertEquals(ManualRegionDp(0.5f, widthDp = 40, heightDp = 40, topDp = 0), detectedRegionDp(display))
-    }
-
-    @Test
-    fun `NR-13 detected default region in dp without cutout`() {
-        assertEquals(ManualRegionDp(0.5f, widthDp = 108, heightDp = 45, topDp = 0), detectedRegionDp(display.copy(cutoutTop = emptyList())))
-    }
-
-    @Test
-    fun `NR-14 no detected region when rotated`() {
-        assertNull(detectedRegionDp(display.copy(rotation = 1, widthPx = 2400, heightPx = 1080)))
+    fun `NR-23 detected region in px rebuilds the detected rect`() {
+        assertEquals(NotchRegionPx(540, 80, 80, 0), detectedRegionPx(display))
+        val odd = display.copy(cutoutTop = listOf(Rect(500, 0, 581, 80)))
+        val detected = detectedRegionPx(odd)
+        assertEquals(NotchRegionPx(540, 81, 80, 0), detected)
+        assertEquals(Rect(500, 0, 581, 80), notchRegion(Settings(paddingPx = 0, notchRegion = detected), odd))
+        assertEquals(NotchRegionPx(540, 216, 90, 0), detectedRegionPx(display.copy(cutoutTop = emptyList())))
+        assertNull(detectedRegionPx(display.copy(rotation = 1, widthPx = 2400, heightPx = 1080)))
     }
 
     @Test
     fun `no cutout falls back to the status bar default`() {
-        assertEquals(Rect(432, 0, 648, 90), notchRegion(Settings(paddingDp = 0), display.copy(cutoutTop = emptyList())))
+        assertEquals(Rect(432, 0, 648, 90), notchRegion(Settings(paddingPx = 0), display.copy(cutoutTop = emptyList())))
     }
 
     @Test

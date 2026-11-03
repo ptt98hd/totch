@@ -21,8 +21,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class GestureEngineTest {
-    /** Bound gestures and the 500 ms long press these tests were written for. */
-    private val base = Settings(enabled = true, bindings = LegacyBindings, longPressMs = 500).boundOn()
+    /** Bound gestures; long press is the fixed 300 ms (FR-G18). */
+    private val base = Settings(enabled = true, bindings = LegacyBindings).boundOn()
     private val region = Rect(400, 0, 600, 80)
     private val dispatched = mutableListOf<Action>()
     private var result: DispatchResult = DispatchResult.Ok
@@ -151,19 +151,19 @@ class GestureEngineTest {
     @Test
     fun `EN-3 settings change updates recognizer config immediately`() = runTest {
         val e = engine()
-        e.updateSettings(Settings(enabled = true, longPressMs = 1000, doubleTapMs = 400, swipeMinDistanceDp = 50))
-        assertEquals(1000, e.config.longPressMs)
-        assertEquals(400, e.config.doubleTapMs)
-        assertEquals(100f, e.config.swipeMinDistancePx)
+        e.updateSettings(Settings(enabled = true), density = 3f)
+        assertEquals(300, e.config.longPressMs)
+        assertEquals(300, e.config.doubleTapMs)
+        assertEquals(120f, e.config.swipeMinDistancePx)
         e.updateSettings(base.bind(Gesture.DOUBLE_TAP to Action.None))
         assertEquals(false, e.config.doubleTapEnabled)
     }
 
     @Test
-    fun `EN-4 LONG_PRESS fires after 500 ms of virtual time without a new event`() = runTest {
+    fun `EN-4 LONG_PRESS fires after 300 ms of virtual time without a new event`() = runTest {
         val e = engine()
         e.onTouch(down(0))
-        advanceTimeBy(499)
+        advanceTimeBy(299)
         runCurrent()
         assertTrue(dispatched.isEmpty())
         advanceTimeBy(1)

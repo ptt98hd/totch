@@ -495,3 +495,38 @@ khoảng đệm font và cắt line height (`LineHeightStyle(Center, Trim.Both)`
 |---|---|---|
 | IG-8 | `band(shape, m)` | `(shape.left, shape.top, shape.right, shape.bottom + dp(2))` — cùng chiều dọc với `cover(shape, m)`; ví dụ IG-6: `band(notch)` = `(500,0,580,84)` |
 | IG-9 | (thủ công MT-O26) island sạc, âm thanh, âm lượng, thông báo, media thu gọn; kết quả cử chỉ | icon và chữ nằm giữa viên đen theo chiều dọc |
+
+## 12. v1.9.6 — island theo notch khít camera (FR-O21, FR-R10, FR-G18)
+
+Từ 1.9.6 vùng notch được căn bằng px cho **khít lỗ camera** (FR-R10, FR-U65). Viên đen đúng bằng notch như trước thì
+camera chạm sát mép viên, island thu gọn chỉ cao bằng lỗ camera (≈ 14 dp) và icon bé. Sửa: mọi hình của island dựng từ
+**viên nghỉ** `rest(notch)` — notch có viền đen bao quanh:
+
+```kotlin
+object IslandLayout {
+    const val RIM_DP = 4; const val MIN_HEIGHT_DP = 28
+    fun rest(notch: Rect, m: IslandMetrics): Rect
+}
+```
+
+`rest`: `h = max(notch.height + 2·dp(RIM_DP), dp(MIN_HEIGHT_DP))`, `w = max(notch.width + 2·dp(RIM_DP), h)`;
+`left = notch.left − (w − notch.width) / 2`, `right = left + w`, `top = notch.top − (h − notch.height) / 2`,
+`bottom = top + h` (chia nguyên); rồi `top` kẹp `≥ 0` (đáy giữ nguyên), trái / phải kẹp trong `[0, screenWidthPx]`.
+
+Mọi hàm nhận **notch vật lý** (như trước) và tự dựng `rest`:
+
+| ID | Given (density 2, màn 1080, notch `(500,0,580,80)` → `rest = (492,0,588,88)`) | Then |
+|---|---|---|
+| IG-10 | `rest` | `(500,0,580,80)` → `(492,0,588,88)`; lỗ camera `(520,30,560,70)` → `(512,22,568,78)`; `(525,10,555,40)` → `(512,0,568,53)`; `(0,0,40,40)` → `(0,0,48,48)` |
+| IG-11 | `pill`: `Hidden` | `rest`. Thay IG-1 |
+| IG-12 | `pill`: thu gọn | `stretched(rest, wing)`, `wing = rest.height + dp(16)` (`Sound`: `+ dp(40)`): `(372,0,708,88)`, `Sound` `(324,0,756,88)`; notch `(20,0,100,80)` → `(16,0,228,88)`; `(980,0,1060,80)` → `(852,0,1064,88)`. Thay IG-2 |
+| IG-13 | `pill`: media mở rộng | `(dp(12), rest.top, screenWidthPx − dp(12), rest.bottom + dp(136))` = `(24,0,1056,360)`; controls `PLAY_PAUSE = (492,240,588,336)`, `PREVIOUS = (348,240,444,336)`, `NEXT = (636,240,732,336)`. Thay IG-3, IG-6 |
+| IG-14 | `feedbackWing(notch)` | `rest.height + dp(16)` = 120; `stretched` giữ nguyên (TF-7, áp lên `rest`) |
+| IG-15 | bỏ `bleed` / `cover` / `band` (IG-7, IG-8) | viên đen, vòng sáng và ô nội dung theo đúng hình viên; viền đen `RIM_DP` thay cho phần lấn 2 dp (FR-O16) |
+
+Vẽ (`:app`): viên đen, vòng sáng, phản hồi chạm co / giãn quanh `rest` (đang chạm, chờ kết quả, biến mất); bo góc
+`rest.height / 2`; cạnh trên `rest.top`. Ô nội dung trái: `pill.left … rest.left`, phải: `rest.right … pill.right`, chiều
+dọc = `pill`. Media mở rộng: thân từ `rest.bottom + dp(8)`. Cửa sổ vẽ cao `rest.bottom + dp(136 + 24)`.
+
+FR-G18: thời gian chờ chạm đúp của phản hồi chạm (`onRelease`) = `DOUBLE_TAP_MS + WAIT_MARGIN_MS`; giãn khi giữ
+(`pressStretch`) dùng `LONG_PRESS_MS` — `OverlayFrame` bỏ `longPressMs`.

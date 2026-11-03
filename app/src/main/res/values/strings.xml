@@ -126,14 +126,8 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="section_sensitivity">Sensitivity</string>
-    <string name="setting_double_tap">Double tap</string>
-    <string name="setting_long_press">Long press</string>
-    <string name="setting_swipe">Swipe</string>
     <string name="setting_padding">Padding</string>
-    <string name="unit_ms">%1$d ms</string>
-    <string name="unit_dp">%1$d dp</string>
-    <string name="unit_percent">%1$d%%</string>
+    <string name="unit_px">%1$d px</string>
     <string name="setting_haptics">Haptic feedback</string>
     <string name="section_position">Position</string>
     <string name="section_size">Size</string>

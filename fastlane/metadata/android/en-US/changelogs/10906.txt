@@ -1,0 +1,4 @@
+* The notch position, size and padding are now set in screen pixels (1 px per step), and the outline hugs the camera from the outside so it stays fully visible. Your previous area is converted.
+* The Dynamic Island keeps an even black rim around the camera and its icons are larger.
+* The gesture sensitivity section is removed; gestures use the standard timings.
+* Volume up / down no longer shows the system volume panel while the island shows the volume.

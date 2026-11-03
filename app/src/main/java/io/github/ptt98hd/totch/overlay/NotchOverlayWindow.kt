@@ -19,6 +19,7 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import io.github.ptt98hd.totch.core.model.Rect
+import io.github.ptt98hd.totch.core.overlay.IslandLayout
 import io.github.ptt98hd.totch.core.overlay.IslandMetrics
 import io.github.ptt98hd.totch.engine.fromNatural
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,14 +36,16 @@ data class OverlayFrame(
     val indicator: Boolean,
     val island: Boolean,
     val touchEffects: Boolean,
-    val longPressMs: Long,
     /** `Surface.ROTATION_*` of the display, and its size as rotated. */
     val rotation: Int = 0,
     val displayWidthPx: Int = metrics.screenWidthPx,
     val displayHeightPx: Int = 0,
 ) {
-    /** Room for the expanded island and its glow. */
-    val heightPx: Int get() = notch.bottom + metrics.dp(136 + 24)
+    /** The island at rest: the notch in its black rim (FR-O21, IG-10). */
+    val rest: Rect get() = IslandLayout.rest(notch, metrics)
+
+    /** Room for the expanded island and its glow (§12). */
+    val heightPx: Int get() = rest.bottom + metrics.dp(136 + 24)
 
     /** The window on the current display: the natural top strip, rotated (§8). */
     val window: Rect get() = fromNatural(Rect(0, 0, metrics.screenWidthPx, heightPx), rotation, displayWidthPx, displayHeightPx)

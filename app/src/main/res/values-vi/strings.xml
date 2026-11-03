@@ -126,14 +126,8 @@
 
     <!-- Settings -->
     <string name="settings_title">Cài đặt</string>
-    <string name="section_sensitivity">Độ nhạy</string>
-    <string name="setting_double_tap">Chạm hai lần</string>
-    <string name="setting_long_press">Nhấn giữ</string>
-    <string name="setting_swipe">Vuốt</string>
     <string name="setting_padding">Đệm</string>
-    <string name="unit_ms">%1$d ms</string>
-    <string name="unit_dp">%1$d dp</string>
-    <string name="unit_percent">%1$d%%</string>
+    <string name="unit_px">%1$d px</string>
     <string name="setting_haptics">Rung phản hồi</string>
     <string name="section_position">Vị trí</string>
     <string name="section_size">Kích thước</string>

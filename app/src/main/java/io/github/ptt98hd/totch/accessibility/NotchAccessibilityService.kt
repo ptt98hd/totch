@@ -84,7 +84,7 @@ class NotchAccessibilityService : AccessibilityService() {
                 OverlayFrame(
                     it.notch, IslandMetrics(natural.widthPx, d.density),
                     indicator = IslandActivity.NOTIFICATIONS in s.activeIslandActivities(), // FR-O12
-                    island = s.island, touchEffects = s.touchEffects, longPressMs = s.longPressMs,
+                    island = s.island, touchEffects = s.touchEffects,
                     rotation = d.rotation, displayWidthPx = d.widthPx, displayHeightPx = d.heightPx,
                 )
             }
