@@ -17,49 +17,33 @@ sealed interface IslandHit {
 
 /**
  * Island geometry in screen pixels around the physical [notch] (no padding), shared by drawing and hit testing
- * (IG-4, IG-5, IG-16…IG-20). Every shape is built from [rest]: the notch itself.
+ * (IG-4, IG-5, IG-10…IG-15). Every shape is built from [rest]: the notch in a black rim.
  */
 object IslandLayout {
-    /** IG-16 (FR-O22): the notch as set, as wide as tall at least, same center. */
+    const val RIM_DP = 4
+    const val MIN_HEIGHT_DP = 28
+
+    /** IG-10 (FR-O21): the notch with a black rim, at least [MIN_HEIGHT_DP] tall and as wide as tall, same center. */
     fun rest(notch: Rect, m: IslandMetrics): Rect {
-        val w = maxOf(notch.width, notch.height)
+        val h = maxOf(notch.height + 2 * m.dp(RIM_DP), m.dp(MIN_HEIGHT_DP))
+        val w = maxOf(notch.width + 2 * m.dp(RIM_DP), h)
         val left = notch.left - (w - notch.width) / 2
-        return Rect(maxOf(left, 0), notch.top, minOf(left + w, m.screenWidthPx), notch.bottom)
-    }
-
-    /** IG-17 (FR-O23): the icon size of a compact island. */
-    fun iconPx(notch: Rect, m: IslandMetrics): Int {
-        val h = rest(notch, m).height
-        return minOf((h * 0.64f).roundToInt().coerceIn(m.dp(10), m.dp(22)), h)
-    }
-
-    /** IG-17: from an icon to the pill's end, as much as above and below it. */
-    fun padPx(notch: Rect, m: IslandMetrics): Int = maxOf((rest(notch, m).height - iconPx(notch, m)) / 2, m.dp(4))
-
-    /** IG-18: how far [content] stretches the rest shape on each side. */
-    fun wing(content: IslandContent, notch: Rect, m: IslandMetrics): Int {
-        val pad = padPx(notch, m)
-        val iconWing = iconPx(notch, m) + 2 * pad
-        return when (content) {
-            IslandContent.Hidden -> 0
-            is IslandContent.Charging -> maxOf(iconWing, 2 * pad + m.dp(34))
-            is IslandContent.Sound -> maxOf(iconWing, 2 * pad + m.dp(64))
-            else -> iconWing
-        }
+        val top = notch.top - (h - notch.height) / 2
+        return Rect(maxOf(left, 0), maxOf(top, 0), minOf(left + w, m.screenWidthPx), top + h)
     }
 
     fun pill(content: IslandContent, notch: Rect, m: IslandMetrics): Rect {
         val rest = rest(notch, m)
         return when {
             content == IslandContent.Hidden -> rest // IG-11
-            content is IslandContent.Media && content.expanded -> // IG-19
+            content is IslandContent.Media && content.expanded -> // IG-13
                 Rect(m.dp(12), rest.top, m.screenWidthPx - m.dp(12), rest.bottom + m.dp(136))
-            else -> stretched(rest, m, wing(content, notch, m)) // IG-18
+            else -> stretched(rest, m, rest.height + m.dp(if (content is IslandContent.Sound) 40 else 16)) // IG-12
         }
     }
 
-    /** IG-20: the wing of the touch-feedback result, an icon on each side. */
-    fun feedbackWing(notch: Rect, m: IslandMetrics): Int = iconPx(notch, m) + 2 * padPx(notch, m)
+    /** IG-14: the wing of the touch-feedback result, as of a compact island. */
+    fun feedbackWing(notch: Rect, m: IslandMetrics): Int = rest(notch, m).height + m.dp(16)
 
     /** TF-7: [shape] grown by [stretchPx] on each side, kept off the screen edges. */
     fun stretched(shape: Rect, m: IslandMetrics, stretchPx: Int): Rect {

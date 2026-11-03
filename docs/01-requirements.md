@@ -369,11 +369,8 @@ tham chiếu ID tương ứng.
 | FR-G18 | **Bỏ phần Độ nhạy** của màn Notch (Double tap, Long press, Swipe): cử chỉ dùng giá trị cố định — chạm đúp 300 ms, nhấn giữ 300 ms, vuốt tối thiểu 40 dp. Giá trị tùy chỉnh cũ bị bỏ qua. Thay FR-S9 phần độ nhạy, FR-U18 phần Double tap / Long press / Swipe | [settings §4](specs/settings.md), [ui §3](specs/ui.md) |
 | FR-A24 | **Tăng / Giảm âm lượng không hiện bảng âm lượng hệ thống** khi Dynamic Island đang hiện được mức âm lượng (island bật hoạt động Âm thanh, Trợ năng đang kết nối, status bar đang hiện); ngược lại vẫn hiện bảng hệ thống như FR-A7 để có phản hồi. *Mở bảng âm lượng* (FR-A13) không đổi | [actions §18](specs/actions.md) |
 
-## 28. Phiên bản 1.9.7
+## 28. Phiên bản 1.9.7 → 1.9.8 (hoàn tác)
 
-| ID | Yêu cầu | Spec |
-|---|---|---|
-| FR-O22 | Island lúc nghỉ **đúng bằng vùng notch** người dùng đặt (cao = cao notch, rộng = max(rộng, cao), cùng tâm); bỏ viền đen 4 dp và chiều cao tối thiểu 28 dp của FR-O21; vòng sáng mảnh và sát mép hơn | [notch-overlay §13](specs/notch-overlay.md) |
-| FR-O23 | Cỡ nội dung island thu gọn (icon, lề, chữ, độ giãn từng mục) **tỉ lệ theo chiều cao notch**; icon đồng tâm với đầu viên; ô trái căn đầu, ô phải căn cuối | [notch-overlay §13](specs/notch-overlay.md) |
-| FR-O24 | **Mỗi mục chỉ hiện một lần, đủ thông tin**: đổi chế độ chuông và âm lượng chuông gộp vào một viên (nhãn chế độ + vòng âm lượng quanh icon); thông báo liên tiếp cùng app gộp thành số đếm; hiển thị riêng cho từng mục (media, thông báo, sạc, âm thanh, âm lượng media / chuông) | [notch-overlay §13](specs/notch-overlay.md) |
-| FR-O25 | Hiện / ẩn island **một nhịp**: hiện = giãn + hiện dần cùng lúc (lò xo gần như không nảy); ẩn = co + mờ dần cùng lúc; bỏ vòng sáng đi trước và thu nhỏ khi biến mất (FR-O11 trình tự, FR-O19) | [notch-overlay §13](specs/notch-overlay.md) |
+1.9.7 (FR-O22…FR-O25: island đúng cỡ notch, cỡ nội dung theo chiều cao, gộp sự kiện, hiện / ẩn một nhịp) đã **hoàn tác**
+ở 1.9.8 theo yêu cầu người dùng: mã nguồn, spec và test trở lại đúng như 1.9.6 (FR-O21 và các yêu cầu trước vẫn áp dụng).
+Chỉ phiên bản tăng lên 1.9.8 (versionCode 10908) để máy đã cài 1.9.7 cập nhật được.

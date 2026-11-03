@@ -9,7 +9,6 @@ import android.media.AudioManager
 import android.os.BatteryManager
 import io.github.ptt98hd.totch.core.overlay.IslandEvent
 import io.github.ptt98hd.totch.core.overlay.SoundMode
-import io.github.ptt98hd.totch.core.overlay.VolumeStream
 
 /**
  * Charging and sound events for the island (FR-O4, FR-O5), registered only while one of them is shown.
@@ -64,7 +63,7 @@ class SystemEventsReceiver(private val context: Context, private val hub: Overla
         val value = intent.getIntExtra(EXTRA_VALUE, -1)
         if (value < 0 || value == intent.getIntExtra(EXTRA_PREV_VALUE, -1)) return null
         val max = audio.getStreamMaxVolume(stream).takeIf { it > 0 } ?: return null
-        return IslandEvent.Volume(value.toFloat() / max, if (stream == AudioManager.STREAM_RING) VolumeStream.RING else VolumeStream.MEDIA)
+        return IslandEvent.Volume(value.toFloat() / max)
     }
 
     private companion object {

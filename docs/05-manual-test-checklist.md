@@ -422,15 +422,6 @@ Chuẩn bị: gán TAP = Play/Pause, SWIPE_RIGHT = Bài tiếp, SWIPE_LEFT = Bà
 | MT-G18 | Tab Notch | Không còn section Độ nhạy; chạm đúp / nhấn giữ / vuốt vẫn nhận như mặc định cũ (FR-G18) | [ ] |
 | MT-A24 | Gán vuốt trái / phải = Giảm / Tăng âm lượng; island bật Âm thanh | Âm lượng đổi, chỉ island hiện vòng âm lượng, **không** hiện bảng âm lượng hệ thống. Tắt hoạt động Âm thanh (hoặc tắt island) → bảng hệ thống hiện lại (FR-A24) | [ ] |
 
-## 26. v1.9.7
-
-| ID | Kịch bản | Kỳ vọng | KQ |
-|---|---|---|---|
-| MT-O31 | Vùng notch căn khít camera; bật island, cắm sạc / phát nhạc | Viên đen lúc nghỉ và chiều cao viên thu gọn **bằng** vùng notch đã đặt, không to hơn; vòng sáng mảnh sát mép (FR-O22) | [ ] |
-| MT-O28 | Island media, thông báo, sạc, âm thanh, âm lượng | Icon cân đối với chiều cao viên, cách đầu viên đều; chữ `%` / nhãn vừa viên, căn về phía ngoài (FR-O23) | [ ] |
-| MT-O29 | Đổi chuông ↔ rung ↔ im lặng bằng phím âm lượng; bật / tắt Không làm phiền; nhận 3 tin nhắn liên tiếp của cùng app | Mỗi lần chỉ **một** viên (không hiện viên âm lượng sau viên chế độ); "Rung" có vòng âm lượng quanh icon; thông báo hiện số 2, 3 tại chỗ (FR-O24) | [ ] |
-| MT-O30 | Cắm sạc, đổi âm lượng, chờ ẩn; chạm notch (kết quả cử chỉ) | Hiện: một nhịp giãn mượt, không nảy, không có vòng sáng đi trước; ẩn: co + mờ cùng lúc, không thu nhỏ còn chấm (FR-O25) | [ ] |
-
 ## Lịch sử kết quả
 
 ### 1.0.0 (10000)
